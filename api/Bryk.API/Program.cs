@@ -1,11 +1,20 @@
+using Bryk.Application.Validators;
 using Bryk.Infrastructure.Data;
+using FluentValidation;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Scalar.AspNetCore; 
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
 builder.Services.AddControllers();
+
+// Replace built-in model validation with FluentValidation
+builder.Services.Configure<ApiBehaviorOptions>(options =>
+    options.SuppressModelStateInvalidFilter = true);
+
+builder.Services.AddValidatorsFromAssemblyContaining<ValidatorPlaceholder>();
 builder.Services.AddEndpointsApiExplorer();
 
 // Configure Swagger/OpenAPI (Swashbuckle generates the spec)
@@ -29,7 +38,7 @@ if (string.IsNullOrEmpty(connectionString))
 // Database configuration
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
+        connectionString,
         sqlOptions => sqlOptions.EnableRetryOnFailure(
             maxRetryCount: 5,
             maxRetryDelay: TimeSpan.FromSeconds(30),
