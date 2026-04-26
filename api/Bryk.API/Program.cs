@@ -62,7 +62,7 @@ builder.Services.AddCors(options =>
 // Service registrations
 builder.Services.AddScoped<IMesocycleService, MesocycleService>();
 builder.Services.AddScoped<IWeekService, WeekService>();
-// builder.Services.AddScoped<IDayService, DayService>();
+builder.Services.AddScoped<IDayService, DayService>();
 // builder.Services.AddScoped<IExerciseService, ExerciseService>();
 
 var app = builder.Build();
