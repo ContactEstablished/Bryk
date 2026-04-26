@@ -103,8 +103,7 @@ public class ApplicationDbContext : DbContext
         {
             if (entry.State == EntityState.Added)
             {
-                if (entry.Property("CreatedAt").CurrentValue == null || 
-                    (DateTime)entry.Property("CreatedAt").CurrentValue == default)
+                if (entry.Property("CreatedAt").CurrentValue is not DateTime createdAt || createdAt == default)
                 {
                     entry.Property("CreatedAt").CurrentValue = DateTime.UtcNow;
                 }
