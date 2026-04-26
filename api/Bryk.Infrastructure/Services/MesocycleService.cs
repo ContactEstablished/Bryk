@@ -2,11 +2,15 @@ using Bryk.Application.DTOs.Mesocycle;
 using Bryk.Application.Interfaces;
 using Bryk.Domain.Entities;
 using Bryk.Infrastructure.Data;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bryk.Infrastructure.Services;
 
-public class MesocycleService(ApplicationDbContext context) : IMesocycleService
+public class MesocycleService(
+    ApplicationDbContext context,
+    IValidator<CreateMesocycleDto> createValidator,
+    IValidator<UpdateMesocycleDto> updateValidator) : IMesocycleService
 {
     // GET: return all mesocycles as List<MesocycleDto>
     public async Task<List<MesocycleDto>> GetAllAsync(CancellationToken cancellationToken = default)
@@ -64,6 +68,10 @@ public class MesocycleService(ApplicationDbContext context) : IMesocycleService
     // POST: create entity from CreateMesocycleDto, save, return MesocycleDto
     public async Task<MesocycleDto> CreateAsync(CreateMesocycleDto dto, CancellationToken cancellationToken = default)
     {
+        var validationResult = await createValidator.ValidateAsync(dto, cancellationToken);
+        if (!validationResult.IsValid)
+            throw new Bryk.Application.Exceptions.ValidationException(validationResult.Errors.Select(e => e.ErrorMessage));
+
         var entity = new Mesocycle
         {
             Id = Guid.NewGuid(),
@@ -86,6 +94,10 @@ public class MesocycleService(ApplicationDbContext context) : IMesocycleService
     // PUT: load entity, apply only non-null fields from UpdateMesocycleDto, save, return MesocycleDto
     public async Task<MesocycleDto> UpdateAsync(Guid id, UpdateMesocycleDto dto, CancellationToken cancellationToken = default)
     {
+        var validationResult = await updateValidator.ValidateAsync(dto, cancellationToken);
+        if (!validationResult.IsValid)
+            throw new Bryk.Application.Exceptions.ValidationException(validationResult.Errors.Select(e => e.ErrorMessage));
+
         var entity = await context.Mesocycles
             .FirstOrDefaultAsync(m => m.Id == id, cancellationToken);
 
