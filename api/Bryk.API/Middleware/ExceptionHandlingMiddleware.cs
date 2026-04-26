@@ -43,6 +43,7 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
             {
                 KeyNotFoundException => (HttpStatusCode.NotFound, "The requested resource was not found."),
                 ArgumentException => (HttpStatusCode.BadRequest, "Invalid request."),
+                InvalidOperationException => (HttpStatusCode.Conflict, "The operation could not be completed due to the current state of the resource."),
                 _ => (HttpStatusCode.InternalServerError, "An unexpected error occurred.")
             };
 
