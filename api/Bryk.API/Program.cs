@@ -1,5 +1,7 @@
+using Bryk.Application.Interfaces;
 using Bryk.Application.Validators;
 using Bryk.Infrastructure.Data;
+using Bryk.Infrastructure.Services;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -57,8 +59,8 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Service registrations (uncomment when implementing services)
-// builder.Services.AddScoped<IMesocycleService, MesocycleService>();
+// Service registrations
+builder.Services.AddScoped<IMesocycleService, MesocycleService>();
 // builder.Services.AddScoped<IWeekService, WeekService>();
 // builder.Services.AddScoped<IDayService, DayService>();
 // builder.Services.AddScoped<IExerciseService, ExerciseService>();
