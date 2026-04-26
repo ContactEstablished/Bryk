@@ -1,108 +1,58 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+using Bryk.Application.DTOs.Mesocycle;
+using Bryk.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Bryk.Domain.Entities;
-using Bryk.Infrastructure.Data;
 
-namespace Bryk.API.Controllers
+namespace Bryk.API.Controllers;
+
+[ApiController]
+[Route("api/v1/[controller]")]
+public class MesocycleController(IMesocycleService mesocycleService) : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class MesocycleController : ControllerBase
+    /// <summary>Returns all mesocycles.</summary>
+    [HttpGet]
+    public async Task<IActionResult> GetAllAsync(CancellationToken cancellationToken)
     {
-        private readonly ApplicationDbContext _context;
+        List<MesocycleDto> result = await mesocycleService.GetAllAsync(cancellationToken);
+        return Ok(result);
+    }
 
-        public MesocycleController(ApplicationDbContext context)
-        {
-            _context = context;
-        }
+    /// <summary>Returns a single mesocycle by ID.</summary>
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
+    {
+        MesocycleDto result = await mesocycleService.GetByIdAsync(id, cancellationToken);
+        return Ok(result);
+    }
 
-        // GET: api/Mesocycle
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Mesocycle>>> GetMesocycles()
-        {
-            return await _context.Mesocycles.ToListAsync();
-        }
+    /// <summary>Returns a mesocycle with its full week breakdown.</summary>
+    [HttpGet("{id}/with-weeks")]
+    public async Task<IActionResult> GetWithWeeksAsync(Guid id, CancellationToken cancellationToken)
+    {
+        MesocycleWithWeeksDto result = await mesocycleService.GetWithWeeksAsync(id, cancellationToken);
+        return Ok(result);
+    }
 
-        // GET: api/Mesocycle/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Mesocycle>> GetMesocycle(Guid id)
-        {
-            var mesocycle = await _context.Mesocycles.FindAsync(id);
+    /// <summary>Creates a new mesocycle.</summary>
+    [HttpPost]
+    public async Task<IActionResult> CreateAsync([FromBody] CreateMesocycleDto dto, CancellationToken cancellationToken)
+    {
+        MesocycleDto result = await mesocycleService.CreateAsync(dto, cancellationToken);
+        return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+    }
 
-            if (mesocycle == null)
-            {
-                return NotFound();
-            }
+    /// <summary>Updates an existing mesocycle.</summary>
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateAsync(Guid id, [FromBody] UpdateMesocycleDto dto, CancellationToken cancellationToken)
+    {
+        MesocycleDto result = await mesocycleService.UpdateAsync(id, dto, cancellationToken);
+        return Ok(result);
+    }
 
-            return mesocycle;
-        }
-
-        // PUT: api/Mesocycle/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutMesocycle(Guid id, Mesocycle mesocycle)
-        {
-            if (id != mesocycle.Id)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(mesocycle).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!MesocycleExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
-        }
-
-        // POST: api/Mesocycle
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
-        public async Task<ActionResult<Mesocycle>> PostMesocycle(Mesocycle mesocycle)
-        {
-            _context.Mesocycles.Add(mesocycle);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetMesocycle", new { id = mesocycle.Id }, mesocycle);
-        }
-
-        // DELETE: api/Mesocycle/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteMesocycle(Guid id)
-        {
-            var mesocycle = await _context.Mesocycles.FindAsync(id);
-            if (mesocycle == null)
-            {
-                return NotFound();
-            }
-
-            _context.Mesocycles.Remove(mesocycle);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        private bool MesocycleExists(Guid id)
-        {
-            return _context.Mesocycles.Any(e => e.Id == id);
-        }
+    /// <summary>Deletes a mesocycle by ID.</summary>
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteAsync(Guid id, CancellationToken cancellationToken)
+    {
+        await mesocycleService.DeleteAsync(id, cancellationToken);
+        return NoContent();
     }
 }

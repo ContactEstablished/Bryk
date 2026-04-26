@@ -1,11 +1,22 @@
+using Bryk.Application.Interfaces;
+using Bryk.Application.Validators;
 using Bryk.Infrastructure.Data;
+using Bryk.Infrastructure.Services;
+using FluentValidation;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Scalar.AspNetCore; 
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
 builder.Services.AddControllers();
+
+// Replace built-in model validation with FluentValidation
+builder.Services.Configure<ApiBehaviorOptions>(options =>
+    options.SuppressModelStateInvalidFilter = true);
+
+builder.Services.AddValidatorsFromAssemblyContaining<ValidatorPlaceholder>();
 builder.Services.AddEndpointsApiExplorer();
 
 // Configure Swagger/OpenAPI (Swashbuckle generates the spec)
@@ -29,7 +40,7 @@ if (string.IsNullOrEmpty(connectionString))
 // Database configuration
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
+        connectionString,
         sqlOptions => sqlOptions.EnableRetryOnFailure(
             maxRetryCount: 5,
             maxRetryDelay: TimeSpan.FromSeconds(30),
@@ -48,11 +59,11 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Service registrations (uncomment when implementing services)
-// builder.Services.AddScoped<IMesocycleService, MesocycleService>();
-// builder.Services.AddScoped<IWeekService, WeekService>();
-// builder.Services.AddScoped<IDayService, DayService>();
-// builder.Services.AddScoped<IExerciseService, ExerciseService>();
+// Service registrations
+builder.Services.AddScoped<IMesocycleService, MesocycleService>();
+builder.Services.AddScoped<IWeekService, WeekService>();
+builder.Services.AddScoped<IDayService, DayService>();
+builder.Services.AddScoped<IExerciseService, ExerciseService>();
 
 var app = builder.Build();
 
