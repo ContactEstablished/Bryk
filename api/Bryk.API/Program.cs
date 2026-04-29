@@ -1,6 +1,7 @@
 using Bryk.Application.Interfaces;
 using Bryk.Application.Validators;
 using Bryk.Infrastructure.Data;
+using Bryk.Infrastructure.Interceptors;
 using Bryk.Infrastructure.Services;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
@@ -38,14 +39,17 @@ if (string.IsNullOrEmpty(connectionString))
 }
 
 // Database configuration
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
+builder.Services.AddSingleton<AuditableEntityInterceptor>();
+builder.Services.AddDbContext<ApplicationDbContext>((sp, options) =>
+{
     options.UseSqlServer(
         connectionString,
         sqlOptions => sqlOptions.EnableRetryOnFailure(
             maxRetryCount: 5,
             maxRetryDelay: TimeSpan.FromSeconds(30),
-            errorNumbersToAdd: null)
-    ));
+            errorNumbersToAdd: null));
+    options.AddInterceptors(sp.GetRequiredService<AuditableEntityInterceptor>());
+});
 
 // CORS configuration
 builder.Services.AddCors(options =>
