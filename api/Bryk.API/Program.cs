@@ -1,7 +1,9 @@
 using Bryk.Application.Interfaces;
 using Bryk.Application.Validators;
+using Bryk.Domain.Interfaces;
 using Bryk.Infrastructure.Data;
 using Bryk.Infrastructure.Interceptors;
+using Bryk.Infrastructure.Repositories;
 using Bryk.Infrastructure.Services;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
@@ -68,6 +70,12 @@ builder.Services.AddScoped<IMesocycleService, MesocycleService>();
 builder.Services.AddScoped<IWeekService, WeekService>();
 builder.Services.AddScoped<IDayService, DayService>();
 builder.Services.AddScoped<IExerciseService, ExerciseService>();
+
+// Repositories
+builder.Services.AddScoped<IAthleteRepository, AthleteRepository>();
+builder.Services.AddScoped<IEventRepository, EventRepository>();
+builder.Services.AddScoped<IGoalRepository, GoalRepository>();
+builder.Services.AddScoped<IEquipmentRepository, EquipmentRepository>();
 
 var app = builder.Build();
 
