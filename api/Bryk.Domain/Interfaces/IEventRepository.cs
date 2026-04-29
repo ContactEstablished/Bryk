@@ -40,9 +40,4 @@ public interface IEventRepository
     /// Stages an existing <see cref="Event"/> for deletion. Does NOT call SaveChanges.
     /// </summary>
     void Delete(Event entity);
-
-    /// <summary>
-    /// Persists all staged changes to the database.
-    /// </summary>
-    Task<int> SaveChangesAsync(CancellationToken ct = default);
 }

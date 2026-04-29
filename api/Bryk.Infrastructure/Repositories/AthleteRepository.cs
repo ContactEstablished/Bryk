@@ -54,9 +54,4 @@ public class AthleteRepository(ApplicationDbContext db) : IAthleteRepository
     {
         db.Athletes.Remove(athlete);
     }
-
-    public async Task<int> SaveChangesAsync(CancellationToken ct = default)
-    {
-        return await db.SaveChangesAsync(ct);
-    }
 }

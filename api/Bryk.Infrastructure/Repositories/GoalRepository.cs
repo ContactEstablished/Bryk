@@ -45,9 +45,4 @@ public class GoalRepository(ApplicationDbContext db) : IGoalRepository
     {
         db.Goals.Remove(entity);
     }
-
-    public async Task<int> SaveChangesAsync(CancellationToken ct = default)
-    {
-        return await db.SaveChangesAsync(ct);
-    }
 }

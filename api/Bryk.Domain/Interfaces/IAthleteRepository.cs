@@ -49,9 +49,4 @@ public interface IAthleteRepository
     /// Stages an existing <see cref="Athlete"/> for deletion. Does NOT call SaveChanges.
     /// </summary>
     void Delete(Athlete athlete);
-
-    /// <summary>
-    /// Persists all staged changes to the database.
-    /// </summary>
-    Task<int> SaveChangesAsync(CancellationToken ct = default);
 }

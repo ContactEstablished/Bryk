@@ -44,9 +44,4 @@ public class EquipmentRepository(ApplicationDbContext db) : IEquipmentRepository
     {
         db.Equipment.Remove(entity);
     }
-
-    public async Task<int> SaveChangesAsync(CancellationToken ct = default)
-    {
-        return await db.SaveChangesAsync(ct);
-    }
 }

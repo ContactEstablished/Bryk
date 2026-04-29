@@ -40,9 +40,4 @@ public interface IEquipmentRepository
     /// Stages an existing <see cref="Equipment"/> for deletion. Does NOT call SaveChanges.
     /// </summary>
     void Delete(Equipment entity);
-
-    /// <summary>
-    /// Persists all staged changes to the database.
-    /// </summary>
-    Task<int> SaveChangesAsync(CancellationToken ct = default);
 }

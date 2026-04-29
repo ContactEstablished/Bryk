@@ -40,9 +40,4 @@ public interface IGoalRepository
     /// Stages an existing <see cref="Goal"/> for deletion. Does NOT call SaveChanges.
     /// </summary>
     void Delete(Goal entity);
-
-    /// <summary>
-    /// Persists all staged changes to the database.
-    /// </summary>
-    Task<int> SaveChangesAsync(CancellationToken ct = default);
 }
