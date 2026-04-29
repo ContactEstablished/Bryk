@@ -1,6 +1,8 @@
+using Bryk.Domain.Interfaces;
+
 namespace Bryk.Domain.Entities;
 
-public class Mesocycle
+public class Mesocycle : IAuditable
 {
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
@@ -17,5 +19,5 @@ public class Mesocycle
     
     // Audit
     public DateTime CreatedAt { get; set; }
-    public DateTime? UpdatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
 }

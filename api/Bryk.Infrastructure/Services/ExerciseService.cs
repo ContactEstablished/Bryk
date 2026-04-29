@@ -152,9 +152,7 @@ public class ExerciseService(
             TssValue = entity.TssValue,
             DurationMinutes = entity.DurationMinutes,
             IntensityZone = entity.IntensityZone,
-            Description = entity.Description,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = null
+            Description = entity.Description
         };
 
         context.Exercises.Add(duplicate);

@@ -1,6 +1,8 @@
+using Bryk.Domain.Interfaces;
+
 namespace Bryk.Domain.Entities;
 
-public class Exercise
+public class Exercise : IAuditable
 {
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
@@ -15,7 +17,7 @@ public class Exercise
     
     // Audit
     public DateTime CreatedAt { get; set; }
-    public DateTime? UpdatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
 }
 
 public enum SportType

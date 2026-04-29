@@ -1,6 +1,8 @@
+using Bryk.Domain.Interfaces;
+
 namespace Bryk.Domain.Entities;
 
-public class Week
+public class Week : IAuditable
 {
     public Guid Id { get; set; }
     public Guid MesocycleId { get; set; }
@@ -17,5 +19,5 @@ public class Week
     
     // Audit
     public DateTime CreatedAt { get; set; }
-    public DateTime? UpdatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
 }
