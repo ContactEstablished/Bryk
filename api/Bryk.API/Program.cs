@@ -1,11 +1,14 @@
 using Bryk.Application.Common;
 using Bryk.Application.Interfaces;
+using Bryk.Application.Onboarding;
 using Bryk.Application.Validators;
 using Bryk.Domain.Interfaces;
 using Bryk.Infrastructure.Data;
 using Bryk.Infrastructure.Interceptors;
 using Bryk.Infrastructure.Repositories;
 using Bryk.Infrastructure.Services;
+using Asp.Versioning;
+using Asp.Versioning.ApiExplorer;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -23,6 +26,24 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
 builder.Services.AddValidatorsFromAssemblyContaining<ValidatorPlaceholder>();
 builder.Services.AddEndpointsApiExplorer();
 
+// API versioning — URL-segment primary, header secondary, strict mode
+builder.Services.AddApiVersioning(options =>
+{
+    options.DefaultApiVersion = new ApiVersion(1, 0);
+    options.AssumeDefaultVersionWhenUnspecified = false;
+    options.ReportApiVersions = true;
+    options.ApiVersionReader = ApiVersionReader.Combine(
+        new UrlSegmentApiVersionReader(),
+        new HeaderApiVersionReader("api-version"));
+})
+.AddApiExplorer(options =>
+{
+    options.GroupNameFormat = "'v'VVV";
+    options.SubstituteApiVersionInUrl = true;
+});
+
+// TODO: When a v2 API ships, iterate over IApiVersionDescriptionProvider.ApiVersionDescriptions
+// to register a SwaggerDoc per discovered version instead of hardcoding "v1".
 // Configure Swagger/OpenAPI (Swashbuckle generates the spec)
 builder.Services.AddSwaggerGen(options =>
 {
@@ -79,6 +100,7 @@ builder.Services.AddScoped<IGoalRepository, GoalRepository>();
 builder.Services.AddScoped<IEquipmentRepository, EquipmentRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+builder.Services.AddScoped<IOnboardingService, OnboardingService>();
 
 var app = builder.Build();
 

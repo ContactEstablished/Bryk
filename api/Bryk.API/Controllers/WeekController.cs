@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Bryk.Application.DTOs.Week;
 using Bryk.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -5,7 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace Bryk.API.Controllers;
 
 [ApiController]
-[Route("api/v1/[controller]")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/[controller]")]
 public class WeekController(IWeekService weekService) : ControllerBase
 {
     /// <summary>Returns a single week by ID.</summary>

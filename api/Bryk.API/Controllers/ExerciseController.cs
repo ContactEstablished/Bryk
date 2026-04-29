@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Bryk.Application.DTOs.Exercise;
 using Bryk.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -5,7 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace Bryk.API.Controllers;
 
 [ApiController]
-[Route("api/v1/[controller]")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/[controller]")]
 public class ExerciseController(IExerciseService exerciseService) : ControllerBase
 {
     /// <summary>Returns all exercises with optional filtering and sorting.</summary>
