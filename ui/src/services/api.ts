@@ -1,5 +1,5 @@
 const BASE_URL: string =
-  import.meta.env.VITE_API_BASE_URL ?? 'https://localhost:60129/api/v1'
+  import.meta.env.VITE_API_BASE_URL ?? '/api/v1'
 
 export class ApiError extends Error {
   readonly status: number

@@ -1,19 +1,11 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { ArrowLeft, Check } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
-import {
-  Stepper,
-  StepperIndicator,
-  StepperItem,
-  StepperSeparator,
-  StepperTitle,
-  StepperTrigger,
-} from '@/components/ui/stepper'
 import { useOnboardingStore, type OnboardingStep } from '@/stores/onboarding'
 import RequiredStep from '@/components/onboarding/RequiredStep.vue'
 import RecommendedStep from '@/components/onboarding/RecommendedStep.vue'
 import GoalsStep from '@/components/onboarding/GoalsStep.vue'
-import { ArrowLeft } from 'lucide-vue-next'
 
 const store = useOnboardingStore()
 const currentStep = ref<OnboardingStep>('required')
@@ -25,29 +17,52 @@ onMounted(async () => {
   }
 })
 
-const stepToNumber: Record<string, number> = {
-  required: 1,
-  recommended: 2,
-  goals: 3,
-  done: 0,
+type StepDefinition = { id: Exclude<OnboardingStep, 'done'>; label: string }
+
+const stepDefinitions: StepDefinition[] = [
+  { id: 'required', label: 'Required' },
+  { id: 'recommended', label: 'Recommended' },
+  { id: 'goals', label: 'Goals' },
+]
+
+const stepOrder = computed(
+  () => stepDefinitions.map((s) => s.id) as Array<OnboardingStep>,
+)
+
+function isCompleted(stepId: OnboardingStep) {
+  if (stepId === 'required') return store.requiredComplete
+  if (stepId === 'recommended') return store.recommendedComplete
+  if (stepId === 'goals') return store.goalsComplete
+  return false
 }
 
-const activeStep = computed(() => stepToNumber[currentStep.value])
+function isActive(stepId: OnboardingStep) {
+  return currentStep.value === stepId
+}
+
+function circleClass(stepId: OnboardingStep) {
+  if (isCompleted(stepId)) return 'bg-primary text-primary-foreground'
+  if (isActive(stepId)) return 'bg-primary text-primary-foreground ring-2 ring-ring ring-offset-2 ring-offset-background'
+  return 'bg-muted text-muted-foreground'
+}
+
+function labelClass(stepId: OnboardingStep) {
+  if (isActive(stepId)) return 'text-foreground font-medium'
+  if (isCompleted(stepId)) return 'text-foreground'
+  return 'text-muted-foreground'
+}
 
 function goBack() {
-  if (currentStep.value === 'goals') {
-    currentStep.value = 'recommended'
-  } else if (currentStep.value === 'recommended') {
-    currentStep.value = 'required'
-  }
+  const i = stepOrder.value.indexOf(currentStep.value)
+  if (i > 0) currentStep.value = stepOrder.value[i - 1]
 }
 
 function handleStepNext() {
-  if (currentStep.value === 'required') {
-    currentStep.value = 'recommended'
-  } else if (currentStep.value === 'recommended') {
-    currentStep.value = 'goals'
-  } else if (currentStep.value === 'goals') {
+  const i = stepOrder.value.indexOf(currentStep.value)
+  if (i === -1) return
+  if (i < stepOrder.value.length - 1) {
+    currentStep.value = stepOrder.value[i + 1]
+  } else {
     currentStep.value = 'done'
   }
 }
@@ -92,43 +107,28 @@ function handleStepNext() {
       v-else-if="store.status"
       class="mt-12 w-full max-w-3xl"
     >
-      <!-- Stepper -->
+      <!-- Stepper (hand-rolled) -->
       <div class="rounded-lg border bg-card p-6">
-        <Stepper :model-value="activeStep">
-          <StepperItem
-            :step="1"
-            :completed="store.requiredComplete"
-          >
-            <StepperTrigger as="div">
-              <StepperIndicator>1</StepperIndicator>
-              <StepperTitle>Required</StepperTitle>
-            </StepperTrigger>
-          </StepperItem>
-
-          <StepperSeparator />
-
-          <StepperItem
-            :step="2"
-            :completed="store.recommendedComplete"
-          >
-            <StepperTrigger as="div">
-              <StepperIndicator>2</StepperIndicator>
-              <StepperTitle>Recommended</StepperTitle>
-            </StepperTrigger>
-          </StepperItem>
-
-          <StepperSeparator />
-
-          <StepperItem
-            :step="3"
-            :completed="store.goalsComplete"
-          >
-            <StepperTrigger as="div">
-              <StepperIndicator>3</StepperIndicator>
-              <StepperTitle>Goals</StepperTitle>
-            </StepperTrigger>
-          </StepperItem>
-        </Stepper>
+        <ol class="flex items-center">
+          <template v-for="(step, idx) in stepDefinitions" :key="step.id">
+            <li class="flex items-center gap-3">
+              <div
+                :class="[
+                  'flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold transition-colors',
+                  circleClass(step.id),
+                ]"
+              >
+                <Check v-if="isCompleted(step.id)" :size="16" />
+                <span v-else>{{ idx + 1 }}</span>
+              </div>
+              <span :class="['text-sm', labelClass(step.id)]">{{ step.label }}</span>
+            </li>
+            <div
+              v-if="idx < stepDefinitions.length - 1"
+              class="mx-4 h-px flex-1 bg-border"
+            />
+          </template>
+        </ol>
       </div>
 
       <!-- Step body -->
