@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet build *)",
+      "Bash(sqlcmd -S IRONMAN -d Bryk -E -Q \"SELECT TOP 1 1 AS ok\" -h -1)",
+      "Bash(pnpm build *)",
+      "Bash(pnpm --dir C:/Projects/Bryk/Site/Bryk/ui build)",
+      "Bash(pnpm *)",
+      "Bash(curl *)"
+    ]
+  }
+}
