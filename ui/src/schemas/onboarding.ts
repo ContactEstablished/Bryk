@@ -33,3 +33,43 @@ export const onboardingRequiredSchema = z.object({
 })
 
 export type OnboardingRequiredFormValues = z.infer<typeof onboardingRequiredSchema>
+
+// ── Recommended step ─────────────────────────────────
+
+function optionalNumber<T extends z.ZodType<number>>(check: T) {
+  return z.preprocess(
+    (v) => (v === '' || v == null ? null : v),
+    check.nullable(),
+  )
+}
+
+const sportThresholdsItemSchema = z
+  .object({
+    sport: z.enum(['Bike', 'Run', 'Swim']),
+    isActive: z.boolean(),
+    thresholdValue: optionalNumber(z.coerce.number().gt(0, 'Must be greater than 0')),
+    lt1: optionalNumber(z.coerce.number().gt(0, 'Must be greater than 0')),
+    lt2: optionalNumber(z.coerce.number().gt(0, 'Must be greater than 0')),
+    customZonesJson: z.string().nullable().optional(),
+  })
+  .refine(
+    (d) => d.lt1 == null || d.lt2 == null || d.lt2 > d.lt1,
+    { message: 'LT2 must be greater than LT1', path: ['lt2'] },
+  )
+
+export const onboardingRecommendedSchema = z
+  .object({
+    restingHr: optionalNumber(
+      z.coerce.number().int('Whole number').gte(1, 'Must be at least 1').lte(149, 'Cannot exceed 149'),
+    ),
+    maxHr: optionalNumber(
+      z.coerce.number().int('Whole number').gte(1, 'Must be at least 1').lte(249, 'Cannot exceed 249'),
+    ),
+    sportThresholds: z.array(sportThresholdsItemSchema),
+  })
+  .refine(
+    (d) => d.restingHr == null || d.maxHr == null || d.maxHr > d.restingHr,
+    { message: 'Max HR must be greater than Resting HR', path: ['maxHr'] },
+  )
+
+export type OnboardingRecommendedFormValues = z.infer<typeof onboardingRecommendedSchema>
