@@ -28,7 +28,7 @@ builder.Services.AddControllers()
 builder.Services.Configure<ApiBehaviorOptions>(options =>
     options.SuppressModelStateInvalidFilter = true);
 
-builder.Services.AddValidatorsFromAssemblyContaining<ValidatorPlaceholder>();
+builder.Services.AddValidatorsFromAssemblyContaining<ApplicationAssemblyMarker>();
 builder.Services.AddEndpointsApiExplorer();
 
 // API versioning — URL-segment primary, header secondary, strict mode
