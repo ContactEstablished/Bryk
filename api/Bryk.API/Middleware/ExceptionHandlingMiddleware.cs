@@ -19,6 +19,13 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
         }
         catch (Exception ex)
         {
+            if (ex is OperationCanceledException && context.RequestAborted.IsCancellationRequested)
+            {
+                // Client disconnected — don't log as an error, don't try to write a response.
+                context.Response.StatusCode = 499;
+                return;
+            }
+
             logger.LogError(ex, "Unhandled exception occurred.");
 
             context.Response.ContentType = "application/json";
