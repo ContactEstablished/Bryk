@@ -127,6 +127,7 @@ public class OnboardingService(
                 EventDate = dto.EventDate,
                 Sport = dto.Sport,
                 TriathlonDistance = dto.TriathlonDistance,
+                CustomDistanceName = dto.CustomDistanceName,
                 Priority = dto.Priority,
                 Notes = dto.Notes
             }, ct);
