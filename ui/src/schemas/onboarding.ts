@@ -73,3 +73,27 @@ export const onboardingRecommendedSchema = z
   )
 
 export type OnboardingRecommendedFormValues = z.infer<typeof onboardingRecommendedSchema>
+
+// ── Goals step ───────────────────────────────────────
+
+const eventItemSchema = z.object({
+  name: z.string().min(1, 'Event name is required'),
+  eventDate: z.string().min(1, 'Date is required'),
+  sport: z.enum(['Swim', 'Bike', 'Run', 'Triathlon']).nullable(),
+  triathlonDistance: z.enum(['Sprint', 'Olympic', 'HalfIronman', 'Ironman', 'Custom']).nullable(),
+  customDistanceName: z.string().nullable(),
+  priority: z.enum(['A', 'B', 'C'], { message: 'Priority is required' }),
+  notes: z.string().nullable(),
+})
+
+const goalItemSchema = z.object({
+  description: z.string().min(1, 'Description is required'),
+  targetDate: z.string().nullable(),
+})
+
+export const onboardingGoalsSchema = z.object({
+  events: z.array(eventItemSchema),
+  goals: z.array(goalItemSchema),
+})
+
+export type OnboardingGoalsFormValues = z.infer<typeof onboardingGoalsSchema>

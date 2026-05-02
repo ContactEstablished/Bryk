@@ -8,7 +8,7 @@ export type MethodologyChoice =
   | 'Polarized'
   | 'Norwegian'
 
-export type Sport = 'Swim' | 'Bike' | 'Run'
+export type Sport = 'Swim' | 'Bike' | 'Run' | 'Triathlon'
 
 export type TriathlonDistance =
   | 'Sprint'
@@ -54,6 +54,7 @@ export interface EventDto {
   eventDate: string // ISO 8601 DateOnly
   sport: Sport | null
   triathlonDistance: TriathlonDistance | null
+  customDistanceName: string | null
   priority: EventPriority
   notes: string | null
 }
