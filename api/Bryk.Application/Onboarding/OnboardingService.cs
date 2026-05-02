@@ -79,10 +79,10 @@ public class OnboardingService(
 
         foreach (var dto in request.SportThresholds)
         {
-            var existing = athlete.SportProfiles.FirstOrDefault(p => p.Sport == dto.Sport);
+            var existing = await athleteRepo.GetSportProfileAsync(athleteId, dto.Sport, ct);
             if (existing is null)
             {
-                athlete.SportProfiles.Add(new AthleteSportProfile
+                athleteRepo.AddSportProfile(new AthleteSportProfile
                 {
                     Id = Guid.NewGuid(),
                     AthleteId = athleteId,
@@ -101,6 +101,7 @@ public class OnboardingService(
                 existing.Lt1 = dto.Lt1;
                 existing.Lt2 = dto.Lt2;
                 existing.CustomZonesJson = dto.CustomZonesJson;
+                athleteRepo.UpdateSportProfile(existing);
             }
         }
 

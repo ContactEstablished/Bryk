@@ -54,4 +54,20 @@ public class AthleteRepository(ApplicationDbContext db) : IAthleteRepository
     {
         db.Athletes.Remove(athlete);
     }
+
+    public async Task<AthleteSportProfile?> GetSportProfileAsync(Guid athleteId, Sport sport, CancellationToken ct = default)
+    {
+        return await db.AthleteSportProfiles
+            .FirstOrDefaultAsync(p => p.AthleteId == athleteId && p.Sport == sport, ct);
+    }
+
+    public void AddSportProfile(AthleteSportProfile profile)
+    {
+        db.AthleteSportProfiles.Add(profile);
+    }
+
+    public void UpdateSportProfile(AthleteSportProfile profile)
+    {
+        db.AthleteSportProfiles.Update(profile);
+    }
 }

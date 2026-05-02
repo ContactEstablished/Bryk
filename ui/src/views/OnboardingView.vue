@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { ArrowLeft, Check } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { useOnboardingStore, type OnboardingStep } from '@/stores/onboarding'
@@ -8,6 +9,7 @@ import RecommendedStep from '@/components/onboarding/RecommendedStep.vue'
 import GoalsStep from '@/components/onboarding/GoalsStep.vue'
 
 const store = useOnboardingStore()
+const router = useRouter()
 const currentStep = ref<OnboardingStep>('required')
 
 onMounted(async () => {
@@ -66,6 +68,10 @@ function handleStepNext() {
     currentStep.value = 'done'
   }
 }
+
+function goHome() {
+  void router.push('/')
+}
 </script>
 
 <template>
@@ -99,7 +105,13 @@ function handleStepNext() {
       v-else-if="store.status && currentStep === 'done'"
       class="mt-16 flex flex-col items-center gap-4"
     >
-      <p class="text-xl font-semibold">You're all set!</p>
+      <h2 class="text-3xl font-semibold text-white">You're all set!</h2>
+      <p class="text-center text-muted-foreground">
+        Your profile is ready — you can update any of this later.
+      </p>
+      <Button @click="goHome">
+        Go to home
+      </Button>
     </div>
 
     <!-- Wizard -->

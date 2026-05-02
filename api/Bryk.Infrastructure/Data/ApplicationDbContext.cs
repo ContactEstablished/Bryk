@@ -102,6 +102,10 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<Athlete>(entity =>
         {
             entity.HasKey(e => e.Id);
+            // Id is supplied by the application (today via ICurrentUserService, eventually
+            // from the auth system). Disable EF's default Guid value generation so that
+            // Guid.Empty and other caller-supplied values are persisted as-is.
+            entity.Property(e => e.Id).ValueGeneratedNever();
             entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
             entity.Property(e => e.HeightCm).HasPrecision(5, 2);
             entity.Property(e => e.WeightKg).HasPrecision(5, 2);

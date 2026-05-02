@@ -49,4 +49,21 @@ public interface IAthleteRepository
     /// Stages an existing <see cref="Athlete"/> for deletion. Does NOT call SaveChanges.
     /// </summary>
     void Delete(Athlete athlete);
+
+    /// <summary>
+    /// Looks up a single <see cref="AthleteSportProfile"/> by athlete and sport.
+    /// Uses change tracking so the caller can mutate the returned entity and stage an update.
+    /// Returns null if no profile exists for this athlete + sport combination.
+    /// </summary>
+    Task<AthleteSportProfile?> GetSportProfileAsync(Guid athleteId, Sport sport, CancellationToken ct = default);
+
+    /// <summary>
+    /// Stages a new <see cref="AthleteSportProfile"/> for insertion. Does NOT call SaveChanges.
+    /// </summary>
+    void AddSportProfile(AthleteSportProfile profile);
+
+    /// <summary>
+    /// Stages an existing <see cref="AthleteSportProfile"/> for update. Does NOT call SaveChanges.
+    /// </summary>
+    void UpdateSportProfile(AthleteSportProfile profile);
 }
