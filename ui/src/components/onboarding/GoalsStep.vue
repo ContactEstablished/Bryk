@@ -95,7 +95,6 @@ watch(
 )
 
 const sportOptions = [
-  { value: '', label: 'None' },
   { value: 'Swim', label: 'Swim' },
   { value: 'Bike', label: 'Bike' },
   { value: 'Run', label: 'Run' },
@@ -194,7 +193,7 @@ const isSubmitting = form.isSubmitting
                 <Select v-bind="componentField">
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue />
+                      <SelectValue placeholder="Select sport (optional)" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
