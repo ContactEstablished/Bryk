@@ -120,6 +120,9 @@ const onSubmit = form.handleSubmit(async (values) => {
       priority: e.priority,
       notes: e.notes ?? null,
     })),
+    // Phase 5 surface: every goal is submitted as GoalType.General. Event-driven
+    // goals would require linking a goal to a specific event, which is out of scope
+    // for the onboarding wizard. Revisit when goal management UI lands post-Phase 5.
     goals: values.goals.map((g) => ({
       type: 'General' as const,
       description: g.description,

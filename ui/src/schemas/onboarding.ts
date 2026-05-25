@@ -76,19 +76,47 @@ export type OnboardingRecommendedFormValues = z.infer<typeof onboardingRecommend
 
 // ── Goals step ───────────────────────────────────────
 
+// Server compares dates against `DateOnly.FromDateTime(DateTime.UtcNow)`,
+// so we mirror that by comparing the YYYY-MM-DD input string against today in UTC.
+function utcTodayIso(): string {
+  const now = new Date()
+  const yyyy = now.getUTCFullYear()
+  const mm = String(now.getUTCMonth() + 1).padStart(2, '0')
+  const dd = String(now.getUTCDate()).padStart(2, '0')
+  return `${yyyy}-${mm}-${dd}`
+}
+
 const eventItemSchema = z.object({
-  name: z.string().min(1, 'Event name is required'),
-  eventDate: z.string().min(1, 'Date is required'),
+  name: z
+    .string()
+    .min(1, 'Event name is required')
+    .max(200, 'Event name must be 200 characters or fewer'),
+  eventDate: z
+    .string()
+    .min(1, 'Date is required')
+    .refine((s) => s >= utcTodayIso(), 'Event date must be today or later'),
   sport: z.enum(['Swim', 'Bike', 'Run', 'Triathlon']).nullable(),
   triathlonDistance: z.enum(['Sprint', 'Olympic', 'HalfIronman', 'Ironman', 'Custom']).nullable(),
   customDistanceName: z.string().nullable(),
   priority: z.enum(['A', 'B', 'C'], { message: 'Priority is required' }),
-  notes: z.string().nullable(),
+  notes: z
+    .string()
+    .max(2000, 'Notes must be 2000 characters or fewer')
+    .nullable(),
 })
 
 const goalItemSchema = z.object({
-  description: z.string().min(1, 'Description is required'),
-  targetDate: z.string().nullable(),
+  description: z
+    .string()
+    .min(1, 'Description is required')
+    .max(2000, 'Description must be 2000 characters or fewer'),
+  targetDate: z
+    .string()
+    .nullable()
+    .refine(
+      (s) => s == null || s === '' || s >= utcTodayIso(),
+      'Target date must be today or later',
+    ),
 })
 
 export const onboardingGoalsSchema = z.object({
