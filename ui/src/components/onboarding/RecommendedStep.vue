@@ -8,6 +8,7 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/comp
 import { Input } from '@/components/ui/input'
 import { useOnboardingStore } from '@/stores/onboarding'
 import { ApiError } from '@/services/api'
+import { mapApiValidationToFields } from '@/services/apiErrors'
 import {
   onboardingRecommendedSchema,
   type OnboardingRecommendedFormValues,
@@ -40,6 +41,9 @@ const globalError = ref<string | null>(null)
 
 const onSubmit = form.handleSubmit(async (values) => {
   globalError.value = null
+  const activeSportIndices = values.sportThresholds
+    .map((s, i) => (s.isActive ? i : -1))
+    .filter((i) => i >= 0)
   const payload: OnboardingRecommendedRequest = {
     restingHr: values.restingHr ?? null,
     maxHr: values.maxHr ?? null,
@@ -51,7 +55,20 @@ const onSubmit = form.handleSubmit(async (values) => {
     await store.submitRecommended(payload)
     emit('next')
   } catch (e) {
-    if (e instanceof ApiError) {
+    const validation = mapApiValidationToFields(e, 'recommended', {
+      activeSportCount: activeSportIndices.length,
+      activeSportIndices,
+    })
+    if (validation) {
+      for (const { path, message } of validation.fieldErrors) {
+        form.setFieldError(path as Parameters<typeof form.setFieldError>[0], message)
+      }
+      globalError.value = validation.globalMessages.length > 0
+        ? validation.globalMessages.join(' ')
+        : validation.fieldErrors.length === 0
+          ? "Couldn't save — please review the highlighted fields."
+          : null
+    } else if (e instanceof ApiError) {
       globalError.value = `Couldn't save: ${e.statusText} (${e.status})`
     } else if (e instanceof Error) {
       globalError.value = `Couldn't save: ${e.message}`

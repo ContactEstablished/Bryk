@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { ArrowLeft, Check } from 'lucide-vue-next'
+import { ArrowLeft, Check, Lock } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { useOnboardingStore, type OnboardingStep } from '@/stores/onboarding'
 import RequiredStep from '@/components/onboarding/RequiredStep.vue'
@@ -42,6 +42,19 @@ function isActive(stepId: OnboardingStep) {
   return currentStep.value === stepId
 }
 
+function canJumpTo(stepId: OnboardingStep) {
+  return isCompleted(stepId) || stepId === store.nextIncompleteStep
+}
+
+function isLocked(stepId: OnboardingStep) {
+  return !canJumpTo(stepId)
+}
+
+function jumpTo(stepId: OnboardingStep) {
+  if (!canJumpTo(stepId)) return
+  currentStep.value = stepId
+}
+
 function circleClass(stepId: OnboardingStep) {
   if (isCompleted(stepId)) return 'bg-primary text-primary-foreground'
   if (isActive(stepId)) return 'bg-primary text-primary-foreground ring-2 ring-ring ring-offset-2 ring-offset-background'
@@ -60,13 +73,7 @@ function goBack() {
 }
 
 function handleStepNext() {
-  const i = stepOrder.value.indexOf(currentStep.value)
-  if (i === -1) return
-  if (i < stepOrder.value.length - 1) {
-    currentStep.value = stepOrder.value[i + 1]
-  } else {
-    currentStep.value = 'done'
-  }
+  currentStep.value = store.nextIncompleteStep
 }
 
 function goHome() {
@@ -123,17 +130,32 @@ function goHome() {
       <div class="rounded-lg border bg-card p-6">
         <ol class="flex items-center">
           <template v-for="(step, idx) in stepDefinitions" :key="step.id">
-            <li class="flex items-center gap-3">
-              <div
+            <li>
+              <button
+                type="button"
+                :disabled="isLocked(step.id)"
+                :aria-current="isActive(step.id) ? 'step' : undefined"
+                :aria-label="`${step.label}${isLocked(step.id) ? ' (locked)' : ''}`"
                 :class="[
-                  'flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold transition-colors',
-                  circleClass(step.id),
+                  'flex items-center gap-3 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                  isLocked(step.id)
+                    ? 'cursor-not-allowed opacity-50'
+                    : 'cursor-pointer',
                 ]"
+                @click="jumpTo(step.id)"
               >
-                <Check v-if="isCompleted(step.id)" :size="16" />
-                <span v-else>{{ idx + 1 }}</span>
-              </div>
-              <span :class="['text-sm', labelClass(step.id)]">{{ step.label }}</span>
+                <span
+                  :class="[
+                    'flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold transition-colors',
+                    circleClass(step.id),
+                  ]"
+                >
+                  <Check v-if="isCompleted(step.id)" :size="16" />
+                  <Lock v-else-if="isLocked(step.id)" :size="14" />
+                  <span v-else>{{ idx + 1 }}</span>
+                </span>
+                <span :class="['text-sm', labelClass(step.id)]">{{ step.label }}</span>
+              </button>
             </li>
             <div
               v-if="idx < stepDefinitions.length - 1"

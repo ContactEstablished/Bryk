@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/select'
 import { useOnboardingStore } from '@/stores/onboarding'
 import { ApiError } from '@/services/api'
+import { mapApiValidationToFields } from '@/services/apiErrors'
 import { onboardingRequiredSchema } from '@/schemas/onboarding'
 import type { OnboardingRequiredFormValues } from '@/schemas/onboarding'
 
@@ -115,7 +116,17 @@ const onSubmit = form.handleSubmit(async (values) => {
     await store.submitRequired(values)
     emit('next')
   } catch (e) {
-    if (e instanceof ApiError) {
+    const validation = mapApiValidationToFields(e, 'required')
+    if (validation) {
+      for (const { path, message } of validation.fieldErrors) {
+        form.setFieldError(path as Parameters<typeof form.setFieldError>[0], message)
+      }
+      globalError.value = validation.globalMessages.length > 0
+        ? validation.globalMessages.join(' ')
+        : validation.fieldErrors.length === 0
+          ? "Couldn't save — please review the highlighted fields."
+          : null
+    } else if (e instanceof ApiError) {
       globalError.value = `Couldn't save: ${e.statusText} (${e.status})`
     } else if (e instanceof Error) {
       globalError.value = `Couldn't save: ${e.message}`
