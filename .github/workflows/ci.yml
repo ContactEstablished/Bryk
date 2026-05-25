@@ -1,0 +1,74 @@
+# Build + test gate for backend and frontend.
+# Tests rely on EF Core InMemory (Task 6-1) — no Docker needed.
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: backend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore api/Bryk.sln
+
+      - name: Build
+        run: dotnet build api/Bryk.sln --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test api/Bryk.sln --no-build --configuration Release --logger "trx;LogFileName=test_results.trx"
+
+      - name: Upload TRX results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-trx
+          path: '**/TestResults/*.trx'
+          if-no-files-found: ignore
+
+  frontend:
+    name: frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ui
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          package_json_file: ui/package.json
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: pnpm
+          cache-dependency-path: ui/pnpm-lock.yaml
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      - name: Test
+        run: pnpm test
