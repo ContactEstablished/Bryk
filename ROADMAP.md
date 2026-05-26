@@ -2,6 +2,8 @@
 
 **Status as of 2026-05-25.** Source of truth for phased Bryk development. Read alongside `CLAUDE.md` (workflow, conventions, pending decisions, tech debt) and `docs/product/feature-parity-trainingpeaks.md` (parity wishlist with status tags). Phase plans below win on scope; the parity doc is the candidate inventory.
 
+**Phase 6 PR note.** Branch `phase-6-test-infra-tech-debt` contains Tasks 6-1 through 6-3 plus `Phase 6-Task4-handoff.md`. Task 6-4 implementation is intentionally paused: `MesocycleService` still accesses `ApplicationDbContext` directly and needs a repository-boundary plan before the layer move. Task 6-5 and Task 6-6 remain open.
+
 This roadmap is intentionally verbose. Each phase entry exists to seed Cursor prompts — the success criteria, dependencies, and task groups should compose directly into Pattern A prompts without the architect re-deriving context.
 
 ---
@@ -29,7 +31,7 @@ Non-negotiable per phase. They constrain how prompts get written and how diffs g
 | 3  | Cross-cutting plumbing (UoW, validation, versioning) | ✅ Complete    |
 | 4  | Onboarding API + DTOs                                | ✅ Complete    |
 | 5  | Vue onboarding wizard (Required / Recommended / Goals) | 🟡 In progress |
-| 6  | Test infrastructure + tech-debt sweep + model decisions | ⏳ Next       |
+| 6  | Test infrastructure + tech-debt sweep + model decisions | 🟡 In progress |
 | 7  | TrainingPlan / PlannedWorkout / Workout domain & API | ⏳ Planned     |
 | 8  | Zones, thresholds, structured workout builder        | ⏳ Planned     |
 | 9  | TSS / IF / NP engine + workout execution capture     | ⏳ Planned     |
@@ -195,12 +197,12 @@ Post-v1 expansion (coaches, device sync, marketplace, virtual training, etc.) is
 **Dependencies.** Phase 5 complete (so the wizard isn't blocked by mid-flight infra changes).
 
 **Task groups.**
-1. **.NET test infrastructure.** Test projects, base fixture, one passing integration test against `OnboardingController`, one service-level unit test. Test-DB strategy decision recorded.
-2. **Vue test infrastructure.** Vitest config, store + service + component tests, pnpm script wired.
-3. **CI pipeline.** Definition committed; verified green on a no-op PR; failure logs surfaced.
-4. **Tech-debt sweep.** Layer fix for `MesocycleService`, `ValidatorPlaceholder` rename, validation pattern simplification, nullability warning. Each its own commit per the one-logical-change-per-commit rule.
-5. **Secrets hygiene.** User-secrets migration, README/deployment doc update.
-6. **Decisions ADRs.** Two short ADRs (Mesocycle/TrainingPlan, Coaches). `CLAUDE.md` updated.
+1. **.NET test infrastructure.** ✅ Landed on `phase-6-test-infra-tech-debt` (`66e1679`). Test projects, base fixture, one passing integration test against `OnboardingController`, one service-level unit test. Test-DB strategy decision recorded as EF Core InMemory bootstrap coverage.
+2. **Vue test infrastructure.** ✅ Landed on `phase-6-test-infra-tech-debt` (`9d7aeda`). Vitest config, store + service + component tests, pnpm script wired.
+3. **CI pipeline.** ✅ Landed on `phase-6-test-infra-tech-debt` (`eb38c4d`). Definition committed; first actual green/red GitHub Actions verification still requires the PR/push workflow.
+4. **Tech-debt sweep.** 🟡 Paused. See `Phase 6-Task4-handoff.md`: `ValidatorPlaceholder` was already renamed, `MesocycleService` needs an `IMesocycleRepository` design/approval before the layer move, and validation/nullability fixes remain open.
+5. **Secrets hygiene.** ⏳ Open. User-secrets migration, README/deployment doc update.
+6. **Decisions ADRs.** ⏳ Open. Two short ADRs (Mesocycle/TrainingPlan, Coaches). `CLAUDE.md` updated.
 
 **Architect notes.** The Mesocycle decision drives the Phase 7 data model. If the answer is *supersede*, write a migration plan that retires `Mesocycle`, `Week`, `Day`, `DayExercise` cleanly. If *coexist*, draw a hard boundary so the legacy surface doesn't bleed into the new one. Either way, do not start Phase 7 prompts until this decision is locked.
 
@@ -430,12 +432,12 @@ Post-v1 expansion (coaches, device sync, marketplace, virtual training, etc.) is
 These are durable concerns that span multiple phases. Each is owned by the phase noted; raising any earlier is welcome if the situation warrants.
 
 - **Real authentication is deferred (owner: Phase 12).** The dev stub `ICurrentUserService` works because nothing currently distinguishes one athlete from another at the network boundary. The moment two real users exist, this is a critical incident waiting to happen.
-- **No test coverage exists (owner: Phase 6).** Every change between now and Phase 6 ships with manual smoke + diff review as the only safety net. The single largest source of latent risk in the project. Resist starting Phases 7–11 before Phase 6 lands.
+- **Test coverage is newly bootstrapped but still shallow (owner: Phase 6).** Branch `phase-6-test-infra-tech-debt` adds backend xUnit/API tests, frontend Vitest tests, and CI. Coverage is intentionally smoke-level; keep resisting Phases 7–11 until Phase 6 decisions and remaining hygiene tasks land.
 - **Mesocycle vs TrainingPlan (owner: Phase 6 decision; Phase 7 enacts).** Until the decision is locked, do not extend the Mesocycle model with new features — additions compound the eventual migration cost.
 - **Coaches as a first-class user role (owner: Phase 6 decision).** Several parity features depend on this. No coach-facing scope work until v1/v2/out-of-scope is decided.
 - **README drift (owner: Phase 14).** README currently implies direct DbContext usage, an Electron shell, SQLite/MySQL providers, and AI providers — none match current code. Treat README as historical, not authoritative, until Phase 14.
 - **Plaintext dev SQL credentials (owner: Phase 6; Phase 14 verifies).** `api/appsettings.development.json` contains plaintext credentials. Dev-only label limits blast radius but file is committed.
-- **`MesocycleService` layer violation (owner: Phase 6).** In `Bryk.Infrastructure/Services/` instead of `Bryk.Application/Services/`. Resolved as part of the Phase 6 tech-debt sweep.
+- **`MesocycleService` layer violation (owner: Phase 6).** In `Bryk.Infrastructure/Services/` instead of `Bryk.Application/Services/`. Task 6-4 discovery found direct `ApplicationDbContext` usage and no `IMesocycleRepository`, so the fix needs a repository-boundary plan before implementation. See `Phase 6-Task4-handoff.md`.
 - **Aspirational README claims — Electron / SQLite / MySQL / AI providers (owner: Phase 14, with optional Phase 15 build-vs-drop decision).** None implemented. Either build (post-v1) or strip the claims; don't leave the gap open.
 - **Bleeding-edge frontend tooling (ongoing).** Vite 8, Tailwind 4, pre-release codegen dependencies. Pin and audit during Phase 14's dependency sweep; expect occasional churn from upstream releases.
 - **Hardcoded `SwaggerDoc("v1")` (owner: Phase 14, or sooner if v2 ships).** Tech debt item 10. TODO already in place.
