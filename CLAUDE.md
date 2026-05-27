@@ -260,13 +260,13 @@ No test coverage exists. Phase 6 should establish:
 
 Until Phase 6 lands this, "verify" in the goal-driven-execution sense means manual smoke tests + green build + clean diff review. When tests exist, prefer them.
 
-### Mesocycle vs new TrainingPlan model (decide at Phase 6)
+### Mesocycle vs new TrainingPlan model — RESOLVED 2026-05-26
 
-The legacy Mesocycle / Week / Day / Exercise feature predates this build. The new TrainingPlan / PlannedWorkout / Workout model arrives in Phase 6. Decision needed: does the new model supersede Mesocycle, integrate, or coexist?
+See `docs/decisions/0001-mesocycle-vs-trainingplan.md`. Decision: supersede Mesocycle. The five Mesocycle entities, the service, the four controllers, and `MesocycleValidators` are retired. `TrainingPlan` / `PlannedWorkout` / `Workout` become the unified training framework. Strength training is a first-class v1 discipline; `Sport` enum gains `Strength`. Periodization concepts (Polarized / Pyramidal / Periodization / Norwegian / etc.) carry forward as fields on `TrainingPlan`. Retirement migration scheduled with the renumbered Phase 9 (formerly Phase 7) or earlier as a Phase 7 cleanup task.
 
-### Coaches as first-class user type (decide before any coach-facing work)
+### Coaches as first-class user type — RESOLVED 2026-05-26
 
-Captured in `/docs/product/feature-parity-trainingpeaks.md`. Multiple TrainingPeaks features depend on coaches existing as a separate user role. Decide v1 / v2 / out-of-scope before scoping any coach-facing work.
+See `docs/decisions/0002-coaches-as-first-class.md`. Decision: coaches are v2. v1 ships athlete-only. One human = one `Athlete`; there is no separate `User` entity at the domain level and there is no Bryk user who is not also an athlete. v2 coach support is added via a role/relationship on `Athlete`, not as a separate identity type. Phase 12 auth ADR will pick the auth-table layout (ASP.NET Identity in its own table linked 1:1 to `Athlete`, vs `Athlete : IdentityUser<Guid>`) — both satisfy the conceptual constraint. Parity-doc tags for coach features flip from `candidate` to `v2`; marketplace/concierge features (`deferred`) unchanged.
 
 ---
 
@@ -276,11 +276,11 @@ Ordered by operational impact:
 
 1. `OperationCanceledException` returns 500 from global exception middleware. Should be silently swallowed or mapped to 499. Most operationally annoying — pollutes logs and metrics with false errors when users navigate away.
 2. **No test coverage anywhere on the project.** Phase 6 establishes the infrastructure; until then, manual verification is the only safety net.
-3. `MesocycleService` lives in `Bryk.Infrastructure/Services/` — layer violation. Address with Phase 6 Mesocycle sweep.
+3. ~~`MesocycleService` lives in `Bryk.Infrastructure/Services/` — layer violation.~~ Resolved by ADR-0001 — file slated for deletion (Mesocycle superseded).
 4. `ValidatorPlaceholder` anchor type is a code smell. Replace with a named marker type.
 5. Validation pattern is verbose (3 lines per call site). Extract to extension method, or migrate to `ValidateAndThrowAsync` + middleware handler for `FluentValidation.ValidationException`.
 6. `NotImplementedException` returns generic 500 from global handler. Should map to 501.
-7. `MesocycleValidators.cs` has a CS8604 nullability warning. Sweep with Phase 6.
+7. ~~`MesocycleValidators.cs` has a CS8604 nullability warning.~~ Resolved by ADR-0001 — file slated for deletion.
 8. `DbUpdateException` and concurrency exceptions hit generic 500 with no diagnostics. Add specific handlers — at minimum, unique-constraint → 409.
 9. Custom JSON error format instead of RFC 7807 ProblemDetails. Lower priority unless API gets external consumers.
 10. Single `SwaggerDoc` hardcoded as `"v1"`. TODO comment in place. Address when v2 ships.

@@ -24,12 +24,11 @@ relevant commit or PR.
 These scope questions are unresolved and will materially shape the
 parity list once answered:
 
-- **Coaches as a first-class user type.** TrainingPeaks treats coaches
-  as a separate user role with their own dashboard, athlete roster,
-  workout/plan libraries, and revenue features. Bryk's v1 onboarding
-  is athlete-only. Decision needed: are coaches v1 scope, v2 expansion,
-  or out of scope entirely? All `Coach Features` below are tagged
-  `candidate` pending this decision.
+- ~~**Coaches as a first-class user type.**~~ **Resolved 2026-05-26 — v2.**
+  See `docs/decisions/0002-coaches-as-first-class.md`. v1 ships athlete-only.
+  Coach-facing features (Sections 4, 5, and coach account tiers in Section 6)
+  are tagged `v2`. A coach in v2 is an `Athlete` who's been granted a coach
+  role; there is no separate non-athlete user type at the domain level.
 - **Indoor virtual training platform.** TrainingPeaks Virtual is a 3D
   cycling sim. Building one is a separate product effort. Tagged
   `deferred` for now.
@@ -70,23 +69,23 @@ parity list once answered:
 
 ## 4. Coach: Athlete Management
 
-> All items below pending the "Coaches as a first-class user type" decision above.
+> Tagged `v2` per ADR-0002 (Coaches are v2). v1 ships athlete-only.
 
-- Coach home dashboard with compliance feed across roster — `candidate`
-- Workout and training plan libraries (reusable, organized in folders) — `candidate`
-- Athlete groups and group calendar planning — `candidate`
-- Bulk copy/paste training across athletes or weeks — `candidate`
-- Custom zone methodologies applied globally to athletes — `candidate`
-- Race report chart (historical race performance per athlete) — `candidate`
-- Health and recovery metric syncing (HRV, RHR) into coach view — `candidate`
+- Coach home dashboard with compliance feed across roster — `v2`
+- Workout and training plan libraries (reusable, organized in folders) — `v2`
+- Athlete groups and group calendar planning — `v2`
+- Bulk copy/paste training across athletes or weeks — `v2`
+- Custom zone methodologies applied globally to athletes — `v2`
+- Race report chart (historical race performance per athlete) — `v2`
+- Health and recovery metric syncing (HRV, RHR) into coach view — `v2`
 
 ## 5. Coach: Business & Communication
 
-> All items below pending the "Coaches as a first-class user type" decision above.
+> Tagged `v2` per ADR-0002. Marketplace/concierge items remain `deferred` pending coach critical mass.
 
-- Post-workout comments (two-way thread per workout) — `candidate`
-- In-app chat — `candidate`
-- Notification grouping/digest — `candidate`
+- Post-workout comments (two-way thread per workout) — `v2`
+- In-app chat — `v2`
+- Notification grouping/digest — `v2`
 - Discounted Premium upsell from coach to athlete — `deferred`
 - Training Plan Store (marketplace, revenue share) — `deferred`
 - Coach Match concierge service — `deferred`
@@ -100,7 +99,7 @@ parity list once answered:
 - MyFitnessPal integration (calories in vs out) — `deferred`
 - WKO5 desktop integration — `out-of-scope`
 - Athlete account tiers (Free / Premium) — `candidate`
-- Coach account tiers (per-athlete or unlimited) — `candidate`
+- Coach account tiers (per-athlete or unlimited) — `v2`
 
 ---
 
