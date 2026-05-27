@@ -2,6 +2,7 @@
 import { ref, watch } from 'vue'
 import { useForm } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
+import { CheckCircle2 } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
@@ -141,6 +142,17 @@ const isSubmitting = form.isSubmitting
 
 <template>
   <div>
+    <div v-if="store.requiredComplete" class="flex items-start gap-3">
+      <CheckCircle2 :size="24" class="mt-0.5 shrink-0 text-primary" />
+      <div>
+        <h3 class="text-xl font-semibold">Identity saved</h3>
+        <p class="mt-1 text-sm text-muted-foreground">
+          Your basic profile is recorded. You'll be able to update these values from your profile once that surface ships.
+        </p>
+      </div>
+    </div>
+
+    <template v-else>
     <div class="flex items-start justify-between gap-4">
       <h3 class="text-2xl font-semibold">Required Information</h3>
       <div class="inline-flex rounded-md border bg-muted p-0.5">
@@ -318,5 +330,6 @@ const isSubmitting = form.isSubmitting
         </Button>
       </div>
     </form>
+    </template>
   </div>
 </template>
