@@ -30,7 +30,7 @@ Non-negotiable per phase. They constrain how prompts get written and how diffs g
 | 2  | Domain model & EF Core persistence                                               | ✅ Complete       |
 | 3  | Cross-cutting plumbing (UoW, validation, versioning)                             | ✅ Complete       |
 | 4  | Onboarding API + DTOs                                                            | ✅ Complete       |
-| 5  | Vue onboarding wizard (Required / Recommended / Goals)                           | 🟡 In progress (handoff outstanding, owned by Task 7-1) |
+| 5  | Vue onboarding wizard (Required / Recommended / Goals)                           | ✅ Complete       |
 | 6  | Test infrastructure (xUnit + Vitest + CI)                                        | ✅ Complete       |
 | 7  | Closeout: ADRs, tech-debt sweep, secrets hygiene, Phase 5 handoff                | 🟡 In progress (ADR-0001 and ADR-0002 landed) |
 | 8  | Profile editing + dashboard warmup cards                                         | ⏳ Planned        |
@@ -129,13 +129,11 @@ Post-v1 expansion (v2 coach features, device sync, marketplace, virtual training
 
 ---
 
-## Phase 5 — Vue onboarding wizard 🟡 (handoff outstanding, see Task 7-1)
+## Phase 5 — Vue onboarding wizard ✅
 
 **Goal.** Ship a three-step onboarding wizard in Vue 3 that drives the Phase 4 API end-to-end. Resume-friendly: on mount, call `GET /onboarding/status` and land on the first incomplete step.
 
-**Status.** Functionally complete. Wizard ships at `/onboarding` with Required / Recommended / Goals steps; vee-validate + zod client validation; vee-validate field error mapping from server validation responses (`src/services/apiErrors.ts`); resume-aware stepper navigation; read-only summary cards on completed steps (band-aid for missing edit-my-profile surface — see Phase 8); HomeView gates on status flags and renders a dashboard shell (`src/views/HomeView.vue` + `src/components/dashboard/`) when all three flags are true. Manual smoke walked end-to-end with a fresh GUID 2026-05-26.
-
-**Why still 🟡.** The formal Phase 5 completion handoff document has not been written. Task 7-1 owns that final piece; once landed, this ledger flips to ✅.
+**Status.** Complete. Wizard ships at `/onboarding` with Required / Recommended / Goals steps; vee-validate + zod client validation; vee-validate field error mapping from server validation responses (`src/services/apiErrors.ts`); resume-aware stepper navigation; read-only summary cards on completed steps (band-aid for missing edit-my-profile surface — see Phase 8); HomeView gates on status flags and renders a dashboard shell (`src/views/HomeView.vue` + `src/components/dashboard/`) when all three flags are true. Manual smoke walked end-to-end with a fresh GUID 2026-05-26. Closeout handoff: `md/handoffs/2026-05-26-phase-5-complete.md`.
 
 **Inter-phase work that landed during Phase 5 closeout (outside original scope, kept for the record):**
 - Read-only summary cards on completed onboarding steps (commit superseded by Phase 8 edit-my-profile surface).
