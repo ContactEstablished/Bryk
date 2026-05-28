@@ -32,7 +32,7 @@ Non-negotiable per phase. They constrain how prompts get written and how diffs g
 | 4  | Onboarding API + DTOs                                                            | ✅ Complete       |
 | 5  | Vue onboarding wizard (Required / Recommended / Goals)                           | ✅ Complete       |
 | 6  | Test infrastructure (xUnit + Vitest + CI)                                        | ✅ Complete       |
-| 7  | Closeout: ADRs, tech-debt sweep, secrets hygiene, Phase 5 handoff                | 🟡 In progress (ADR-0001 and ADR-0002 landed) |
+| 7  | Closeout: ADRs, tech-debt sweep, secrets hygiene, Phase 5 handoff                | ✅ Complete       |
 | 8  | Profile editing + dashboard warmup cards                                         | ⏳ Planned        |
 | 9  | TrainingPlan / PlannedWorkout / Workout domain & API + This Week card            | ⏳ Planned        |
 | 10 | Zones, thresholds, structured workout builder                                    | ⏳ Planned        |
@@ -163,7 +163,7 @@ Post-v1 expansion (v2 coach features, device sync, marketplace, virtual training
 
 ---
 
-## Phase 7 — Closeout: ADRs, tech-debt sweep, secrets hygiene, Phase 5 handoff 🟡
+## Phase 7 — Closeout: ADRs, tech-debt sweep, secrets hygiene, Phase 5 handoff ✅
 
 **Goal.** Clear the runway before opening the training-domain work in Phase 9. Boring but necessary — everything downstream is cheaper with these locked.
 
