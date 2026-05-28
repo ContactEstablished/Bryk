@@ -1,8 +1,8 @@
 using Bryk.Domain.Entities;
 using Bryk.Domain.Interfaces;
 using Bryk.Application.Common;
+using Bryk.Application.Common.Validation;
 using FluentValidation;
-using Bryk.Application.Exceptions;
 
 namespace Bryk.Application.Onboarding;
 
@@ -18,10 +18,7 @@ public class OnboardingService(
 {
     public async Task SubmitRequiredAsync(OnboardingRequiredRequest request, CancellationToken ct = default)
     {
-        var validationResult = await requiredValidator.ValidateAsync(request, ct);
-        if (!validationResult.IsValid)
-            throw new Bryk.Application.Exceptions.ValidationException(
-                validationResult.Errors.Select(e => e.ErrorMessage));
+        await requiredValidator.ValidateOrThrowAsync(request, ct);
 
         var athleteId = currentUser.GetCurrentAthleteId();
         var existing = await athleteRepo.GetByIdAsync(athleteId, ct);
@@ -60,10 +57,7 @@ public class OnboardingService(
 
     public async Task SubmitRecommendedAsync(OnboardingRecommendedRequest request, CancellationToken ct = default)
     {
-        var validationResult = await recommendedValidator.ValidateAsync(request, ct);
-        if (!validationResult.IsValid)
-            throw new Bryk.Application.Exceptions.ValidationException(
-                validationResult.Errors.Select(e => e.ErrorMessage));
+        await recommendedValidator.ValidateOrThrowAsync(request, ct);
 
         var athleteId = currentUser.GetCurrentAthleteId();
         var athlete = await athleteRepo.GetWithSportProfilesAsync(athleteId, ct);
@@ -110,10 +104,7 @@ public class OnboardingService(
 
     public async Task SubmitGoalsAsync(OnboardingGoalsRequest request, CancellationToken ct = default)
     {
-        var validationResult = await goalsValidator.ValidateAsync(request, ct);
-        if (!validationResult.IsValid)
-            throw new Bryk.Application.Exceptions.ValidationException(
-                validationResult.Errors.Select(e => e.ErrorMessage));
+        await goalsValidator.ValidateOrThrowAsync(request, ct);
 
         var athleteId = currentUser.GetCurrentAthleteId();
 

@@ -1,5 +1,4 @@
 using Bryk.Application.Common;
-using Bryk.Application.Interfaces;
 using Bryk.Application.Onboarding;
 using Bryk.Application.Validators;
 using Bryk.Domain.Interfaces;
@@ -91,12 +90,6 @@ builder.Services.AddCors(options =>
               .AllowCredentials();
     });
 });
-
-// Service registrations
-builder.Services.AddScoped<IMesocycleService, MesocycleService>();
-builder.Services.AddScoped<IWeekService, WeekService>();
-builder.Services.AddScoped<IDayService, DayService>();
-builder.Services.AddScoped<IExerciseService, ExerciseService>();
 
 // Repositories
 builder.Services.AddScoped<IAthleteRepository, AthleteRepository>();
