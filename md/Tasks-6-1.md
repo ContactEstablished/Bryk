@@ -5,10 +5,10 @@ Stand up the first xUnit projects under `api/` so Phase 6 has a real safety net 
 
 ## Current code/status
 - No tests exist anywhere in the repo. `api/Bryk.sln` contains only the four production projects (`Bryk.Domain`, `Bryk.Application`, `Bryk.Infrastructure`, `Bryk.API`).
-- `OnboardingController` (Phase 4) exposes `GET /api/v1/onboarding/status`, `POST /required`, `POST /recommended`, `POST /goals`. State-machine semantics are locked in `docs/handoffs/2026-04-29-phase-4-complete.md`.
+- `OnboardingController` (Phase 4) exposes `GET /api/v1/onboarding/status`, `POST /required`, `POST /recommended`, `POST /goals`. State-machine semantics are locked in `md/handoffs/2026-04-29-phase-4-complete.md`.
 - `OnboardingService` (`api/Bryk.Application/Onboarding/OnboardingService.cs`) uses the locked FluentValidation pattern (`await validator.ValidateAsync(request, ct)` then throw `Bryk.Application.Exceptions.ValidationException`). Identity comes from `ICurrentUserService` — dev stub reads `DevAuth:CurrentAthleteId` from `appsettings.Development.json` and throws outside Development.
 - API versioning is strict (`AssumeDefaultVersionWhenUnspecified = false`); routes are `api/v1/...`.
-- Global exception middleware maps `ValidationException` → 400 with the JSON shape documented in `Tasks-5-1.md`.
+- Global exception middleware maps `ValidationException` → 400 with the JSON shape documented in `md/Tasks-5-1.md`.
 
 ## Test-DB strategy — decision required in this task
 Pick one and document the choice in an XML doc comment at the top of the base fixture (and reference it from the Task 6-6 ADR work). Options:

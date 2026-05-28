@@ -262,11 +262,11 @@ Until Phase 6 lands this, "verify" in the goal-driven-execution sense means manu
 
 ### Mesocycle vs new TrainingPlan model — RESOLVED 2026-05-26
 
-See `docs/decisions/0001-mesocycle-vs-trainingplan.md`. Decision: supersede Mesocycle. The five Mesocycle entities, the service, the four controllers, and `MesocycleValidators` are retired. `TrainingPlan` / `PlannedWorkout` / `Workout` become the unified training framework. Strength training is a first-class v1 discipline; `Sport` enum gains `Strength`. Periodization concepts (Polarized / Pyramidal / Periodization / Norwegian / etc.) carry forward as fields on `TrainingPlan`. Retirement migration scheduled with the renumbered Phase 9 (formerly Phase 7) or earlier as a Phase 7 cleanup task.
+See `md/decisions/0001-mesocycle-vs-trainingplan.md`. Decision: supersede Mesocycle. The five Mesocycle entities, the service, the four controllers, and `MesocycleValidators` are retired. `TrainingPlan` / `PlannedWorkout` / `Workout` become the unified training framework. Strength training is a first-class v1 discipline; `Sport` enum gains `Strength`. Periodization concepts (Polarized / Pyramidal / Periodization / Norwegian / etc.) carry forward as fields on `TrainingPlan`. Retirement migration scheduled with the renumbered Phase 9 (formerly Phase 7) or earlier as a Phase 7 cleanup task.
 
 ### Coaches as first-class user type — RESOLVED 2026-05-26
 
-See `docs/decisions/0002-coaches-as-first-class.md`. Decision: coaches are v2. v1 ships athlete-only. One human = one `Athlete`; there is no separate `User` entity at the domain level and there is no Bryk user who is not also an athlete. v2 coach support is added via a role/relationship on `Athlete`, not as a separate identity type. Phase 12 auth ADR will pick the auth-table layout (ASP.NET Identity in its own table linked 1:1 to `Athlete`, vs `Athlete : IdentityUser<Guid>`) — both satisfy the conceptual constraint. Parity-doc tags for coach features flip from `candidate` to `v2`; marketplace/concierge features (`deferred`) unchanged.
+See `md/decisions/0002-coaches-as-first-class.md`. Decision: coaches are v2. v1 ships athlete-only. One human = one `Athlete`; there is no separate `User` entity at the domain level and there is no Bryk user who is not also an athlete. v2 coach support is added via a role/relationship on `Athlete`, not as a separate identity type. Phase 12 auth ADR will pick the auth-table layout (ASP.NET Identity in its own table linked 1:1 to `Athlete`, vs `Athlete : IdentityUser<Guid>`) — both satisfy the conceptual constraint. Parity-doc tags for coach features flip from `candidate` to `v2`; marketplace/concierge features (`deferred`) unchanged.
 
 ---
 
@@ -290,8 +290,8 @@ Ordered by operational impact:
 
 ## Project state pointers
 
-- `/docs/product/feature-parity-trainingpeaks.md` — feature wishlist and status.
-- `/docs/handoffs/` — session-end handoff documents. Read the latest at session start.
+- `/md/product/feature-parity-trainingpeaks.md` — feature wishlist and status.
+- `/md/handoffs/` — session-end handoff documents. Read the latest at session start.
 - `git log --oneline -20` for recent commit history.
 
 On session start: read the latest handoff (or ask for one) before designing any prompts. Confirm clean working tree and green build before proposing the first task.

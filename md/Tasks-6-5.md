@@ -25,8 +25,8 @@ Remove the plaintext SQL Server credentials currently committed to `api/appsetti
   Recommendation to discuss with Sr. Dev before locking: **Option B**. It is the strictest, hardest to accidentally regress, and forces every developer through the documented workflow exactly once.
 - Developer-setup documentation lands in one of:
   - `api/README.md` (extend the existing file with a "Local secrets" section), or
-  - `docs/local-dev-setup.md` (new short doc).
-  Recommendation: **`api/README.md`** if the file is short, else `docs/local-dev-setup.md`. Decide at task time after reading the existing README.
+  - `md/local-dev-setup.md` (new short doc).
+  Recommendation: **`api/README.md`** if the file is short, else `md/local-dev-setup.md`. Decide at task time after reading the existing README.
 - The doc explicitly lists:
   1. `dotnet user-secrets init --project api/Bryk.API` (idempotent — only needed if the csproj doesn't already have `<UserSecretsId>`).
   2. `dotnet user-secrets set "ConnectionStrings:DefaultConnection" "<your-connection-string>" --project api/Bryk.API`
@@ -40,7 +40,7 @@ Remove the plaintext SQL Server credentials currently committed to `api/appsetti
 - `api/appsettings.development.json` — connection string removed or replaced per the chosen option.
 - `api/Bryk.API/Bryk.API.csproj` — `<UserSecretsId>` added if missing.
 - `api/Bryk.API/Program.cs` — only if Option A requires a placeholder-detection guard (one line, matches existing null-guard idiom).
-- `api/README.md` (extended) **or** `docs/local-dev-setup.md` (new). Pick one.
+- `api/README.md` (extended) **or** `md/local-dev-setup.md` (new). Pick one.
 
 ## What NOT to modify
 - Do not rewrite git history to scrub the password (`git filter-repo`, `git filter-branch`, BFG). The password is a low-blast-radius dev credential on a developer-named server; the rotation question belongs to Sr. Dev, not to this task. If Sr. Dev wants history scrubbed, that's a separate operation with explicit approval, performed on a coordinated window.

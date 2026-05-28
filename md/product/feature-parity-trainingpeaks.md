@@ -25,7 +25,7 @@ These scope questions are unresolved and will materially shape the
 parity list once answered:
 
 - ~~**Coaches as a first-class user type.**~~ **Resolved 2026-05-26 — v2.**
-  See `docs/decisions/0002-coaches-as-first-class.md`. v1 ships athlete-only.
+  See `md/decisions/0002-coaches-as-first-class.md`. v1 ships athlete-only.
   Coach-facing features (Sections 4, 5, and coach account tiers in Section 6)
   are tagged `v2`. A coach in v2 is an `Athlete` who's been granted a coach
   role; there is no separate non-athlete user type at the domain level.

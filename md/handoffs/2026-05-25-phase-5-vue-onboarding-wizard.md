@@ -11,10 +11,10 @@ Phase 5 focused on bringing the Vue/Vite onboarding wizard into closer alignment
 
 ## Phase 5 tasks completed
 
-- `Tasks-5-1.md` — server validation errors are mapped into vee-validate field errors where practical.
-- `Tasks-5-2.md` — wizard stepper navigation is resume-aware and gates locked future steps.
-- `Tasks-5-3.md` — client zod schemas and submit payload behavior are tightened against Phase 4 validators/DTOs.
-- `Tasks-5-4.md` — frontend build verified and this handoff written.
+- `md/Tasks-5-1.md` — server validation errors are mapped into vee-validate field errors where practical.
+- `md/Tasks-5-2.md` — wizard stepper navigation is resume-aware and gates locked future steps.
+- `md/Tasks-5-3.md` — client zod schemas and submit payload behavior are tightened against Phase 4 validators/DTOs.
+- `md/Tasks-5-4.md` — frontend build verified and this handoff written.
 
 ## Commits on this branch
 
@@ -31,10 +31,10 @@ Task 5-4 is expected to add this handoff as the final Phase 5 documentation comm
 
 Task definitions:
 
-- `Tasks-5-1.md`
-- `Tasks-5-2.md`
-- `Tasks-5-3.md`
-- `Tasks-5-4.md`
+- `md/Tasks-5-1.md`
+- `md/Tasks-5-2.md`
+- `md/Tasks-5-3.md`
+- `md/Tasks-5-4.md`
 
 Frontend implementation:
 

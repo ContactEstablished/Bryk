@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Task 6-4 was opened as a tech-debt sweep for CLAUDE.md items 3, 4, 5, and 7. During pre-implementation discovery, item 3 hit the approval gate explicitly called out in `Tasks-6-4.md`, and item 4 was found to already be complete. No Task 6-4 source changes were made after that discovery.
+Task 6-4 was opened as a tech-debt sweep for CLAUDE.md items 3, 4, 5, and 7. During pre-implementation discovery, item 3 hit the approval gate explicitly called out in `md/Tasks-6-4.md`, and item 4 was found to already be complete. No Task 6-4 source changes were made after that discovery.
 
 This document captures the remaining work, questions, concerns, and recommended path so the PR can be reviewed/merged before the next plan is written.
 
@@ -109,7 +109,7 @@ Current pattern appears in:
 
 Recommended path:
 
-Use the extension-method approach from `Tasks-6-4.md`:
+Use the extension-method approach from `md/Tasks-6-4.md`:
 
 - Add `api/Bryk.Application/Common/Validation/ValidationExtensions.cs`.
 - Define an extension such as `ValidateOrThrowAsync<T>(this IValidator<T> validator, T instance, CancellationToken ct = default)`.

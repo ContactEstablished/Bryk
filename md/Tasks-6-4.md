@@ -36,7 +36,7 @@ Items in scope:
   - **Middleware handler addition** that maps `FluentValidation.ValidationException` to the same JSON shape the custom exception currently produces, then call sites switch to `validator.ValidateAndThrowAsync(...)`. This deletes the custom exception type entirely.
   Recommendation to discuss with Sr. Dev: **extension method**. Keeps the locked custom-exception convention from Phase 3 intact, doesn't touch middleware, and is a smaller surgical change. The middleware-handler option is cleaner long-term but expands blast radius beyond a tech-debt sweep.
 - **Item 7 (CS8604).** Read `MesocycleValidators.cs`, fix the nullability gap at the warned line. The fix is whatever the compiler is telling you — usually an explicit null guard or a `!` operator with justification. Do not silence the warning with a `#pragma`.
-- Validation behavior unchanged after item 5: same exception type reaches middleware, same JSON 400 response shape goes back to the client (the shape documented in `Tasks-5-1.md`). If the chosen approach would change the response shape, stop — that is a Phase 5/UI breaking change and out of scope.
+- Validation behavior unchanged after item 5: same exception type reaches middleware, same JSON 400 response shape goes back to the client (the shape documented in `md/Tasks-5-1.md`). If the chosen approach would change the response shape, stop — that is a Phase 5/UI breaking change and out of scope.
 - `dotnet build api/Bryk.sln` clean (zero new warnings introduced; CS8604 in `MesocycleValidators.cs` cleared).
 - `dotnet test api/Bryk.sln` green after each commit. Use the test infrastructure from Task 6-1.
 - Manual smoke of one onboarding POST after the sweep (e.g., `POST /api/v1/onboarding/required` with a deliberately invalid payload) returns the same 400 JSON shape it did before. Capture the before/after response bodies in the commit message for item 5.
@@ -54,7 +54,7 @@ Items in scope:
 
 ## What NOT to modify
 - Do not touch other CLAUDE.md tech-debt items (1, 2, 6, 8, 9, 10, 11). Items 1 (`OperationCanceledException`) and 2 (test coverage) are already addressed elsewhere; items 6/8/9/10/11 are Phase 15 mop-up.
-- Do not modify the locked `Bryk.Application.Exceptions.ValidationException` JSON response shape, unless item 5 explicitly chooses the middleware-handler route — and in that case, the response shape must remain identical, byte-for-byte, with the Phase 5 UI's expectations (see `Tasks-5-1.md`).
+- Do not modify the locked `Bryk.Application.Exceptions.ValidationException` JSON response shape, unless item 5 explicitly chooses the middleware-handler route — and in that case, the response shape must remain identical, byte-for-byte, with the Phase 5 UI's expectations (see `md/Tasks-5-1.md`).
 - Do not refactor `OnboardingService` beyond switching to the new validation idiom.
 - Do not change repository contracts or `IUnitOfWork`. If `MesocycleService` post-move requires new repository methods to escape `DbContext` access, stop and design those separately — not in this sweep.
 - Do not bundle the Mesocycle decision (Task 6-6) into this sweep. The layer fix is independent of supersede/integrate/coexist.

@@ -15,7 +15,7 @@ Current code already complete:
   - full happy path creates/updates Required, Recommended sport profiles, and at least one Goal/Event;
   - reload after partial completion lands on the correct first incomplete step;
   - server validation errors surface sanely in the UI.
-- Write a dated handoff under `docs/handoffs/` summarizing:
+- Write a dated handoff under `md/handoffs/` summarizing:
   - Phase 5 tasks completed;
   - code files changed;
   - build/test commands run and results;
@@ -24,7 +24,7 @@ Current code already complete:
 - Do not mark Phase 5 complete in `ROADMAP.md` unless the smoke checklist has actually been verified. If smoke cannot be completed in this environment, leave the roadmap status unchanged and state why in the handoff.
 
 ## Files likely to change
-- `docs/handoffs/YYYY-MM-DD-phase-5-vue-onboarding-wizard.md`
+- `md/handoffs/YYYY-MM-DD-phase-5-vue-onboarding-wizard.md`
 - Possibly `ROADMAP.md` only if Phase 5 is genuinely complete and manually verified.
 - Possibly small build-hygiene fixes discovered while running the build.
 

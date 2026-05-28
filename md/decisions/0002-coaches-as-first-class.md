@@ -5,7 +5,7 @@
 
 ## Context
 
-`docs/product/feature-parity-trainingpeaks.md` tags ~12 features as `candidate` pending a decision on whether coaches are a first-class user type in Bryk. The TrainingPeaks reference product treats coaches as a major surface — coach dashboards, athlete rosters, workout/plan libraries, race-report-per-athlete, HRV syncing to coach view, coach-athlete messaging, notification digests, coach account tiers (revenue).
+`md/product/feature-parity-trainingpeaks.md` tags ~12 features as `candidate` pending a decision on whether coaches are a first-class user type in Bryk. The TrainingPeaks reference product treats coaches as a major surface — coach dashboards, athlete rosters, workout/plan libraries, race-report-per-athlete, HRV syncing to coach view, coach-athlete messaging, notification digests, coach account tiers (revenue).
 
 Bryk's v1 onboarding is athlete-only. Identity is a dev-stub `ICurrentUserService` returning a single Athlete GUID. Real authentication is deferred to Phase 12.
 
@@ -33,7 +33,7 @@ Both are compatible with this ADR. The Phase 12 auth ADR picks one based on Sr. 
 
 **Created by this decision:**
 
-- `docs/product/feature-parity-trainingpeaks.md` tag updates needed: all `candidate` entries in Section 4 (Coach: Athlete Management) and Section 5 (Coach: Business & Communication) flip to `v2`. Coach account tiers in Section 7 flip to `v2`. Items already tagged `deferred` (Training Plan Store, Coach Match, public coach profile directory) stay `deferred` — those are revenue/marketplace features dependent on critical mass even after coaches ship.
+- `md/product/feature-parity-trainingpeaks.md` tag updates needed: all `candidate` entries in Section 4 (Coach: Athlete Management) and Section 5 (Coach: Business & Communication) flip to `v2`. Coach account tiers in Section 7 flip to `v2`. Items already tagged `deferred` (Training Plan Store, Coach Match, public coach profile directory) stay `deferred` — those are revenue/marketplace features dependent on critical mass even after coaches ship.
 - v1 design across all phases proceeds assuming athlete-only UX. No coach mode, no coach sidebar, no role-based routing.
 - Phase 12 auth ADR must reaffirm the 1:1 user-athlete relationship and pick the table layout. It is a free design choice as long as the conceptual invariant holds.
 
