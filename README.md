@@ -69,10 +69,31 @@ cd bryk/api
 
 # Restore packages
 dotnet restore
+```
 
-# Set your connection string in appsettings.Development.json
-# "ConnectionStrings": { "DefaultConnection": "Server=...;Database=Bryk;..." }
+#### Per-developer secrets (one-time)
 
+Dev-only configuration values live in `dotnet user-secrets` rather than in committed config — keeps connection strings and per-developer overrides out of source control. The `<UserSecretsId>` is already in `Bryk.API/Bryk.API.csproj`; you just need to populate your local secret store:
+
+```bash
+cd Bryk.API
+
+# Required: SQL Server connection for your local dev DB
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "<your-connection-string>"
+
+# Required: any GUID — used by the dev-stub ICurrentUserService to identify
+# "the current athlete" for this dev box. The API throws on startup if missing.
+dotnet user-secrets set "DevAuth:CurrentAthleteId" "<any-GUID>"
+
+# Verify
+dotnet user-secrets list
+```
+
+You can change the `DevAuth:CurrentAthleteId` GUID at any time to simulate a fresh athlete (useful for re-walking the onboarding flow against a clean profile).
+
+#### Run the API
+
+```bash
 # Apply migrations
 dotnet ef database update --project Bryk.Infrastructure --startup-project Bryk.API
 
