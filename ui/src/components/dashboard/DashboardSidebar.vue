@@ -1,22 +1,39 @@
 <script setup lang="ts">
+import { useRoute } from 'vue-router'
 import { Home, Activity, TrendingUp, Target, User, type LucideIcon } from 'lucide-vue-next'
 
 interface NavItem {
   icon: LucideIcon
   label: string
-  active: boolean
+  // Navigable items carry a route target + name; inert items omit both.
+  to?: string
+  routeName?: string
 }
 
+const route = useRoute()
+
 const trainItems: NavItem[] = [
-  { icon: Home, label: 'Dashboard', active: true },
-  { icon: Activity, label: 'Workouts', active: false },
-  { icon: TrendingUp, label: 'Progress', active: false },
-  { icon: Target, label: 'Goals', active: false },
+  { icon: Home, label: 'Dashboard', to: '/', routeName: 'home' },
+  { icon: Activity, label: 'Workouts' },
+  { icon: TrendingUp, label: 'Progress' },
+  { icon: Target, label: 'Goals' },
 ]
 
 const accountItems: NavItem[] = [
-  { icon: User, label: 'Profile', active: false },
+  { icon: User, label: 'Profile', to: '/profile', routeName: 'profile' },
 ]
+
+const baseClass = 'flex items-center gap-3 rounded-md px-2 py-2 text-sm'
+
+function isActive(item: NavItem): boolean {
+  return item.routeName != null && route.name === item.routeName
+}
+
+function itemClass(item: NavItem): string {
+  if (isActive(item)) return 'bg-sidebar-accent font-medium text-sidebar-foreground'
+  if (item.to) return 'text-sidebar-foreground/50 hover:text-sidebar-foreground'
+  return 'text-sidebar-foreground/50'
+}
 </script>
 
 <template>
@@ -38,19 +55,20 @@ const accountItems: NavItem[] = [
         Train
       </h2>
       <nav class="mt-2 space-y-1">
-        <div
-          v-for="item in trainItems"
-          :key="item.label"
-          :class="[
-            'flex items-center gap-3 rounded-md px-2 py-2 text-sm',
-            item.active
-              ? 'bg-sidebar-accent font-medium text-sidebar-foreground'
-              : 'text-sidebar-foreground/50',
-          ]"
-        >
-          <component :is="item.icon" :size="16" />
-          <span>{{ item.label }}</span>
-        </div>
+        <template v-for="item in trainItems" :key="item.label">
+          <RouterLink
+            v-if="item.to"
+            :to="item.to"
+            :class="[baseClass, itemClass(item)]"
+          >
+            <component :is="item.icon" :size="16" />
+            <span>{{ item.label }}</span>
+          </RouterLink>
+          <div v-else :class="[baseClass, itemClass(item)]">
+            <component :is="item.icon" :size="16" />
+            <span>{{ item.label }}</span>
+          </div>
+        </template>
       </nav>
     </div>
 
@@ -60,14 +78,20 @@ const accountItems: NavItem[] = [
         Account
       </h2>
       <nav class="mt-2 space-y-1">
-        <div
-          v-for="item in accountItems"
-          :key="item.label"
-          class="flex items-center gap-3 rounded-md px-2 py-2 text-sm text-sidebar-foreground/50"
-        >
-          <component :is="item.icon" :size="16" />
-          <span>{{ item.label }}</span>
-        </div>
+        <template v-for="item in accountItems" :key="item.label">
+          <RouterLink
+            v-if="item.to"
+            :to="item.to"
+            :class="[baseClass, itemClass(item)]"
+          >
+            <component :is="item.icon" :size="16" />
+            <span>{{ item.label }}</span>
+          </RouterLink>
+          <div v-else :class="[baseClass, itemClass(item)]">
+            <component :is="item.icon" :size="16" />
+            <span>{{ item.label }}</span>
+          </div>
+        </template>
       </nav>
     </div>
   </aside>
