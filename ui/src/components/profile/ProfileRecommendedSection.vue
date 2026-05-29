@@ -27,8 +27,22 @@ const sportLabels = [
   { sport: 'Swim' as const, label: 'Swim', thresholdLabel: 'Threshold pace (min/100m)', lt1Label: 'LT1 pace', lt2Label: 'LT2 pace' },
 ]
 
+// Fixed 3-row shape from the start so the template can index sportThresholds[index]
+// before loadRecommended resolves; the watch below overlays the loaded values.
 const form = useForm<OnboardingRecommendedFormValues>({
   validationSchema: toTypedSchema(onboardingRecommendedSchema),
+  initialValues: {
+    restingHr: null,
+    maxHr: null,
+    sportThresholds: sportLabels.map((s) => ({
+      sport: s.sport,
+      isActive: false,
+      thresholdValue: null,
+      lt1: null,
+      lt2: null,
+      customZonesJson: null,
+    })),
+  },
 })
 
 const globalError = ref<string | null>(null)
