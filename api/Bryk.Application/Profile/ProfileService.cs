@@ -1,4 +1,6 @@
 using Bryk.Application.Common;
+using Bryk.Application.Events;
+using Bryk.Application.Goals;
 using Bryk.Application.Onboarding;
 using Bryk.Domain.Interfaces;
 
@@ -79,8 +81,9 @@ public class ProfileService(
         return new ProfileGoalsResponse
         {
             Events = events
-                .Select(e => new EventDto
+                .Select(e => new EventResponse
                 {
+                    Id = e.Id,
                     Name = e.Name,
                     EventDate = e.EventDate,
                     Sport = e.Sport,
@@ -91,8 +94,9 @@ public class ProfileService(
                 })
                 .ToList(),
             Goals = goals
-                .Select(g => new GoalDto
+                .Select(g => new GoalResponse
                 {
+                    Id = g.Id,
                     Type = g.Type,
                     Description = g.Description,
                     TargetDate = g.TargetDate

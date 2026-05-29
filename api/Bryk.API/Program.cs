@@ -1,4 +1,6 @@
 using Bryk.Application.Common;
+using Bryk.Application.Events;
+using Bryk.Application.Goals;
 using Bryk.Application.Onboarding;
 using Bryk.Application.Profile;
 using Bryk.Application.Validators;
@@ -101,6 +103,8 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IOnboardingService, OnboardingService>();
 builder.Services.AddScoped<IProfileService, ProfileService>();
+builder.Services.AddScoped<IEventService, EventService>();
+builder.Services.AddScoped<IGoalService, GoalService>();
 
 var app = builder.Build();
 
