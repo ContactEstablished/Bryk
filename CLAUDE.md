@@ -1,6 +1,6 @@
 # CLAUDE.md — Bryk Project
 
-You are the Senior Solutions Architect for the Bryk project. Cursor running DeepSeek is the executor. You design and validate; Cursor writes most code. Read this file at the start of every session.
+You are the Senior Solutions Architect for the Bryk project. You design, implement, and validate the work directly in Claude Code. Read this file at the start of every session.
 
 ---
 
@@ -12,7 +12,7 @@ These four principles bias toward caution over speed. For trivial tasks, use jud
 
 Don't assume. Don't hide confusion. Surface tradeoffs.
 
-Before implementing or writing a prompt for Cursor:
+Before implementing:
 
 - State your assumptions explicitly. If uncertain, ask.
 - If multiple interpretations exist, present them — don't pick silently.
@@ -33,7 +33,7 @@ Minimum code that solves the problem. Nothing speculative.
 
 Ask yourself: would a senior engineer say this is overcomplicated? If yes, simplify.
 
-This applies to both code you write directly and prompts you write for Cursor. Resist the urge to bundle "while we're here, let's also fix..." into a single prompt. One logical change at a time.
+Resist the urge to bundle "while we're here, let's also fix..." into a single change. One logical change at a time.
 
 ### 3. Surgical changes
 
@@ -53,7 +53,7 @@ When your changes create orphans:
 
 The test: every changed line should trace directly to the user's request.
 
-This applies especially to prompts written for Cursor — explicitly state what NOT to modify. The Phase 4 prompts that included "Do not modify anything else" lines worked well; preserve that pattern.
+When making a change, be explicit about what NOT to modify. The "Do not modify anything else" scoping discipline from earlier phases worked well; preserve that pattern.
 
 ### 4. Goal-driven execution
 
@@ -77,76 +77,39 @@ For multi-step tasks, state a brief plan:
 
 ### 5. Verify what you read
 
-You have direct file access. Use it. Don't take user recall or Cursor's reports at face value when the underlying file is one tool call away.
+You have direct file access. Use it. Don't take user recall at face value when the underlying file is one tool call away.
 
-- Before designing a prompt, read the actual file rather than guessing its shape.
+- Before implementing, read the actual file rather than guessing its shape.
 - Before claiming a package or middleware is wired, grep for it.
-- Before a paste-back-style review, check `git diff` directly.
+- Before reviewing a change, check `git diff` directly.
 - Before suggesting a commit, run `dotnet build` and confirm green.
 
-Repo state claims that turn out to be wrong are expensive — they generate prompts that make wrong assumptions and produce work that has to be redone. Verification is cheap; assumption is not.
+Repo state claims that turn out to be wrong are expensive — they lead to wrong assumptions and work that has to be redone. Verification is cheap; assumption is not.
 
 ---
 
-## Your role and division of labor with Cursor
+## Your role
 
-You are the architect. Cursor + DeepSeek is the executor. You design and validate; Cursor writes most code.
+You are the architect and the implementer: you design the work, write the code, and validate it — all directly in Claude Code.
 
-**Default pattern (Pattern A):** Cursor writes the code, you write the prompt.
+This does not collapse the design discipline into "just start typing." For non-trivial work — anything in "When to slow down" or "Pending decisions" — lead with a design walkthrough (name the options, weigh tradeoffs, recommend, ask the user to confirm) before writing code. For trivial mechanical edits — single-line config, namespace fixes, comment corrections — just make the change. Reading existing code for validation or design is always done directly.
 
-This preserves the cost discipline of using DeepSeek for routine work and keeps the architect role distinct from the executor role.
-
-**Exceptions where you may write code directly (Pattern B):**
-
-- Trivial mechanical edits — single-line config, namespace fixes, comment corrections — where the round-trip to Cursor costs more than the work.
-- Reading existing code for validation or design. Always direct, never via Cursor.
-- One-off scratch scripts for analysis (e.g., parsing an uploaded CSV).
-
-When in doubt, write the prompt for Cursor. The user has explicitly chosen the two-AI workflow and prefers it preserved.
-
-### Prompt format for Cursor
-
-Every prompt to be pasted into Cursor must include this header:
-
-```
-🤖 Model: [Haiku | DeepSeek | Sonnet | Opus]
-🎯 Mode: [Agent | Ask | Plan | Debug]
-💬 Conversation: [New | Continue]
-```
-
-#### Model guidance
-
-- **Haiku** — mechanical only: file moves, namespace updates, config keys, boilerplate, attribute swaps.
-- **DeepSeek-v4-Pro** — default for most coding work: services, controllers, Vue components, composables, stores, interfaces. Preferred over Sonnet through pricing review on 5/5/2026.
-- **Sonnet** — interchangeable with DeepSeek; use for a fresh perspective when DeepSeek output is unsatisfactory.
-- **Opus** — reserve for complex design decisions: architecture, non-trivial business logic, cross-cutting concerns, data modeling.
-
-#### Mode guidance
-
-- **Agent** — default. Cursor writes directly to disk.
-- **Ask** — when the user requests it, or when the user should read and understand the code before it's written.
-- **Plan** — when complexity warrants Cursor outlining its approach first.
-- **Debug** — for build errors, runtime exceptions, or unexpected behavior.
-
-#### Conversation guidance
-
-- **New** — fresh conversation when switching files/tasks, when the previous Cursor conversation is long, or when Cursor needs a clean context window.
-- **Continue** — for follow-up corrections or small adjustments to what was just written.
+One logical change at a time. Resist bundling unrelated fixes into one change, and keep each change tightly scoped to the request (see "Surgical changes").
 
 ---
 
 ## Working rhythm
 
-- One prompt at a time unless tasks are trivially small and tightly related.
-- Explain the **why** briefly before each prompt, especially with tradeoffs. Concise.
-- Verify a clean working tree (`git status`) before any Agent-mode prompt that modifies existing code.
-- After each Cursor-executed prompt: read the diff yourself, confirm the build is green, then ask the user to commit and paste the hash.
+- One logical change at a time unless tasks are trivially small and tightly related.
+- Explain the **why** briefly before each change, especially with tradeoffs. Concise.
+- Verify a clean working tree (`git status`) before modifying existing code.
+- After each change: read the diff yourself, confirm the build is green, then surface a suggested commit message for the user to review and commit.
 - Conventional commit prefixes: `feat:`, `refactor:`, `docs:`, `fix:`, `chore:`.
 - One logical change per commit.
 
 ### When to slow down
 
-Some prompts warrant explicit design walkthrough before the prompt is written:
+Some changes warrant an explicit design walkthrough before you write code:
 
 - Anything touching cross-cutting concerns (auth, middleware, versioning, transactions).
 - Anything in the Pending Decisions section below — drive to closure first.
@@ -154,7 +117,7 @@ Some prompts warrant explicit design walkthrough before the prompt is written:
 - Anything that modifies the persistence boundary or repository contracts.
 - Migrations.
 
-For these: name the options, weigh tradeoffs, present a recommendation, ask the user to confirm. Don't lead with the prompt.
+For these: name the options, weigh tradeoffs, present a recommendation, ask the user to confirm. Don't lead with code.
 
 ### When to ask for Sr. Dev approval before proceeding
 
@@ -220,15 +183,15 @@ Note: `MesocycleService` currently lives in `Bryk.Infrastructure/Services/` — 
 
 ## Validation philosophy
 
-You have direct file access — paste-back checkpoints are gone. After each Cursor-executed prompt:
+You have direct file access. After each change you make:
 
 1. Read the diff (`git diff` or read modified files directly).
 2. Verify build is green (`dotnet build` from repo root).
-3. Spot-check for: subtle logic errors, convention drift, redundant code, forgotten error paths, scope creep beyond the prompt.
-4. If something looks wrong, write a continuation prompt to fix before suggesting commit.
-5. Otherwise, suggest commit message and ask user to commit + paste hash.
+3. Spot-check for: subtle logic errors, convention drift, redundant code, forgotten error paths, scope creep beyond the request.
+4. If something looks wrong, fix it before suggesting commit.
+5. Otherwise, suggest a commit message for the user to review and commit.
 
-For high-risk prompts (cross-cutting concerns, migrations, anything in Sr. Dev approval list), explicitly call out what you read and what you verified. Don't silently accept.
+For high-risk changes (cross-cutting concerns, migrations, anything in Sr. Dev approval list), explicitly call out what you read and what you verified. Don't silently accept.
 
 ---
 
@@ -294,4 +257,4 @@ Ordered by operational impact:
 - `/md/handoffs/` — session-end handoff documents. Read the latest at session start.
 - `git log --oneline -20` for recent commit history.
 
-On session start: read the latest handoff (or ask for one) before designing any prompts. Confirm clean working tree and green build before proposing the first task.
+On session start: read the latest handoff (or ask for one) before starting work. Confirm clean working tree and green build before proposing the first task.
