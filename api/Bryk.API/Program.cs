@@ -1,5 +1,6 @@
 using Bryk.Application.Common;
 using Bryk.Application.Onboarding;
+using Bryk.Application.Profile;
 using Bryk.Application.Validators;
 using Bryk.Domain.Interfaces;
 using Bryk.Infrastructure.Data;
@@ -99,6 +100,7 @@ builder.Services.AddScoped<IEquipmentRepository, EquipmentRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IOnboardingService, OnboardingService>();
+builder.Services.AddScoped<IProfileService, ProfileService>();
 
 var app = builder.Build();
 
