@@ -2,6 +2,7 @@
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar.vue'
 import ProfileRequiredSection from '@/components/profile/ProfileRequiredSection.vue'
 import ProfileRecommendedSection from '@/components/profile/ProfileRecommendedSection.vue'
+import ProfileGoalsSection from '@/components/profile/ProfileGoalsSection.vue'
 </script>
 
 <template>
@@ -18,7 +19,7 @@ import ProfileRecommendedSection from '@/components/profile/ProfileRecommendedSe
       <div class="mt-8 max-w-2xl space-y-8">
         <ProfileRequiredSection />
         <ProfileRecommendedSection />
-        <!-- ProfileGoalsSection lands in Slice 3. -->
+        <ProfileGoalsSection />
       </div>
     </main>
   </div>

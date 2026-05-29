@@ -86,7 +86,7 @@ function utcTodayIso(): string {
   return `${yyyy}-${mm}-${dd}`
 }
 
-const eventItemSchema = z.object({
+export const eventItemSchema = z.object({
   name: z
     .string()
     .min(1, 'Event name is required')
@@ -105,7 +105,7 @@ const eventItemSchema = z.object({
     .nullable(),
 })
 
-const goalItemSchema = z.object({
+export const goalItemSchema = z.object({
   description: z
     .string()
     .min(1, 'Description is required')
