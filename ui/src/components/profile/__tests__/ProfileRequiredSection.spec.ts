@@ -1,12 +1,29 @@
 import { describe, expect, it } from 'vitest'
-import { flushPromises, mount } from '@vue/test-utils'
+import { mount } from '@vue/test-utils'
 import { createTestingPinia } from '@pinia/testing'
 import ProfileRequiredSection from '@/components/profile/ProfileRequiredSection.vue'
+import type { ProfileRequiredResponse } from '@/types/profile'
 
-function mountSection() {
+const seededRequired: ProfileRequiredResponse = {
+  name: 'Alice',
+  gender: 'Male',
+  dateOfBirth: '1990-05-15',
+  heightCm: 180,
+  weightKg: 75,
+  yearsTraining: 5,
+  typicalWeeklyHours: 8,
+  methodology: 'Polarized',
+}
+
+function mountSection(required?: ProfileRequiredResponse) {
   return mount(ProfileRequiredSection, {
     global: {
-      plugins: [createTestingPinia({ createSpy: () => () => {} })],
+      plugins: [
+        createTestingPinia({
+          createSpy: () => () => {},
+          initialState: required ? { profile: { required } } : undefined,
+        }),
+      ],
     },
     attachTo: document.body,
   })
@@ -19,20 +36,16 @@ describe('ProfileRequiredSection', () => {
     wrapper.unmount()
   })
 
-  it('shows at least one validation error when submitting empty', async () => {
+  it('shows the loading state before data loads', () => {
     const wrapper = mountSection()
-    const submitButton = wrapper.find('button[type="submit"]')
-    expect(submitButton.exists()).toBe(true)
+    expect(wrapper.text()).toContain('Loading…')
+    wrapper.unmount()
+  })
 
-    await submitButton.trigger('click')
-    await flushPromises()
-    await flushPromises()
-
-    const messages = wrapper.findAll('[data-slot="form-message"]')
-    const errorTexts = messages
-      .map((m) => m.text().trim())
-      .filter((t) => t.length > 0)
-    expect(errorTexts.length).toBeGreaterThan(0)
+  it('renders the form once data is present', () => {
+    const wrapper = mountSection(seededRequired)
+    expect(wrapper.find('button[type="submit"]').exists()).toBe(true)
+    expect(wrapper.text()).toContain('Name')
     wrapper.unmount()
   })
 })

@@ -99,16 +99,7 @@ const isSubmitting = form.isSubmitting
   <section class="rounded-lg border bg-card p-6">
     <h2 class="text-2xl font-semibold">Required Information</h2>
 
-    <p v-if="store.loadingRequired && !store.required" class="mt-4 text-sm text-muted-foreground">
-      Loading…
-    </p>
-
-    <div v-else-if="store.requiredError && !store.required" class="mt-4">
-      <p class="text-sm text-destructive">Couldn't load your required profile.</p>
-      <Button class="mt-3" variant="outline" @click="store.loadRequired()">Retry</Button>
-    </div>
-
-    <form v-else class="mt-6 space-y-6" @submit="onSubmit">
+    <form v-if="store.required" class="mt-6 space-y-6" @submit="onSubmit">
       <FormField v-slot="{ componentField }" name="name">
         <FormItem>
           <FormLabel>Name</FormLabel>
@@ -223,5 +214,14 @@ const isSubmitting = form.isSubmitting
         <Button type="submit" :disabled="isSubmitting">Save changes</Button>
       </div>
     </form>
+
+    <div v-else-if="store.requiredError" class="mt-4">
+      <p class="text-sm text-destructive">Couldn't load your required profile.</p>
+      <Button class="mt-3" variant="outline" @click="store.loadRequired()">Retry</Button>
+    </div>
+
+    <p v-else class="mt-4 text-sm text-muted-foreground">
+      Loading…
+    </p>
   </section>
 </template>

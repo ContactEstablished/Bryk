@@ -42,16 +42,7 @@ onMounted(() => {
       Your upcoming events and training goals.
     </p>
 
-    <p v-if="store.loadingGoals && !store.goals" class="mt-4 text-sm text-muted-foreground">
-      Loading…
-    </p>
-
-    <div v-else-if="store.goalsError && !store.goals" class="mt-4">
-      <p class="text-sm text-destructive">Couldn't load your events and goals.</p>
-      <Button class="mt-3" variant="outline" @click="store.loadGoals()">Retry</Button>
-    </div>
-
-    <template v-else>
+    <template v-if="store.goals">
       <!-- Events -->
       <fieldset class="mt-6">
         <legend class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Events</legend>
@@ -108,5 +99,14 @@ onMounted(() => {
         <Button type="button" variant="outline" class="mt-4" @click="addGoalDraft">Add Goal</Button>
       </fieldset>
     </template>
+
+    <div v-else-if="store.goalsError" class="mt-4">
+      <p class="text-sm text-destructive">Couldn't load your events and goals.</p>
+      <Button class="mt-3" variant="outline" @click="store.loadGoals()">Retry</Button>
+    </div>
+
+    <p v-else class="mt-4 text-sm text-muted-foreground">
+      Loading…
+    </p>
   </section>
 </template>

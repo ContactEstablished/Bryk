@@ -140,16 +140,7 @@ const isSubmitting = form.isSubmitting
       Optional &mdash; fill out what you have. You can update any of this later.
     </p>
 
-    <p v-if="store.loadingRecommended && !store.recommended" class="mt-4 text-sm text-muted-foreground">
-      Loading…
-    </p>
-
-    <div v-else-if="store.recommendedError && !store.recommended" class="mt-4">
-      <p class="text-sm text-destructive">Couldn't load your recommended profile.</p>
-      <Button class="mt-3" variant="outline" @click="store.loadRecommended()">Retry</Button>
-    </div>
-
-    <form v-else class="mt-6 space-y-8" @submit="onSubmit">
+    <form v-if="store.recommended" class="mt-6 space-y-8" @submit="onSubmit">
       <!-- Heart Rate -->
       <fieldset>
         <legend class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Heart Rate</legend>
@@ -254,5 +245,14 @@ const isSubmitting = form.isSubmitting
         <Button type="submit" :disabled="isSubmitting">Save changes</Button>
       </div>
     </form>
+
+    <div v-else-if="store.recommendedError" class="mt-4">
+      <p class="text-sm text-destructive">Couldn't load your recommended profile.</p>
+      <Button class="mt-3" variant="outline" @click="store.loadRecommended()">Retry</Button>
+    </div>
+
+    <p v-else class="mt-4 text-sm text-muted-foreground">
+      Loading…
+    </p>
   </section>
 </template>
