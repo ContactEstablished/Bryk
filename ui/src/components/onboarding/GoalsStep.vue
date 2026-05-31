@@ -2,7 +2,6 @@
 import { ref, watch } from 'vue'
 import { useFieldArray, useForm } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
-import { CheckCircle2 } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
@@ -162,17 +161,6 @@ const isSubmitting = form.isSubmitting
 
 <template>
   <div>
-    <div v-if="store.goalsComplete" class="flex items-start gap-3">
-      <CheckCircle2 :size="24" class="mt-0.5 shrink-0 text-primary" />
-      <div>
-        <h3 class="text-xl font-semibold">Goals saved</h3>
-        <p class="mt-1 text-sm text-muted-foreground">
-          Your events and goals are recorded. You'll be able to add more or edit them later.
-        </p>
-      </div>
-    </div>
-
-    <template v-else>
     <h3 class="text-2xl font-semibold">Set Your Goals</h3>
     <p class="mt-2 text-sm text-muted-foreground">
       Tell us about your upcoming events and training goals so we can plan your season.
@@ -358,6 +346,5 @@ const isSubmitting = form.isSubmitting
         </Button>
       </div>
     </form>
-    </template>
   </div>
 </template>

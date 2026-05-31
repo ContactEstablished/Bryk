@@ -79,6 +79,10 @@ function handleStepNext() {
 function goHome() {
   void router.push('/')
 }
+
+function goToProfile() {
+  void router.push('/profile')
+}
 </script>
 
 <template>
@@ -116,9 +120,14 @@ function goHome() {
       <p class="text-center text-muted-foreground">
         Your profile is ready — you can update any of this later.
       </p>
-      <Button @click="goHome">
-        Go to home
-      </Button>
+      <div class="flex gap-3">
+        <Button @click="goHome">
+          Go to home
+        </Button>
+        <Button variant="outline" @click="goToProfile">
+          Manage your profile
+        </Button>
+      </div>
     </div>
 
     <!-- Wizard -->

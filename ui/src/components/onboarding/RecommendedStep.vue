@@ -2,7 +2,6 @@
 import { ref } from 'vue'
 import { useForm } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
-import { CheckCircle2 } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form'
@@ -84,17 +83,6 @@ const isSubmitting = form.isSubmitting
 
 <template>
   <div>
-    <div v-if="store.recommendedComplete" class="flex items-start gap-3">
-      <CheckCircle2 :size="24" class="mt-0.5 shrink-0 text-primary" />
-      <div>
-        <h3 class="text-xl font-semibold">Thresholds saved</h3>
-        <p class="mt-1 text-sm text-muted-foreground">
-          Your sport thresholds and HR fields are recorded. You'll be able to update them later.
-        </p>
-      </div>
-    </div>
-
-    <template v-else>
     <h3 class="text-2xl font-semibold">Recommended Profile</h3>
     <p class="mt-2 text-sm text-muted-foreground">
       Optional &mdash; fill out what you have. You can update any of this later.
@@ -212,6 +200,5 @@ const isSubmitting = form.isSubmitting
         </Button>
       </div>
     </form>
-    </template>
   </div>
 </template>
