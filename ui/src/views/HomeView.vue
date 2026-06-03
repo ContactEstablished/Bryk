@@ -6,6 +6,7 @@ import { Activity } from 'lucide-vue-next'
 import { useOnboardingStore } from '@/stores/onboarding'
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar.vue'
 import PlaceholderCard from '@/components/dashboard/PlaceholderCard.vue'
+import PrimaryGoalCard from '@/components/dashboard/PrimaryGoalCard.vue'
 
 const router = useRouter()
 const store = useOnboardingStore()
@@ -104,10 +105,7 @@ const formattedDate = computed(() => {
             subtitle="Your training plan and weekly sessions land with the TrainingPlan domain (Phase 7) and structured workout builder (Phase 8)."
           />
         </div>
-        <PlaceholderCard
-          title="Primary Goal"
-          subtitle="Your highest-priority event will surface here once goal-fetching ships."
-        />
+        <PrimaryGoalCard />
       </div>
 
       <!-- Bottom: recent activity -->

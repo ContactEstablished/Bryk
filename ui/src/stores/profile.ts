@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { ApiError } from '@/services/api'
 import {
   getRequired,
@@ -30,7 +30,19 @@ import type {
   ProfileRequiredResponse,
   ProfileRecommendedResponse,
   ProfileGoalsResponse,
+  EventResponse,
 } from '@/types/profile'
+
+// Today as YYYY-MM-DD in UTC, so date-string comparisons match the server's
+// DateOnly semantics. Mirrors schemas/onboarding.ts's helper; kept local to
+// avoid exporting a one-liner across module boundaries.
+function utcTodayIso(): string {
+  const now = new Date()
+  const yyyy = now.getUTCFullYear()
+  const mm = String(now.getUTCMonth() + 1).padStart(2, '0')
+  const dd = String(now.getUTCDate()).padStart(2, '0')
+  return `${yyyy}-${mm}-${dd}`
+}
 
 export const useProfileStore = defineStore('profile', () => {
   const required = ref<ProfileRequiredResponse | null>(null)
@@ -44,6 +56,21 @@ export const useProfileStore = defineStore('profile', () => {
   const requiredError = ref<ApiError | Error | null>(null)
   const recommendedError = ref<ApiError | Error | null>(null)
   const goalsError = ref<ApiError | Error | null>(null)
+
+  // Highest-priority upcoming event for the dashboard's Primary Goal card:
+  // exclude past events (eventDate < today), then priority A<B<C, then soonest date.
+  const primaryEvent = computed<EventResponse | null>(() => {
+    const events = goals.value?.events
+    if (!events || events.length === 0) return null
+    const today = utcTodayIso()
+    const upcoming = events.filter((e) => e.eventDate >= today)
+    if (upcoming.length === 0) return null
+    return [...upcoming].sort((a, b) =>
+      a.priority !== b.priority
+        ? a.priority.localeCompare(b.priority)
+        : a.eventDate.localeCompare(b.eventDate),
+    )[0]
+  })
 
   async function loadRequired() {
     loadingRequired.value = true
@@ -137,6 +164,7 @@ export const useProfileStore = defineStore('profile', () => {
     requiredError,
     recommendedError,
     goalsError,
+    primaryEvent,
     loadRequired,
     loadRecommended,
     loadGoals,
