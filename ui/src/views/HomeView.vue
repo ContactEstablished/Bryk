@@ -7,6 +7,7 @@ import { useOnboardingStore } from '@/stores/onboarding'
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar.vue'
 import PlaceholderCard from '@/components/dashboard/PlaceholderCard.vue'
 import PrimaryGoalCard from '@/components/dashboard/PrimaryGoalCard.vue'
+import RestingHrCard from '@/components/dashboard/RestingHrCard.vue'
 
 const router = useRouter()
 const store = useOnboardingStore()
@@ -83,10 +84,7 @@ const formattedDate = computed(() => {
           title="Weekly Load"
           subtitle="Will populate once workout execution and TSS calculation ship (Phase 9)."
         />
-        <PlaceholderCard
-          title="Resting HR"
-          subtitle="Will show your saved resting HR once the profile editor ships."
-        />
+        <RestingHrCard />
         <PlaceholderCard
           title="Sleep Avg"
           subtitle="Post-v1 — needs a device or health-app integration."
