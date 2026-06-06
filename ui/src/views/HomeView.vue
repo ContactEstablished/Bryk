@@ -8,6 +8,7 @@ import DashboardSidebar from '@/components/dashboard/DashboardSidebar.vue'
 import PlaceholderCard from '@/components/dashboard/PlaceholderCard.vue'
 import PrimaryGoalCard from '@/components/dashboard/PrimaryGoalCard.vue'
 import RestingHrCard from '@/components/dashboard/RestingHrCard.vue'
+import ThisWeekCard from '@/components/dashboard/ThisWeekCard.vue'
 
 const router = useRouter()
 const store = useOnboardingStore()
@@ -98,10 +99,7 @@ const formattedDate = computed(() => {
       <!-- Middle row: training plan + primary goal -->
       <div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div class="lg:col-span-2">
-          <PlaceholderCard
-            title="This Week"
-            subtitle="Your training plan and weekly sessions land with the TrainingPlan domain (Phase 7) and structured workout builder (Phase 8)."
-          />
+          <ThisWeekCard />
         </div>
         <PrimaryGoalCard />
       </div>
