@@ -5,6 +5,7 @@ using Bryk.Application.Onboarding;
 using Bryk.Application.Profile;
 using Bryk.Application.Training;
 using Bryk.Application.Validators;
+using Bryk.Application.Zones;
 using Bryk.Domain.Interfaces;
 using Bryk.Infrastructure.Data;
 using Bryk.Infrastructure.Interceptors;
@@ -101,6 +102,7 @@ builder.Services.AddScoped<IEventRepository, EventRepository>();
 builder.Services.AddScoped<IGoalRepository, GoalRepository>();
 builder.Services.AddScoped<IEquipmentRepository, EquipmentRepository>();
 builder.Services.AddScoped<ITrainingPlanRepository, TrainingPlanRepository>();
+builder.Services.AddScoped<IAthleteSportZoneRepository, AthleteSportZoneRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IOnboardingService, OnboardingService>();
@@ -109,6 +111,7 @@ builder.Services.AddScoped<IEventService, EventService>();
 builder.Services.AddScoped<IGoalService, GoalService>();
 builder.Services.AddScoped<ITrainingPlanService, TrainingPlanService>();
 builder.Services.AddScoped<IThisWeekService, ThisWeekService>();
+builder.Services.AddScoped<IZoneService, ZoneService>();
 
 var app = builder.Build();
 

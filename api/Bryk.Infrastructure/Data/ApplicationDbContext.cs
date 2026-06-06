@@ -18,6 +18,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<TrainingPlan> TrainingPlans => Set<TrainingPlan>();
     public DbSet<PlannedWorkout> PlannedWorkouts => Set<PlannedWorkout>();
     public DbSet<Workout> Workouts => Set<Workout>();
+    public DbSet<AthleteSportZone> AthleteSportZones => Set<AthleteSportZone>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -146,6 +147,18 @@ public class ApplicationDbContext : DbContext
 
             // Denormalized, indexed AthleteId with no FK to Athlete (ADR-0003).
             entity.HasIndex(e => e.AthleteId);
+        });
+
+        // AthleteSportZone configuration
+        modelBuilder.Entity<AthleteSportZone>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.LowerBound).HasPrecision(7, 2);
+            entity.Property(e => e.UpperBound).HasPrecision(7, 2);
+
+            // Denormalized AthleteId, no FK to Athlete (ADR-0004 §1). One override row per
+            // athlete/sport/zone/metric.
+            entity.HasIndex(e => new { e.AthleteId, e.Sport, e.ZoneNumber, e.Metric }).IsUnique();
         });
     }
 
