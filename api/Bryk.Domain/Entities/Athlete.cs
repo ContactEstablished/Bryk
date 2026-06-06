@@ -20,6 +20,7 @@ public class Athlete : IAuditable
     public ICollection<Event> Events { get; set; } = new List<Event>();
     public ICollection<Goal> Goals { get; set; } = new List<Goal>();
     public ICollection<Equipment> Equipment { get; set; } = new List<Equipment>();
+    public ICollection<TrainingPlan> TrainingPlans { get; set; } = new List<TrainingPlan>();
 
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }

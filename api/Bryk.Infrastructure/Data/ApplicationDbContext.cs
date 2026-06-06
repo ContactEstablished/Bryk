@@ -15,6 +15,9 @@ public class ApplicationDbContext : DbContext
     public DbSet<Event> Events => Set<Event>();
     public DbSet<Goal> Goals => Set<Goal>();
     public DbSet<Equipment> Equipment => Set<Equipment>();
+    public DbSet<TrainingPlan> TrainingPlans => Set<TrainingPlan>();
+    public DbSet<PlannedWorkout> PlannedWorkouts => Set<PlannedWorkout>();
+    public DbSet<Workout> Workouts => Set<Workout>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -54,6 +57,11 @@ public class ApplicationDbContext : DbContext
                 .WithOne(eq => eq.Athlete)
                 .HasForeignKey(eq => eq.AthleteId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(e => e.TrainingPlans)
+                .WithOne(tp => tp.Athlete)
+                .HasForeignKey(tp => tp.AthleteId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         // AthleteSportProfile configuration
@@ -87,6 +95,53 @@ public class ApplicationDbContext : DbContext
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Notes).HasMaxLength(500);
+        });
+
+        // TrainingPlan configuration
+        modelBuilder.Entity<TrainingPlan>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.RecoveryWeekPercentage).HasPrecision(5, 2);
+
+            // Optional target event. SetNull so deleting the event leaves the plan standalone.
+            entity.HasOne(e => e.Event)
+                .WithMany()
+                .HasForeignKey(e => e.EventId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasMany(e => e.PlannedWorkouts)
+                .WithOne(pw => pw.TrainingPlan)
+                .HasForeignKey(pw => pw.TrainingPlanId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // PlannedWorkout configuration
+        modelBuilder.Entity<PlannedWorkout>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Description).HasMaxLength(2000);
+            entity.Property(e => e.PlannedLoad).HasPrecision(6, 2);
+
+            // AthleteId is a denormalized, indexed column with no FK to Athlete (ADR-0003):
+            // ownership cascades through TrainingPlan; this composite index serves the "This Week" range query.
+            entity.HasIndex(e => new { e.AthleteId, e.ScheduledDate });
+        });
+
+        // Workout configuration
+        modelBuilder.Entity<Workout>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            // Nullable link to the planned session; unplanned executions are first-class (ADR-0001 §16).
+            entity.HasOne(e => e.PlannedWorkout)
+                .WithMany()
+                .HasForeignKey(e => e.PlannedWorkoutId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // Denormalized, indexed AthleteId with no FK to Athlete (ADR-0003).
+            entity.HasIndex(e => e.AthleteId);
         });
     }
 
