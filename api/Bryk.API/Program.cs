@@ -3,6 +3,7 @@ using Bryk.Application.Events;
 using Bryk.Application.Goals;
 using Bryk.Application.Onboarding;
 using Bryk.Application.Profile;
+using Bryk.Application.Training;
 using Bryk.Application.Validators;
 using Bryk.Domain.Interfaces;
 using Bryk.Infrastructure.Data;
@@ -106,6 +107,7 @@ builder.Services.AddScoped<IOnboardingService, OnboardingService>();
 builder.Services.AddScoped<IProfileService, ProfileService>();
 builder.Services.AddScoped<IEventService, EventService>();
 builder.Services.AddScoped<IGoalService, GoalService>();
+builder.Services.AddScoped<ITrainingPlanService, TrainingPlanService>();
 
 var app = builder.Build();
 
