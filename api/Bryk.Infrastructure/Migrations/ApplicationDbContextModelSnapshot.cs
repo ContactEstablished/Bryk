@@ -430,8 +430,7 @@ namespace Bryk.Infrastructure.Migrations
 
                     b.HasOne("Bryk.Domain.Entities.Event", "Event")
                         .WithMany()
-                        .HasForeignKey("EventId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("EventId");
 
                     b.Navigation("Athlete");
 

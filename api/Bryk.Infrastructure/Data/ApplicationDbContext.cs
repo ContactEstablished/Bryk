@@ -104,11 +104,15 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
             entity.Property(e => e.RecoveryWeekPercentage).HasPrecision(5, 2);
 
-            // Optional target event. SetNull so deleting the event leaves the plan standalone.
+            // Optional target event. ClientSetNull: EF nulls EventId client-side when an event is
+            // deleted through the tracked context (plan goes standalone), but the FK is NO ACTION at
+            // the DB. A DB-level SET NULL here would create a second Athlete -> Event -> TrainingPlan
+            // delete-action path alongside the Athlete -> TrainingPlan cascade, which SQL Server rejects
+            // (multiple cascade paths, error 1785).
             entity.HasOne(e => e.Event)
                 .WithMany()
                 .HasForeignKey(e => e.EventId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.ClientSetNull);
 
             entity.HasMany(e => e.PlannedWorkouts)
                 .WithOne(pw => pw.TrainingPlan)

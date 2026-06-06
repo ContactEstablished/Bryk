@@ -41,8 +41,7 @@ namespace Bryk.Infrastructure.Migrations
                         name: "FK_TrainingPlans_Events_EventId",
                         column: x => x.EventId,
                         principalTable: "Events",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(

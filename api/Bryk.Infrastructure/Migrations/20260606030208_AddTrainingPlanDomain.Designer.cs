@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Bryk.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260606024708_AddTrainingPlanDomain")]
+    [Migration("20260606030208_AddTrainingPlanDomain")]
     partial class AddTrainingPlanDomain
     {
         /// <inheritdoc />
@@ -433,8 +433,7 @@ namespace Bryk.Infrastructure.Migrations
 
                     b.HasOne("Bryk.Domain.Entities.Event", "Event")
                         .WithMany()
-                        .HasForeignKey("EventId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("EventId");
 
                     b.Navigation("Athlete");
 
