@@ -108,6 +108,7 @@ builder.Services.AddScoped<IProfileService, ProfileService>();
 builder.Services.AddScoped<IEventService, EventService>();
 builder.Services.AddScoped<IGoalService, GoalService>();
 builder.Services.AddScoped<ITrainingPlanService, TrainingPlanService>();
+builder.Services.AddScoped<IThisWeekService, ThisWeekService>();
 
 var app = builder.Build();
 

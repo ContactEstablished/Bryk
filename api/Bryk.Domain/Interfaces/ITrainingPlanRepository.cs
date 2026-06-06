@@ -23,6 +23,14 @@ public interface ITrainingPlanRepository
     Task<IReadOnlyList<TrainingPlan>> GetByAthleteIdAsync(Guid athleteId, CancellationToken ct = default);
 
     /// <summary>
+    /// Returns the athlete's <see cref="PlannedWorkout"/>s whose <see cref="PlannedWorkout.ScheduledDate"/>
+    /// falls within [start, end] inclusive, across all the athlete's plans, ordered by date then sport.
+    /// Single-table query on the denormalized, indexed <see cref="PlannedWorkout.AthleteId"/> (ADR-0003) —
+    /// one round-trip, no join. Uses no-tracking.
+    /// </summary>
+    Task<IReadOnlyList<PlannedWorkout>> GetPlannedWorkoutsInRangeAsync(Guid athleteId, DateOnly start, DateOnly end, CancellationToken ct = default);
+
+    /// <summary>
     /// Stages a new <see cref="TrainingPlan"/> (with any seeded <see cref="PlannedWorkout"/> children)
     /// for insertion. Does NOT call SaveChanges.
     /// </summary>
