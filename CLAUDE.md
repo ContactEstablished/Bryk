@@ -273,6 +273,7 @@ This project has the **dotnet-claude-kit** plugin active. Use it rather than rei
   - **0002** — Coaches are v2; v1 is athlete-only, one human = one `Athlete` (Accepted).
   - **0003** — TrainingPlan / PlannedWorkout / Workout field shapes (Accepted).
   - **0004** — Structured-workout payload + training-zone model (Accepted).
+  - **0005** — Training-load engine + executed-workout capture (Accepted; HR §1=a, strength §2=c).
 - `/md/product/feature-parity-trainingpeaks.md` — feature wishlist and status.
 - `/md/Tasks-<phase>-<n>.md` — per-task specs (Phase 10: `Tasks-10-1.md` … `Tasks-10-5.md`).
 - `/md/handoffs/` — session-end handoff documents. Most recent: `2026-06-08-phase-10-complete.md`.

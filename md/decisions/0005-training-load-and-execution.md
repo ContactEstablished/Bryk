@@ -1,7 +1,7 @@
 # ADR-0005 — Training-load engine + executed-workout capture (Phase 11)
 
 **Date:** 2026-06-08
-**Status:** Proposed
+**Status:** Accepted (2026-06-08) — HR §1 = option (a); strength §2 = option (c)
 
 ## Context
 
@@ -236,9 +236,11 @@ compute/override surface) and executed-`Workout` step capture; ADR-0001 §2 / AD
 - `IWorkoutService` + DTOs/validators + `WorkoutsController` (11-4).
 - **No new enum** — `Sport` and `StepIntent` are reused.
 
-**Open on acceptance:** the §1 HR-target sub-decision (option a recommended), the §2 strength formula
-choice (option c recommended), and the calibration constants — all to be ratified (or adjusted)
-before 11-1 implementation, exactly as ADR-0004's four sub-decisions were confirmed on acceptance.
+**Ratified on acceptance (2026-06-08):** §1 HR-target = **option (a)** — `IF = targetHr / Lt2`
+(`AthleteSportProfile.Lt2` as threshold-HR), degrading to the step's zone/power/pace target then 0
+when `Lt2` is null; §2 strength = **option (c)** — scaled tonnage `Σ(Sets×Reps×LoadKg)×k` when `LoadKg`
+is present, else per-step `Rpe`-weighted duration. The calibration constant `k` is set and unit-tested
+in Task 11-1 and documented as tunable. Nullable inputs / missing thresholds always degrade to 0.
 
 ### For Tasks 11-1 … 11-5
 
