@@ -13,12 +13,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import WorkoutStructureBuilder from '@/components/training/WorkoutStructureBuilder.vue'
 import { useProfileStore } from '@/stores/profile'
 import { useTrainingStore } from '@/stores/training'
 import { ApiError } from '@/services/api'
 import { extractApiValidationMessages } from '@/services/apiErrors'
 import { trainingPlanSchema, type TrainingPlanFormValues } from '@/schemas/training'
-import type { TrainingPlanRequest } from '@/types/training'
+import type {
+  TrainingPlanRequest,
+  TrainingPlanResponse,
+  PlannedWorkoutResponse,
+  PlannedSport,
+} from '@/types/training'
 
 const profileStore = useProfileStore()
 const trainingStore = useTrainingStore()
@@ -50,6 +56,25 @@ const { fields, push, remove } = useFieldArray<PlannedWorkoutFormItem>('plannedW
 
 const globalError = ref<string | null>(null)
 const justCreated = ref(false)
+
+// After a plan is created its planned workouts have ids, so the builder can be launched for each.
+const createdPlan = ref<TrainingPlanResponse | null>(null)
+const buildTarget = ref<{
+  planId: string
+  plannedWorkoutId: string
+  sport: PlannedSport
+  title: string
+} | null>(null)
+
+function openBuilder(pw: PlannedWorkoutResponse) {
+  if (!createdPlan.value) return
+  buildTarget.value = {
+    planId: createdPlan.value.id,
+    plannedWorkoutId: pw.id,
+    sport: pw.sport,
+    title: pw.title,
+  }
+}
 
 onMounted(() => {
   if (!profileStore.required) void profileStore.loadRequired()
@@ -132,7 +157,8 @@ const onSubmit = form.handleSubmit(async (values) => {
   }
 
   try {
-    await trainingStore.createPlan(req)
+    createdPlan.value = await trainingStore.createPlan(req)
+    buildTarget.value = null
     justCreated.value = true
     form.resetForm()
     methodologySeeded.value = false // allow the next plan to re-seed from the athlete default
@@ -340,5 +366,45 @@ const isSubmitting = form.isSubmitting
         <Button type="submit" :disabled="isSubmitting">Create Plan</Button>
       </div>
     </form>
+
+    <!-- Structured-workout builder (Task 10-5), launched from the just-created plan's workouts. -->
+    <section v-if="createdPlan && !buildTarget" class="mt-8 rounded-lg border bg-card p-6">
+      <h2 class="text-lg font-semibold">Build structured workouts</h2>
+      <p class="mt-1 text-sm text-muted-foreground">
+        Add interval blocks and steps to the workouts you just scheduled.
+      </p>
+      <ul class="mt-4 divide-y">
+        <li
+          v-for="pw in createdPlan.plannedWorkouts"
+          :key="pw.id"
+          class="flex items-center justify-between gap-4 py-3"
+        >
+          <span class="text-sm">
+            <span class="font-medium">{{ pw.title }}</span>
+            &middot; {{ pw.sport }} &middot; {{ pw.scheduledDate }}
+          </span>
+          <Button type="button" variant="outline" size="sm" @click="openBuilder(pw)">
+            Build structure
+          </Button>
+        </li>
+        <li
+          v-if="createdPlan.plannedWorkouts.length === 0"
+          class="py-3 text-sm text-muted-foreground/60"
+        >
+          This plan has no planned workouts to build.
+        </li>
+      </ul>
+    </section>
+
+    <WorkoutStructureBuilder
+      v-if="buildTarget"
+      :key="buildTarget.plannedWorkoutId"
+      class="mt-8"
+      :plan-id="buildTarget.planId"
+      :planned-workout-id="buildTarget.plannedWorkoutId"
+      :sport="buildTarget.sport"
+      :title="buildTarget.title"
+      @close="buildTarget = null"
+    />
   </main>
 </template>

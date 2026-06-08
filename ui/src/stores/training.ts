@@ -1,11 +1,18 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { ApiError } from '@/services/api'
-import { getThisWeek, createPlan as createPlanApi } from '@/services/training'
+import {
+  getThisWeek,
+  createPlan as createPlanApi,
+  getStructure as getStructureApi,
+  saveStructure as saveStructureApi,
+} from '@/services/training'
 import type {
   ThisWeekResponse,
   TrainingPlanRequest,
   TrainingPlanResponse,
+  PlannedWorkoutResponse,
+  WorkoutStructureRequest,
 } from '@/types/training'
 
 export const useTrainingStore = defineStore('training', () => {
@@ -34,11 +41,46 @@ export const useTrainingStore = defineStore('training', () => {
     return created
   }
 
+  // ── Structured-workout payload (Task 10-5) ──
+  const structure = ref<PlannedWorkoutResponse | null>(null)
+  const loadingStructure = ref(false)
+  const structureError = ref<ApiError | Error | null>(null)
+
+  async function loadStructure(planId: string, plannedWorkoutId: string) {
+    loadingStructure.value = true
+    structureError.value = null
+    structure.value = null
+    try {
+      structure.value = await getStructureApi(planId, plannedWorkoutId)
+    } catch (e) {
+      structureError.value = e as ApiError | Error
+    } finally {
+      loadingStructure.value = false
+    }
+  }
+
+  // Replace a planned workout's blocks/steps; the PUT returns the saved structure, so the
+  // builder gets server truth (ids assigned) without a second round-trip. Re-throws for the form.
+  async function saveStructure(
+    planId: string,
+    plannedWorkoutId: string,
+    request: WorkoutStructureRequest,
+  ): Promise<PlannedWorkoutResponse> {
+    const updated = await saveStructureApi(planId, plannedWorkoutId, request)
+    structure.value = updated
+    return updated
+  }
+
   return {
     thisWeek,
     loadingThisWeek,
     thisWeekError,
     loadThisWeek,
     createPlan,
+    structure,
+    loadingStructure,
+    structureError,
+    loadStructure,
+    saveStructure,
   }
 })

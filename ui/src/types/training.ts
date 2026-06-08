@@ -15,6 +15,9 @@ export interface PlannedWorkoutResponse {
   description: string | null
   plannedDurationMinutes: number | null
   plannedLoad: number | null
+  // Structured payload (Task 10-4 / ADR-0004 §2). Only populated by the structure endpoint;
+  // the plan/This-Week reads omit it, so it's optional on the shared shape.
+  blocks?: WorkoutBlockResponse[]
 }
 
 // Mirrors Bryk.Application.Training.ThisWeekResponse.
@@ -45,6 +48,53 @@ export interface TrainingPlanRequest {
   endDate: string
   eventId: string | null
   plannedWorkouts: PlannedWorkoutDto[]
+}
+
+// ── Structured-workout payload (Task 10-4 / ADR-0004 §2), mirroring the backend DTOs ──
+
+export type StepIntent = 'Warmup' | 'Work' | 'Recovery' | 'Cooldown' | 'Rest'
+
+// Write-side step. Order is positional; the server assigns it. Sport-discriminated fields
+// (validated server-side and by the client schema factory): cardio uses duration/distance +
+// zone/power/HR/pace targets; strength uses sets/reps/load/RPE.
+export interface WorkoutStepDto {
+  intent: StepIntent
+  title: string | null
+  durationSeconds: number | null
+  distanceMeters: number | null
+  targetZone: number | null
+  targetPowerLow: number | null
+  targetPowerHigh: number | null
+  targetHrLow: number | null
+  targetHrHigh: number | null
+  targetPaceLow: number | null
+  targetPaceHigh: number | null
+  sets: number | null
+  reps: number | null
+  loadKg: number | null
+  rpe: number | null
+}
+
+export interface WorkoutBlockDto {
+  orderIndex: number
+  repeats: number
+  steps: WorkoutStepDto[]
+}
+
+export interface WorkoutStructureRequest {
+  blocks: WorkoutBlockDto[]
+}
+
+export interface WorkoutStepResponse extends WorkoutStepDto {
+  id: string
+  orderIndex: number
+}
+
+export interface WorkoutBlockResponse {
+  id: string
+  orderIndex: number
+  repeats: number
+  steps: WorkoutStepResponse[]
 }
 
 // Mirrors Bryk.Application.Training.TrainingPlanResponse (Id-bearing read shape).
