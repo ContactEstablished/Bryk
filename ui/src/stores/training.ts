@@ -6,6 +6,8 @@ import {
   createPlan as createPlanApi,
   getStructure as getStructureApi,
   saveStructure as saveStructureApi,
+  logWorkout as logWorkoutApi,
+  getRecentWorkouts as getRecentWorkoutsApi,
 } from '@/services/training'
 import type {
   ThisWeekResponse,
@@ -13,6 +15,8 @@ import type {
   TrainingPlanResponse,
   PlannedWorkoutResponse,
   WorkoutStructureRequest,
+  WorkoutResponse,
+  LogWorkoutRequest,
 } from '@/types/training'
 
 export const useTrainingStore = defineStore('training', () => {
@@ -71,6 +75,31 @@ export const useTrainingStore = defineStore('training', () => {
     return updated
   }
 
+  // ── Executed workouts (Task 11-5) ──
+  const recentWorkouts = ref<WorkoutResponse[] | null>(null)
+  const loadingRecent = ref(false)
+  const recentError = ref<ApiError | Error | null>(null)
+
+  async function loadRecentWorkouts() {
+    loadingRecent.value = true
+    recentError.value = null
+    try {
+      recentWorkouts.value = await getRecentWorkoutsApi()
+    } catch (e) {
+      recentError.value = e as ApiError | Error
+    } finally {
+      loadingRecent.value = false
+    }
+  }
+
+  // Log a completed workout, then re-fetch the recent list so Recent Activity reflects it.
+  // Re-throws so the form can map validation errors.
+  async function logWorkout(req: LogWorkoutRequest): Promise<WorkoutResponse> {
+    const created = await logWorkoutApi(req)
+    await loadRecentWorkouts()
+    return created
+  }
+
   return {
     thisWeek,
     loadingThisWeek,
@@ -82,5 +111,10 @@ export const useTrainingStore = defineStore('training', () => {
     structureError,
     loadStructure,
     saveStructure,
+    recentWorkouts,
+    loadingRecent,
+    recentError,
+    loadRecentWorkouts,
+    logWorkout,
   }
 })

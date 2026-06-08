@@ -5,6 +5,8 @@ import type {
   TrainingPlanResponse,
   PlannedWorkoutResponse,
   WorkoutStructureRequest,
+  WorkoutResponse,
+  LogWorkoutRequest,
 } from '@/types/training'
 
 export async function getThisWeek(): Promise<ThisWeekResponse> {
@@ -53,6 +55,30 @@ export async function saveStructure(
   )
   if (result === null) {
     throw new Error('Unexpected empty response from PUT structure')
+  }
+  return result
+}
+
+// Executed-workout capture (Task 11-4).
+export async function logWorkout(req: LogWorkoutRequest): Promise<WorkoutResponse> {
+  const result = await apiFetch<WorkoutResponse>('/workouts', {
+    method: 'POST',
+    body: JSON.stringify(req),
+  })
+  if (result === null) {
+    throw new Error('Unexpected empty response from POST /workouts')
+  }
+  return result
+}
+
+export async function getRecentWorkouts(take = 10): Promise<WorkoutResponse[]> {
+  return (await apiFetch<WorkoutResponse[]>(`/workouts?take=${take}`)) ?? []
+}
+
+export async function getWorkout(id: string): Promise<WorkoutResponse> {
+  const result = await apiFetch<WorkoutResponse>(`/workouts/${id}`)
+  if (result === null) {
+    throw new Error('Unexpected empty response from GET /workouts/{id}')
   }
   return result
 }

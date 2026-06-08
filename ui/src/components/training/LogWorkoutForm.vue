@@ -1,0 +1,256 @@
+<script setup lang="ts">
+import { computed, ref } from 'vue'
+import { useFieldArray, useForm } from 'vee-validate'
+import { toTypedSchema } from '@vee-validate/zod'
+import { CheckCircle2 } from 'lucide-vue-next'
+import { Button } from '@/components/ui/button'
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { useTrainingStore } from '@/stores/training'
+import { ApiError } from '@/services/api'
+import { extractApiValidationMessages } from '@/services/apiErrors'
+import { logWorkoutSchema, type LogWorkoutFormValues } from '@/schemas/workouts'
+import type { LogWorkoutRequest, PlannedWorkoutResponse, PlannedSport } from '@/types/training'
+
+// When launched from a planned workout: seeds a step-result row per planned step + shows planned-vs-actual.
+const props = defineProps<{ plannedWorkout?: PlannedWorkoutResponse | null }>()
+const emit = defineEmits<{ logged: []; close: [] }>()
+
+const store = useTrainingStore()
+
+function utcTodayIso(): string {
+  const now = new Date()
+  const yyyy = now.getUTCFullYear()
+  const mm = String(now.getUTCMonth() + 1).padStart(2, '0')
+  const dd = String(now.getUTCDate()).padStart(2, '0')
+  return `${yyyy}-${mm}-${dd}`
+}
+
+const sport = ref<PlannedSport>(props.plannedWorkout?.sport ?? 'Run')
+const isPlanned = computed(() => props.plannedWorkout != null)
+
+const sportOptions = [
+  { value: 'Swim', label: 'Swim' },
+  { value: 'Bike', label: 'Bike' },
+  { value: 'Run', label: 'Run' },
+  { value: 'Triathlon', label: 'Triathlon' },
+  { value: 'Strength', label: 'Strength' },
+]
+
+// Flatten the planned steps (for seeding + the planned-vs-actual labels).
+const plannedSteps = computed(() =>
+  (props.plannedWorkout?.blocks ?? [])
+    .slice()
+    .sort((a, b) => a.orderIndex - b.orderIndex)
+    .flatMap((b) => b.steps.slice().sort((s1, s2) => s1.orderIndex - s2.orderIndex)),
+)
+
+function emptyResult(workoutStepId: string | null = null) {
+  return {
+    workoutStepId,
+    actualDurationSeconds: null,
+    actualDistanceMeters: null,
+    avgPower: null,
+    avgHr: null,
+    avgPace: null,
+    rpe: null,
+  }
+}
+
+const form = useForm<LogWorkoutFormValues>({
+  validationSchema: toTypedSchema(logWorkoutSchema),
+  initialValues: {
+    completedDate: utcTodayIso(),
+    actualDurationSeconds: null,
+    actualDistanceMeters: null,
+    avgHr: null,
+    maxHr: null,
+    loadOverride: null,
+    rpe: null,
+    notes: null,
+    stepResults: plannedSteps.value.map((s) => emptyResult(s.id)),
+  },
+})
+
+const { fields: stepResults, push, remove } = useFieldArray('stepResults')
+
+const globalError = ref<string | null>(null)
+const justLogged = ref(false)
+
+function plannedLabel(index: number): string {
+  const s = plannedSteps.value[index]
+  if (!s) return ''
+  if (sport.value === 'Strength') {
+    return `Planned: ${s.sets ?? '–'}×${s.reps ?? '–'}${s.loadKg != null ? ` @ ${s.loadKg}kg` : ''}`
+  }
+  const bits: string[] = []
+  if (s.targetZone != null) bits.push(`Z${s.targetZone}`)
+  if (s.durationSeconds != null) bits.push(`${s.durationSeconds}s`)
+  if (s.distanceMeters != null) bits.push(`${s.distanceMeters}m`)
+  return bits.length ? `Planned: ${bits.join(' · ')}` : ''
+}
+
+function addStepResult() {
+  push(emptyResult())
+}
+
+const onSubmit = form.handleSubmit(async (values) => {
+  globalError.value = null
+  const req: LogWorkoutRequest = {
+    sport: sport.value,
+    completedDate: values.completedDate,
+    plannedWorkoutId: props.plannedWorkout?.id ?? null,
+    actualDurationSeconds: values.actualDurationSeconds ?? null,
+    actualDistanceMeters: values.actualDistanceMeters ?? null,
+    avgHr: values.avgHr ?? null,
+    maxHr: values.maxHr ?? null,
+    loadOverride: values.loadOverride ?? null,
+    rpe: values.rpe ?? null,
+    notes: values.notes ?? null,
+    stepResults: values.stepResults.map((r) => ({
+      workoutStepId: r.workoutStepId ?? null,
+      actualDurationSeconds: r.actualDurationSeconds ?? null,
+      actualDistanceMeters: r.actualDistanceMeters ?? null,
+      avgPower: r.avgPower ?? null,
+      avgHr: r.avgHr ?? null,
+      avgPace: r.avgPace ?? null,
+      rpe: r.rpe ?? null,
+    })),
+  }
+
+  try {
+    await store.logWorkout(req)
+    justLogged.value = true
+    emit('logged')
+  } catch (e) {
+    const messages = extractApiValidationMessages(e)
+    globalError.value = messages
+      ? messages.join(' ')
+      : e instanceof ApiError
+        ? `Couldn't log: ${e.statusText} (${e.status})`
+        : e instanceof Error
+          ? `Couldn't log: ${e.message}`
+          : "Couldn't log — please try again."
+  }
+})
+
+const isSubmitting = form.isSubmitting
+</script>
+
+<template>
+  <section class="rounded-md border p-4 space-y-4">
+    <div class="flex items-center justify-between">
+      <h4 class="text-sm font-semibold">
+        Log workout<span v-if="isPlanned && plannedWorkout"> &middot; {{ plannedWorkout.title }}</span>
+      </h4>
+      <Button type="button" variant="ghost" size="sm" @click="emit('close')">Close</Button>
+    </div>
+
+    <form class="space-y-4" @submit="onSubmit">
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <!-- Sport: selectable only when unplanned. -->
+        <div v-if="!isPlanned" class="space-y-1">
+          <span class="text-xs font-medium">Sport</span>
+          <Select :model-value="sport" @update:model-value="(v) => (sport = v as PlannedSport)">
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem v-for="opt in sportOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <FormField v-slot="{ componentField }" name="completedDate">
+          <FormItem>
+            <FormLabel>Completed date</FormLabel>
+            <FormControl><Input type="date" v-bind="componentField" /></FormControl>
+            <FormMessage />
+          </FormItem>
+        </FormField>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <FormField v-slot="{ componentField }" name="actualDurationSeconds">
+          <FormItem><FormLabel class="text-xs">Duration (sec)</FormLabel><FormControl><Input type="number" v-bind="componentField" /></FormControl><FormMessage /></FormItem>
+        </FormField>
+        <FormField v-slot="{ componentField }" name="actualDistanceMeters">
+          <FormItem><FormLabel class="text-xs">Distance (m)</FormLabel><FormControl><Input type="number" v-bind="componentField" /></FormControl><FormMessage /></FormItem>
+        </FormField>
+        <FormField v-slot="{ componentField }" name="avgHr">
+          <FormItem><FormLabel class="text-xs">Avg HR</FormLabel><FormControl><Input type="number" v-bind="componentField" /></FormControl><FormMessage /></FormItem>
+        </FormField>
+        <FormField v-slot="{ componentField }" name="maxHr">
+          <FormItem><FormLabel class="text-xs">Max HR</FormLabel><FormControl><Input type="number" v-bind="componentField" /></FormControl><FormMessage /></FormItem>
+        </FormField>
+        <FormField v-slot="{ componentField }" name="rpe">
+          <FormItem><FormLabel class="text-xs">RPE</FormLabel><FormControl><Input type="number" step="0.1" v-bind="componentField" /></FormControl><FormMessage /></FormItem>
+        </FormField>
+        <FormField v-slot="{ componentField }" name="loadOverride">
+          <FormItem><FormLabel class="text-xs">Load (override)</FormLabel><FormControl><Input type="number" step="0.01" v-bind="componentField" /></FormControl><FormMessage /></FormItem>
+        </FormField>
+      </div>
+
+      <FormField v-slot="{ componentField }" name="notes">
+        <FormItem><FormLabel class="text-xs">Notes</FormLabel><FormControl><Input v-bind="componentField" /></FormControl><FormMessage /></FormItem>
+      </FormField>
+
+      <!-- Per-step actuals (optional; seeded from the plan for comparison). -->
+      <fieldset class="space-y-3">
+        <legend class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Per-step actuals</legend>
+        <div v-if="stepResults.length === 0" class="text-xs text-muted-foreground/60">No per-step actuals.</div>
+
+        <div
+          v-for="(field, index) in stepResults"
+          :key="field.key"
+          class="rounded-md border border-dashed p-3 space-y-2"
+        >
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-medium">Step result {{ index + 1 }}</span>
+            <span v-if="plannedLabel(index)" class="text-[11px] text-muted-foreground">{{ plannedLabel(index) }}</span>
+            <Button type="button" variant="ghost" size="sm" @click="remove(index)">Remove</Button>
+          </div>
+          <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            <FormField v-slot="{ componentField }" :name="`stepResults[${index}].actualDurationSeconds`">
+              <FormItem><FormLabel class="text-[11px]">Dur (s)</FormLabel><FormControl><Input type="number" v-bind="componentField" /></FormControl><FormMessage /></FormItem>
+            </FormField>
+            <FormField v-slot="{ componentField }" :name="`stepResults[${index}].avgPower`">
+              <FormItem><FormLabel class="text-[11px]">Power</FormLabel><FormControl><Input type="number" v-bind="componentField" /></FormControl><FormMessage /></FormItem>
+            </FormField>
+            <FormField v-slot="{ componentField }" :name="`stepResults[${index}].avgHr`">
+              <FormItem><FormLabel class="text-[11px]">HR</FormLabel><FormControl><Input type="number" v-bind="componentField" /></FormControl><FormMessage /></FormItem>
+            </FormField>
+            <FormField v-slot="{ componentField }" :name="`stepResults[${index}].avgPace`">
+              <FormItem><FormLabel class="text-[11px]">Pace</FormLabel><FormControl><Input type="number" v-bind="componentField" /></FormControl><FormMessage /></FormItem>
+            </FormField>
+            <FormField v-slot="{ componentField }" :name="`stepResults[${index}].actualDistanceMeters`">
+              <FormItem><FormLabel class="text-[11px]">Dist (m)</FormLabel><FormControl><Input type="number" v-bind="componentField" /></FormControl><FormMessage /></FormItem>
+            </FormField>
+            <FormField v-slot="{ componentField }" :name="`stepResults[${index}].rpe`">
+              <FormItem><FormLabel class="text-[11px]">RPE</FormLabel><FormControl><Input type="number" step="0.1" v-bind="componentField" /></FormControl><FormMessage /></FormItem>
+            </FormField>
+          </div>
+        </div>
+
+        <Button type="button" variant="outline" size="sm" @click="addStepResult">Add step result</Button>
+      </fieldset>
+
+      <div v-if="globalError" class="rounded-md bg-destructive/10 px-4 py-3 text-sm text-destructive">
+        {{ globalError }}
+      </div>
+
+      <div class="flex items-center justify-end gap-3">
+        <span v-if="justLogged" class="flex items-center gap-1 text-sm text-muted-foreground">
+          <CheckCircle2 :size="16" class="text-primary" />
+          Logged
+        </span>
+        <Button type="submit" :disabled="isSubmitting">Log workout</Button>
+      </div>
+    </form>
+  </section>
+</template>

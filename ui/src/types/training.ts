@@ -34,6 +34,62 @@ export interface ThisWeekResponse {
   plannedWorkouts: PlannedWorkoutResponse[]
 }
 
+// ── Executed-workout shapes (Task 11-4 / ADR-0005 §4-6) ──
+
+export interface WorkoutStepResultResponse {
+  id: string
+  workoutStepId: string | null
+  orderIndex: number
+  actualDurationSeconds: number | null
+  actualDistanceMeters: number | null
+  avgPower: number | null
+  avgHr: number | null
+  avgPace: number | null
+  rpe: number | null
+}
+
+export interface WorkoutResponse {
+  id: string
+  plannedWorkoutId: string | null
+  sport: PlannedSport
+  completedDate: string
+  actualDurationSeconds: number | null
+  actualDistanceMeters: number | null
+  avgHr: number | null
+  maxHr: number | null
+  computedLoad: number | null
+  loadOverride: number | null
+  effectiveLoad: number | null
+  isLoadOverride: boolean
+  rpe: number | null
+  notes: string | null
+  stepResults: WorkoutStepResultResponse[]
+}
+
+export interface WorkoutStepResultDto {
+  workoutStepId: string | null
+  actualDurationSeconds: number | null
+  actualDistanceMeters: number | null
+  avgPower: number | null
+  avgHr: number | null
+  avgPace: number | null
+  rpe: number | null
+}
+
+export interface LogWorkoutRequest {
+  sport: PlannedSport
+  completedDate: string
+  plannedWorkoutId: string | null
+  actualDurationSeconds: number | null
+  actualDistanceMeters: number | null
+  avgHr: number | null
+  maxHr: number | null
+  loadOverride: number | null
+  rpe: number | null
+  notes: string | null
+  stepResults: WorkoutStepResultDto[]
+}
+
 // ── Write-side request shapes (Task 9-6), mirroring Bryk.Application.Training request DTOs ──
 
 export interface PlannedWorkoutDto {

@@ -10,6 +10,7 @@ import PrimaryGoalCard from '@/components/dashboard/PrimaryGoalCard.vue'
 import RestingHrCard from '@/components/dashboard/RestingHrCard.vue'
 import ThisWeekCard from '@/components/dashboard/ThisWeekCard.vue'
 import WeeklyLoadCard from '@/components/dashboard/WeeklyLoadCard.vue'
+import RecentActivityCard from '@/components/dashboard/RecentActivityCard.vue'
 
 const router = useRouter()
 const store = useOnboardingStore()
@@ -104,10 +105,7 @@ const formattedDate = computed(() => {
 
       <!-- Bottom: recent activity -->
       <div class="mt-6">
-        <PlaceholderCard
-          title="Recent Activity"
-          subtitle="Completed workouts will appear here when execution capture ships (Phase 9)."
-        />
+        <RecentActivityCard />
       </div>
     </main>
   </div>
