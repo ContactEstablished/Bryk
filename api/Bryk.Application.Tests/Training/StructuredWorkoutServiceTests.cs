@@ -296,6 +296,7 @@ public class StructuredWorkoutServiceTests
         public Task<TrainingPlan?> GetByIdAsync(Guid id, CancellationToken ct = default) => throw new NotImplementedException();
         public Task<IReadOnlyList<TrainingPlan>> GetByAthleteIdAsync(Guid athleteId, CancellationToken ct = default) => throw new NotImplementedException();
         public Task<IReadOnlyList<PlannedWorkout>> GetPlannedWorkoutsInRangeAsync(Guid athleteId, DateOnly start, DateOnly end, CancellationToken ct = default) => throw new NotImplementedException();
+        public Task<IReadOnlyList<PlannedWorkout>> GetPlannedWorkoutsInRangeWithStructureAsync(Guid athleteId, DateOnly start, DateOnly end, CancellationToken ct = default) => throw new NotImplementedException();
         public Task AddAsync(TrainingPlan entity, CancellationToken ct = default) => throw new NotImplementedException();
         public void Update(TrainingPlan entity) => throw new NotImplementedException();
         public void Delete(TrainingPlan entity) => throw new NotImplementedException();

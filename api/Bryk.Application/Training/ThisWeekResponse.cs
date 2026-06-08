@@ -7,5 +7,7 @@ public class ThisWeekResponse
 {
     public DateOnly WeekStart { get; set; }
     public DateOnly WeekEnd { get; set; }
+    // Σ of each workout's effective load over the week (ADR-0005 §3). Null effective loads count as 0.
+    public decimal WeeklyLoad { get; set; }
     public IReadOnlyList<PlannedWorkoutResponse> PlannedWorkouts { get; set; } = new List<PlannedWorkoutResponse>();
 }

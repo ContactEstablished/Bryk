@@ -34,6 +34,19 @@ public class TrainingPlanRepository(ApplicationDbContext db) : ITrainingPlanRepo
             .ToListAsync(ct);
     }
 
+    public async Task<IReadOnlyList<PlannedWorkout>> GetPlannedWorkoutsInRangeWithStructureAsync(Guid athleteId, DateOnly start, DateOnly end, CancellationToken ct = default)
+    {
+        return await db.PlannedWorkouts
+            .AsNoTracking()
+            .AsSplitQuery()
+            .Include(pw => pw.Blocks)
+                .ThenInclude(b => b.Steps)
+            .Where(pw => pw.AthleteId == athleteId && pw.ScheduledDate >= start && pw.ScheduledDate <= end)
+            .OrderBy(pw => pw.ScheduledDate)
+            .ThenBy(pw => pw.Sport)
+            .ToListAsync(ct);
+    }
+
     public async Task AddAsync(TrainingPlan entity, CancellationToken ct = default)
     {
         await db.TrainingPlans.AddAsync(entity, ct);

@@ -58,7 +58,7 @@ const sessions = computed(() => store.thisWeek?.plannedWorkouts ?? [])
         </div>
         <div class="shrink-0 text-right text-xs text-muted-foreground">
           <span v-if="session.plannedDurationMinutes != null">{{ session.plannedDurationMinutes }} min</span>
-          <span v-if="session.plannedLoad != null" class="ml-2">{{ session.plannedLoad }} TSS</span>
+          <span v-if="session.effectiveLoad != null" class="ml-2">{{ session.effectiveLoad }} TSS</span>
         </div>
       </li>
     </ul>

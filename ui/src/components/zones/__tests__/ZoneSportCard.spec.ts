@@ -42,9 +42,9 @@ describe('ZoneSportCard', () => {
     const { wrapper, store } = mountCard(bikeZones())
 
     await wrapper.find('button[type="submit"]').trigger('click')
-    for (let i = 0; i < 6; i++) await flushPromises()
-
-    expect(store.saveZones).toHaveBeenCalledTimes(1)
+    // vee-validate resolves a valid submit over a refined-array schema across a variable number of
+    // microtask hops; poll rather than guess a fixed flush count.
+    await vi.waitFor(() => expect(store.saveZones).toHaveBeenCalledTimes(1))
     expect(store.saveZones).toHaveBeenCalledWith('Bike', expect.objectContaining({ zones: expect.any(Array) }))
     wrapper.unmount()
   })

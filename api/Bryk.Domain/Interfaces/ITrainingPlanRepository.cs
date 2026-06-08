@@ -31,6 +31,13 @@ public interface ITrainingPlanRepository
     Task<IReadOnlyList<PlannedWorkout>> GetPlannedWorkoutsInRangeAsync(Guid athleteId, DateOnly start, DateOnly end, CancellationToken ct = default);
 
     /// <summary>
+    /// Same range filter as <see cref="GetPlannedWorkoutsInRangeAsync"/> but with each workout's
+    /// <see cref="PlannedWorkout.Blocks"/> (and their steps) included (split query, no-tracking), for
+    /// callers that compute training load over the week (Task 11-2).
+    /// </summary>
+    Task<IReadOnlyList<PlannedWorkout>> GetPlannedWorkoutsInRangeWithStructureAsync(Guid athleteId, DateOnly start, DateOnly end, CancellationToken ct = default);
+
+    /// <summary>
     /// Stages a new <see cref="TrainingPlan"/> (with any seeded <see cref="PlannedWorkout"/> children)
     /// for insertion. Does NOT call SaveChanges.
     /// </summary>

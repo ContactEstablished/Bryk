@@ -1,4 +1,6 @@
 using Bryk.Application.Common;
+using Bryk.Application.Training.Load;
+using Bryk.Application.Zones;
 using Bryk.Domain.Entities;
 using Bryk.Domain.Interfaces;
 
@@ -6,20 +8,30 @@ namespace Bryk.Application.Training;
 
 public class ThisWeekService(
     ICurrentUserService currentUser,
-    ITrainingPlanRepository planRepo) : IThisWeekService
+    ITrainingPlanRepository planRepo,
+    IAthleteRepository athleteRepo,
+    IZoneService zoneService) : IThisWeekService
 {
     public async Task<ThisWeekResponse> GetThisWeekAsync(CancellationToken ct = default)
     {
+        var athleteId = currentUser.GetCurrentAthleteId();
         var (weekStart, weekEnd) = CurrentWeek();
 
-        var workouts = await planRepo.GetPlannedWorkoutsInRangeAsync(
-            currentUser.GetCurrentAthleteId(), weekStart, weekEnd, ct);
+        // Load the week's workouts WITH structure, plus the athlete's profiles + effective zones once,
+        // so the per-workout load computation is a single set of round-trips (ADR-0005 §3 read-cost note).
+        var workouts = await planRepo.GetPlannedWorkoutsInRangeWithStructureAsync(athleteId, weekStart, weekEnd, ct);
+        var athlete = await athleteRepo.GetWithSportProfilesAsync(athleteId, ct);
+        var zones = await zoneService.GetZonesAsync(ct);
+
+        var planned = workouts.Select(w => Map(w, athlete, zones)).ToList();
+        var weeklyLoad = Math.Round(planned.Sum(p => p.EffectiveLoad ?? 0m), 2);
 
         return new ThisWeekResponse
         {
             WeekStart = weekStart,
             WeekEnd = weekEnd,
-            PlannedWorkouts = workouts.Select(Map).ToList()
+            WeeklyLoad = weeklyLoad,
+            PlannedWorkouts = planned
         };
     }
 
@@ -33,18 +45,26 @@ public class ThisWeekService(
         return (start, start.AddDays(6));
     }
 
-    private static PlannedWorkoutResponse Map(PlannedWorkout pw) => new()
+    private static PlannedWorkoutResponse Map(PlannedWorkout pw, Athlete? athlete, ZonesResponse zones)
     {
-        Id = pw.Id,
-        TrainingPlanId = pw.TrainingPlanId,
-        Sport = pw.Sport,
-        ScheduledDate = pw.ScheduledDate,
-        Title = pw.Title,
-        Description = pw.Description,
-        PlannedDurationMinutes = pw.PlannedDurationMinutes,
-        PlannedLoad = pw.PlannedLoad,
-        // Bare read (no Blocks) — computed stays null; effective falls back to the manual override.
-        EffectiveLoad = pw.PlannedLoad,
-        IsLoadOverride = pw.PlannedLoad is not null
-    };
+        var profile = athlete?.SportProfiles.FirstOrDefault(p => p.Sport == pw.Sport);
+        var sportZones = zones.Sports.FirstOrDefault(s => s.Sport == pw.Sport);
+        var computed = LoadCalculator.ComputePlannedLoad(pw, profile, sportZones);
+
+        return new PlannedWorkoutResponse
+        {
+            Id = pw.Id,
+            TrainingPlanId = pw.TrainingPlanId,
+            Sport = pw.Sport,
+            ScheduledDate = pw.ScheduledDate,
+            Title = pw.Title,
+            Description = pw.Description,
+            PlannedDurationMinutes = pw.PlannedDurationMinutes,
+            PlannedLoad = pw.PlannedLoad,
+            ComputedLoad = computed,
+            IsLoadOverride = pw.PlannedLoad is not null,
+            EffectiveLoad = pw.PlannedLoad ?? computed
+            // Blocks intentionally omitted — This Week shows the load number, not the structure.
+        };
+    }
 }

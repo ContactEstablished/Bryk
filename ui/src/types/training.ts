@@ -15,6 +15,12 @@ export interface PlannedWorkoutResponse {
   description: string | null
   plannedDurationMinutes: number | null
   plannedLoad: number | null
+  // Training load (Task 11-1 / ADR-0005 §3). computedLoad is null on reads that don't load Blocks;
+  // effectiveLoad = plannedLoad ?? computedLoad; isLoadOverride is true when plannedLoad is set.
+  // Optional on the shared shape (older mocks / bare reads), like blocks.
+  computedLoad?: number | null
+  effectiveLoad?: number | null
+  isLoadOverride?: boolean
   // Structured payload (Task 10-4 / ADR-0004 §2). Only populated by the structure endpoint;
   // the plan/This-Week reads omit it, so it's optional on the shared shape.
   blocks?: WorkoutBlockResponse[]
@@ -24,6 +30,7 @@ export interface PlannedWorkoutResponse {
 export interface ThisWeekResponse {
   weekStart: string
   weekEnd: string
+  weeklyLoad?: number
   plannedWorkouts: PlannedWorkoutResponse[]
 }
 

@@ -9,6 +9,7 @@ import PlaceholderCard from '@/components/dashboard/PlaceholderCard.vue'
 import PrimaryGoalCard from '@/components/dashboard/PrimaryGoalCard.vue'
 import RestingHrCard from '@/components/dashboard/RestingHrCard.vue'
 import ThisWeekCard from '@/components/dashboard/ThisWeekCard.vue'
+import WeeklyLoadCard from '@/components/dashboard/WeeklyLoadCard.vue'
 
 const router = useRouter()
 const store = useOnboardingStore()
@@ -81,10 +82,7 @@ const formattedDate = computed(() => {
 
       <!-- Top stat row -->
       <div class="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <PlaceholderCard
-          title="Weekly Load"
-          subtitle="Will populate once workout execution and TSS calculation ship (Phase 9)."
-        />
+        <WeeklyLoadCard />
         <RestingHrCard />
         <PlaceholderCard
           title="Sleep Avg"
