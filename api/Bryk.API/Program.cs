@@ -110,6 +110,7 @@ builder.Services.AddScoped<IProfileService, ProfileService>();
 builder.Services.AddScoped<IEventService, EventService>();
 builder.Services.AddScoped<IGoalService, GoalService>();
 builder.Services.AddScoped<ITrainingPlanService, TrainingPlanService>();
+builder.Services.AddScoped<IStructuredWorkoutService, StructuredWorkoutService>();
 builder.Services.AddScoped<IThisWeekService, ThisWeekService>();
 builder.Services.AddScoped<IZoneService, ZoneService>();
 

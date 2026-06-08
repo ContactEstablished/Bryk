@@ -7,7 +7,9 @@ namespace Bryk.API.Controllers;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/[controller]")]
-public class TrainingPlansController(ITrainingPlanService trainingPlanService) : ControllerBase
+public class TrainingPlansController(
+    ITrainingPlanService trainingPlanService,
+    IStructuredWorkoutService structuredWorkoutService) : ControllerBase
 {
     /// <summary>Creates a new training plan (with any planned workouts supplied) for the current athlete.</summary>
     [HttpPost]
@@ -55,5 +57,21 @@ public class TrainingPlansController(ITrainingPlanService trainingPlanService) :
     {
         await trainingPlanService.RemovePlannedWorkoutAsync(id, plannedWorkoutId, cancellationToken);
         return NoContent();
+    }
+
+    /// <summary>Returns a planned workout's structured payload (blocks + steps) within an owned plan. 404 if the plan or planned workout is missing or foreign.</summary>
+    [HttpGet("{id:guid}/plannedworkouts/{plannedWorkoutId:guid}/structure")]
+    public async Task<IActionResult> GetStructureAsync(Guid id, Guid plannedWorkoutId, CancellationToken cancellationToken)
+    {
+        PlannedWorkoutResponse result = await structuredWorkoutService.GetStructureAsync(id, plannedWorkoutId, cancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>Replaces a planned workout's structured payload (blocks + steps) within an owned plan. 404 if the plan or planned workout is missing or foreign; 400 if the payload is invalid.</summary>
+    [HttpPut("{id:guid}/plannedworkouts/{plannedWorkoutId:guid}/structure")]
+    public async Task<IActionResult> SetStructureAsync(Guid id, Guid plannedWorkoutId, [FromBody] WorkoutStructureRequest request, CancellationToken cancellationToken)
+    {
+        PlannedWorkoutResponse result = await structuredWorkoutService.SetStructureAsync(id, plannedWorkoutId, request, cancellationToken);
+        return Ok(result);
     }
 }

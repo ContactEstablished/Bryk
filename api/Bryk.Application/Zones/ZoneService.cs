@@ -145,7 +145,7 @@ public class ZoneService(
         _ => throw new ValidationException(new[] { $"Zones are not defined for {sport}." })
     };
 
-    private static int MaxZones(Sport sport) => sport == Sport.Bike ? 7 : 5;
+    private static int MaxZones(Sport sport) => ZoneScheme.Count(sport);
 
     private static void EnsureZoneSport(Sport sport)
     {

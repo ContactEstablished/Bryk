@@ -15,4 +15,8 @@ public class PlannedWorkoutResponse
     public string? Description { get; set; }
     public int? PlannedDurationMinutes { get; set; }
     public decimal? PlannedLoad { get; set; }
+
+    // Structured payload (ADR-0004 §2). Empty on the plan/This-Week reads, which don't load it;
+    // populated by the structure endpoints (Task 10-4).
+    public List<WorkoutBlockResponse> Blocks { get; set; } = new();
 }
