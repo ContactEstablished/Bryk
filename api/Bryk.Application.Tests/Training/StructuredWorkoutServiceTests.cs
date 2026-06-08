@@ -1,5 +1,6 @@
 using Bryk.Application.Common;
 using Bryk.Application.Training;
+using Bryk.Application.Training.Load;
 using Bryk.Application.Training.Validators;
 using Bryk.Domain.Entities;
 using Bryk.Domain.Interfaces;
@@ -12,10 +13,10 @@ public class StructuredWorkoutServiceTests
 {
     private static readonly Guid AthleteId = Guid.Parse("11111111-1111-1111-1111-111111111111");
 
-    private static StructuredWorkoutService NewService(StubStructureRepository repo, StubUnitOfWork uow, Guid? athleteId = null) =>
+    private static StructuredWorkoutService NewService(StubStructureRepository repo, StubUnitOfWork uow, ILoadService? loadService = null, Guid? athleteId = null) =>
         new(new StubCurrentUserService(athleteId ?? AthleteId),
             new WorkoutStructureRequestValidator(),
-            repo, uow);
+            repo, uow, loadService ?? new StubLoadService());
 
     private static PlannedWorkout OwnedWorkout(Guid planId, Guid pwId, Sport sport, IEnumerable<WorkoutBlock>? blocks = null) => new()
     {
@@ -221,6 +222,38 @@ public class StructuredWorkoutServiceTests
         uow.SaveCount.Should().Be(0);
     }
 
+    [Fact]
+    public async Task GetStructureAsync_PlannedLoadOverride_EffectiveLoadUsesOverride()
+    {
+        var planId = Guid.NewGuid();
+        var pwId = Guid.NewGuid();
+        var workout = OwnedWorkout(planId, pwId, Sport.Run);
+        workout.PlannedLoad = 88m;
+        var repo = new StubStructureRepository { ToReturn = workout };
+        var service = NewService(repo, new StubUnitOfWork(), new StubLoadService { Computed = 42m });
+
+        var result = await service.GetStructureAsync(planId, pwId);
+
+        result.ComputedLoad.Should().Be(42m);
+        result.IsLoadOverride.Should().BeTrue();
+        result.EffectiveLoad.Should().Be(88m);
+    }
+
+    [Fact]
+    public async Task GetStructureAsync_NoOverride_EffectiveLoadUsesComputed()
+    {
+        var planId = Guid.NewGuid();
+        var pwId = Guid.NewGuid();
+        var repo = new StubStructureRepository { ToReturn = OwnedWorkout(planId, pwId, Sport.Run) };
+        var service = NewService(repo, new StubUnitOfWork(), new StubLoadService { Computed = 42m });
+
+        var result = await service.GetStructureAsync(planId, pwId);
+
+        result.ComputedLoad.Should().Be(42m);
+        result.IsLoadOverride.Should().BeFalse();
+        result.EffectiveLoad.Should().Be(42m);
+    }
+
     private sealed class StubCurrentUserService(Guid athleteId) : ICurrentUserService
     {
         public Guid GetCurrentAthleteId() => athleteId;
@@ -234,6 +267,12 @@ public class StructuredWorkoutServiceTests
             SaveCount++;
             return Task.FromResult(1);
         }
+    }
+
+    private sealed class StubLoadService : ILoadService
+    {
+        public decimal? Computed { get; init; }
+        public Task<decimal?> ComputePlannedLoadAsync(PlannedWorkout workout, CancellationToken ct = default) => Task.FromResult(Computed);
     }
 
     private sealed class StubStructureRepository : ITrainingPlanRepository

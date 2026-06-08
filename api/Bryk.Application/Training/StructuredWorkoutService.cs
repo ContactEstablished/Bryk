@@ -1,5 +1,6 @@
 using Bryk.Application.Common;
 using Bryk.Application.Common.Validation;
+using Bryk.Application.Training.Load;
 using Bryk.Application.Zones;
 using Bryk.Domain.Entities;
 using Bryk.Domain.Interfaces;
@@ -12,12 +13,13 @@ public class StructuredWorkoutService(
     ICurrentUserService currentUser,
     IValidator<WorkoutStructureRequest> validator,
     ITrainingPlanRepository planRepo,
-    IUnitOfWork unitOfWork) : IStructuredWorkoutService
+    IUnitOfWork unitOfWork,
+    ILoadService loadService) : IStructuredWorkoutService
 {
     public async Task<PlannedWorkoutResponse> GetStructureAsync(Guid planId, Guid plannedWorkoutId, CancellationToken ct = default)
     {
         var workout = await LoadOwnedWorkoutAsync(planId, plannedWorkoutId, ct);
-        return Map(workout);
+        return await MapWithLoadAsync(workout, ct);
     }
 
     public async Task<PlannedWorkoutResponse> SetStructureAsync(Guid planId, Guid plannedWorkoutId, WorkoutStructureRequest request, CancellationToken ct = default)
@@ -56,7 +58,7 @@ public class StructuredWorkoutService(
         await unitOfWork.SaveChangesAsync(ct);
 
         var refreshed = await LoadOwnedWorkoutAsync(planId, plannedWorkoutId, ct);
-        return Map(refreshed);
+        return await MapWithLoadAsync(refreshed, ct);
     }
 
     // Loads the planned workout with its structured payload and asserts it belongs to the route's plan
@@ -146,6 +148,17 @@ public class StructuredWorkoutService(
         LoadKg = dto.LoadKg,
         Rpe = dto.Rpe
     };
+
+    // Wraps Map with the computed/effective load (ADR-0005 §3); the calculator needs the loaded Blocks.
+    private async Task<PlannedWorkoutResponse> MapWithLoadAsync(PlannedWorkout workout, CancellationToken ct)
+    {
+        var response = Map(workout);
+        var computed = await loadService.ComputePlannedLoadAsync(workout, ct);
+        response.ComputedLoad = computed;
+        response.IsLoadOverride = workout.PlannedLoad is not null;
+        response.EffectiveLoad = workout.PlannedLoad ?? computed;
+        return response;
+    }
 
     private static PlannedWorkoutResponse Map(PlannedWorkout pw) => new()
     {

@@ -42,6 +42,9 @@ public class ThisWeekService(
         Title = pw.Title,
         Description = pw.Description,
         PlannedDurationMinutes = pw.PlannedDurationMinutes,
-        PlannedLoad = pw.PlannedLoad
+        PlannedLoad = pw.PlannedLoad,
+        // Bare read (no Blocks) — computed stays null; effective falls back to the manual override.
+        EffectiveLoad = pw.PlannedLoad,
+        IsLoadOverride = pw.PlannedLoad is not null
     };
 }

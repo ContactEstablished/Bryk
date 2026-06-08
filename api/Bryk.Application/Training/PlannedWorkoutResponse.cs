@@ -16,6 +16,12 @@ public class PlannedWorkoutResponse
     public int? PlannedDurationMinutes { get; set; }
     public decimal? PlannedLoad { get; set; }
 
+    // Training load (ADR-0005 §3). ComputedLoad is the calculator result and is null on reads that don't
+    // load Blocks; IsLoadOverride is true when PlannedLoad is set; EffectiveLoad = PlannedLoad ?? ComputedLoad.
+    public decimal? ComputedLoad { get; set; }
+    public decimal? EffectiveLoad { get; set; }
+    public bool IsLoadOverride { get; set; }
+
     // Structured payload (ADR-0004 §2). Empty on the plan/This-Week reads, which don't load it;
     // populated by the structure endpoints (Task 10-4).
     public List<WorkoutBlockResponse> Blocks { get; set; } = new();
