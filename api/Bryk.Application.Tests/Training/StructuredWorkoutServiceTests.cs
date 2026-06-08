@@ -273,6 +273,7 @@ public class StructuredWorkoutServiceTests
     {
         public decimal? Computed { get; init; }
         public Task<decimal?> ComputePlannedLoadAsync(PlannedWorkout workout, CancellationToken ct = default) => Task.FromResult(Computed);
+        public Task<decimal?> ComputeActualLoadAsync(Workout workout, CancellationToken ct = default) => Task.FromResult(Computed);
     }
 
     private sealed class StubStructureRepository : ITrainingPlanRepository

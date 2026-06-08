@@ -1,0 +1,182 @@
+using Bryk.Application.Common;
+using Bryk.Application.Training.Load;
+using Bryk.Application.Training.Workouts;
+using Bryk.Domain.Entities;
+using Bryk.Domain.Interfaces;
+using FluentAssertions;
+using Xunit;
+
+namespace Bryk.Application.Tests.Training;
+
+public class WorkoutServiceTests
+{
+    private static readonly Guid AthleteId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+
+    private static WorkoutService NewService(StubWorkoutRepository workoutRepo, StubPlanRepository planRepo, StubUnitOfWork uow, decimal? computedLoad = 42m) =>
+        new(new StubCurrentUserService(AthleteId),
+            new LogWorkoutRequestValidator(),
+            workoutRepo, planRepo,
+            new StubLoadService { Computed = computedLoad },
+            uow);
+
+    private static LogWorkoutRequest ValidRequest(Guid? plannedWorkoutId = null) => new()
+    {
+        Sport = Sport.Bike,
+        CompletedDate = DateOnly.FromDateTime(DateTime.UtcNow),
+        PlannedWorkoutId = plannedWorkoutId,
+        ActualDurationSeconds = 3600,
+        AvgHr = 150
+    };
+
+    [Fact]
+    public async Task LogAsync_Unplanned_StagesAndReturnsWithComputedLoad()
+    {
+        var repo = new StubWorkoutRepository();
+        var uow = new StubUnitOfWork();
+        var service = NewService(repo, new StubPlanRepository(), uow);
+
+        var result = await service.LogAsync(ValidRequest());
+
+        repo.Added.Should().NotBeNull();
+        repo.Added!.AthleteId.Should().Be(AthleteId);
+        repo.Added.ComputedLoad.Should().Be(42m);
+        result.ComputedLoad.Should().Be(42m);
+        result.EffectiveLoad.Should().Be(42m);
+        result.IsLoadOverride.Should().BeFalse();
+        uow.SaveCount.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task LogAsync_ForeignPlannedWorkout_ThrowsKeyNotFound()
+    {
+        var planId = Guid.NewGuid();
+        var foreignPlanned = new PlannedWorkout { Id = planId, AthleteId = Guid.NewGuid(), Sport = Sport.Bike };
+        var planRepo = new StubPlanRepository { ToReturn = foreignPlanned };
+        var repo = new StubWorkoutRepository();
+        var uow = new StubUnitOfWork();
+        var service = NewService(repo, planRepo, uow);
+
+        var act = () => service.LogAsync(ValidRequest(planId));
+
+        await act.Should().ThrowAsync<KeyNotFoundException>();
+        repo.Added.Should().BeNull();
+        uow.SaveCount.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task LogAsync_PartialStepActuals_LogsSuccessfully()
+    {
+        var repo = new StubWorkoutRepository();
+        var uow = new StubUnitOfWork();
+        var service = NewService(repo, new StubPlanRepository(), uow);
+
+        var request = ValidRequest();
+        request.StepResults = new List<WorkoutStepResultDto>
+        {
+            new() { AvgPower = 200 },                            // only power captured
+            new() { AvgHr = 160, ActualDurationSeconds = 300 }   // partial actuals
+        };
+
+        await service.LogAsync(request);
+
+        repo.Added.Should().NotBeNull();
+        repo.Added!.StepResults.Should().HaveCount(2);
+        repo.Added.StepResults.Select(r => r.OrderIndex).Should().Equal(0, 1);
+        repo.Added.StepResults.Should().OnlyContain(r => r.AthleteId == AthleteId && r.WorkoutId == repo.Added.Id);
+        uow.SaveCount.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task LogAsync_FutureCompletedDate_ThrowsValidation()
+    {
+        var repo = new StubWorkoutRepository();
+        var uow = new StubUnitOfWork();
+        var service = NewService(repo, new StubPlanRepository(), uow);
+
+        var request = ValidRequest();
+        request.CompletedDate = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(1);
+
+        var act = () => service.LogAsync(request);
+
+        await act.Should().ThrowAsync<Bryk.Application.Exceptions.ValidationException>();
+        repo.Added.Should().BeNull();
+        uow.SaveCount.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task GetAsync_ForeignWorkout_ThrowsKeyNotFound()
+    {
+        var foreign = new Workout { Id = Guid.NewGuid(), AthleteId = Guid.NewGuid(), Sport = Sport.Run };
+        var repo = new StubWorkoutRepository { ToReturn = foreign };
+        var service = NewService(repo, new StubPlanRepository(), new StubUnitOfWork());
+
+        var act = () => service.GetAsync(foreign.Id);
+
+        await act.Should().ThrowAsync<KeyNotFoundException>();
+    }
+
+    private sealed class StubCurrentUserService(Guid athleteId) : ICurrentUserService
+    {
+        public Guid GetCurrentAthleteId() => athleteId;
+    }
+
+    private sealed class StubUnitOfWork : IUnitOfWork
+    {
+        public int SaveCount { get; private set; }
+        public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            SaveCount++;
+            return Task.FromResult(1);
+        }
+    }
+
+    private sealed class StubLoadService : ILoadService
+    {
+        public decimal? Computed { get; init; }
+        public Task<decimal?> ComputePlannedLoadAsync(PlannedWorkout workout, CancellationToken ct = default) => Task.FromResult(Computed);
+        public Task<decimal?> ComputeActualLoadAsync(Workout workout, CancellationToken ct = default) => Task.FromResult(Computed);
+    }
+
+    private sealed class StubWorkoutRepository : IWorkoutRepository
+    {
+        public Workout? ToReturn { get; init; }
+        public Workout? Added { get; private set; }
+
+        public Task AddAsync(Workout workout, CancellationToken ct = default)
+        {
+            Added = workout;
+            return Task.CompletedTask;
+        }
+
+        public Task<Workout?> GetByIdAsync(Guid id, CancellationToken ct = default) => Task.FromResult(ToReturn ?? Added);
+
+        public Task<IReadOnlyList<Workout>> GetByAthleteInRangeAsync(Guid athleteId, DateOnly start, DateOnly end, CancellationToken ct = default) => throw new NotImplementedException();
+        public Task<IReadOnlyList<Workout>> GetRecentByAthleteAsync(Guid athleteId, int take, CancellationToken ct = default) => throw new NotImplementedException();
+        public void Update(Workout workout) => throw new NotImplementedException();
+        public void Delete(Workout workout) => throw new NotImplementedException();
+    }
+
+    private sealed class StubPlanRepository : ITrainingPlanRepository
+    {
+        public PlannedWorkout? ToReturn { get; init; }
+
+        public Task<PlannedWorkout?> GetPlannedWorkoutWithStructureAsync(Guid plannedWorkoutId, CancellationToken ct = default) => Task.FromResult(ToReturn);
+
+        public Task<TrainingPlan?> GetByIdAsync(Guid id, CancellationToken ct = default) => throw new NotImplementedException();
+        public Task<IReadOnlyList<TrainingPlan>> GetByAthleteIdAsync(Guid athleteId, CancellationToken ct = default) => throw new NotImplementedException();
+        public Task<IReadOnlyList<PlannedWorkout>> GetPlannedWorkoutsInRangeAsync(Guid athleteId, DateOnly start, DateOnly end, CancellationToken ct = default) => throw new NotImplementedException();
+        public Task<IReadOnlyList<PlannedWorkout>> GetPlannedWorkoutsInRangeWithStructureAsync(Guid athleteId, DateOnly start, DateOnly end, CancellationToken ct = default) => throw new NotImplementedException();
+        public Task AddAsync(TrainingPlan entity, CancellationToken ct = default) => throw new NotImplementedException();
+        public void Update(TrainingPlan entity) => throw new NotImplementedException();
+        public void Delete(TrainingPlan entity) => throw new NotImplementedException();
+        public Task AddPlannedWorkoutAsync(PlannedWorkout plannedWorkout, CancellationToken ct = default) => throw new NotImplementedException();
+        public void UpdatePlannedWorkout(PlannedWorkout plannedWorkout) => throw new NotImplementedException();
+        public void RemovePlannedWorkout(PlannedWorkout plannedWorkout) => throw new NotImplementedException();
+        public Task AddWorkoutBlockAsync(WorkoutBlock block, CancellationToken ct = default) => throw new NotImplementedException();
+        public void UpdateWorkoutBlock(WorkoutBlock block) => throw new NotImplementedException();
+        public void RemoveWorkoutBlock(WorkoutBlock block) => throw new NotImplementedException();
+        public Task AddWorkoutStepAsync(WorkoutStep step, CancellationToken ct = default) => throw new NotImplementedException();
+        public void UpdateWorkoutStep(WorkoutStep step) => throw new NotImplementedException();
+        public void RemoveWorkoutStep(WorkoutStep step) => throw new NotImplementedException();
+    }
+}

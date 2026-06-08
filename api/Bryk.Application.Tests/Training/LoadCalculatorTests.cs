@@ -126,4 +126,25 @@ public class LoadCalculatorTests
 
         LoadCalculator.ComputePlannedLoad(workout, null, null).Should().Be(10.5m);
     }
+
+    [Fact]
+    public void ActualLoad_CardioFromStepResults_UsesAvgPower()
+    {
+        var workout = new Workout
+        {
+            Sport = Sport.Bike,
+            StepResults = { new WorkoutStepResult { AvgPower = 250, ActualDurationSeconds = 3600 } }
+        };
+
+        LoadCalculator.ComputeActualLoad(workout, Profile(threshold: 250m)).Should().Be(100m);
+    }
+
+    [Fact]
+    public void ActualLoad_Strength_UsesSessionRpeAndDuration()
+    {
+        // RPE 7 × 60 min × 0.165 = 69.3
+        var workout = new Workout { Sport = Sport.Strength, Rpe = 7m, ActualDurationSeconds = 3600 };
+
+        LoadCalculator.ComputeActualLoad(workout, null).Should().Be(69.3m);
+    }
 }

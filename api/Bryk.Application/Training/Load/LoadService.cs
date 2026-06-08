@@ -21,4 +21,10 @@ public class LoadService(
 
         return LoadCalculator.ComputePlannedLoad(workout, profile, zones);
     }
+
+    public async Task<decimal?> ComputeActualLoadAsync(Workout workout, CancellationToken ct = default)
+    {
+        var profile = await athleteRepo.GetSportProfileAsync(workout.AthleteId, workout.Sport, ct);
+        return LoadCalculator.ComputeActualLoad(workout, profile);
+    }
 }

@@ -15,4 +15,9 @@ public interface ILoadService
     /// null when there is no structure to compute from.
     /// </summary>
     Task<decimal?> ComputePlannedLoadAsync(PlannedWorkout workout, CancellationToken ct = default);
+
+    /// <summary>
+    /// Computes actual load for a completed <see cref="Workout"/> from its captured actuals (ADR-0005 §6).
+    /// </summary>
+    Task<decimal?> ComputeActualLoadAsync(Workout workout, CancellationToken ct = default);
 }
