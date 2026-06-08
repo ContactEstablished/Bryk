@@ -21,6 +21,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<AthleteSportZone> AthleteSportZones => Set<AthleteSportZone>();
     public DbSet<WorkoutBlock> WorkoutBlocks => Set<WorkoutBlock>();
     public DbSet<WorkoutStep> WorkoutSteps => Set<WorkoutStep>();
+    public DbSet<WorkoutStepResult> WorkoutStepResults => Set<WorkoutStepResult>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -153,6 +154,18 @@ public class ApplicationDbContext : DbContext
                 .HasForeignKey(e => e.PlannedWorkoutId)
                 .OnDelete(DeleteBehavior.SetNull);
 
+            // Execution actuals (ADR-0005 §4).
+            entity.Property(e => e.ComputedLoad).HasPrecision(7, 2);
+            entity.Property(e => e.LoadOverride).HasPrecision(7, 2);
+            entity.Property(e => e.Rpe).HasPrecision(3, 1);
+            entity.Property(e => e.Notes).HasMaxLength(2000);
+
+            // Per-step actuals cascade with the workout (ADR-0005 §5).
+            entity.HasMany(e => e.StepResults)
+                .WithOne(r => r.Workout)
+                .HasForeignKey(r => r.WorkoutId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             // Denormalized, indexed AthleteId with no FK to Athlete (ADR-0003).
             entity.HasIndex(e => e.AthleteId);
         });
@@ -194,6 +207,24 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Rpe).HasPrecision(3, 1);
 
             entity.HasIndex(e => new { e.WorkoutBlockId, e.OrderIndex });
+            // Denormalized AthleteId, no FK to Athlete (ADR-0003/0004).
+            entity.HasIndex(e => e.AthleteId);
+        });
+
+        // WorkoutStepResult configuration (ADR-0005 §5)
+        modelBuilder.Entity<WorkoutStepResult>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Rpe).HasPrecision(3, 1);
+
+            // Optional reference to the planned step — NoAction so a plan edit never touches completed
+            // execution history (ADR-0005 §5). One-directional (no inverse nav).
+            entity.HasOne<WorkoutStep>()
+                .WithMany()
+                .HasForeignKey(e => e.WorkoutStepId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            entity.HasIndex(e => new { e.WorkoutId, e.OrderIndex });
             // Denormalized AthleteId, no FK to Athlete (ADR-0003/0004).
             entity.HasIndex(e => e.AthleteId);
         });
