@@ -1,7 +1,7 @@
 # ADR-0004 — Structured-workout payload + training-zone model (Phase 10)
 
 **Date:** 2026-06-06
-**Status:** Proposed (awaiting Sr. Dev acceptance — this is the Phase-10 shape-pinning ADR)
+**Status:** Accepted (2026-06-08) — implemented across Phase 10 (Tasks 10-1 … 10-5)
 
 ## Context
 
@@ -188,7 +188,7 @@ representation; ADR-0003 §5's "Zones → Phase 10" with a concrete sport-tailor
 - Two new enums: `ZoneMetric` (Power/Hr/Pace), `StepIntent` (Warmup/Work/Recovery/Cooldown/Rest).
 - `CustomZonesJson` becomes vestigial (superseded by `AthleteSportZone`); dropped by a later cleanup.
 
-**Sub-decisions flagged for review (architect calls, confirm or override at ADR acceptance):**
+**Sub-decisions confirmed on acceptance (2026-06-08)** — all four stood as written and are implemented in 10-1 … 10-5:
 
 1. **Two-level nesting** (block→step, no recursive blocks). — decision 2.
 2. **Run/swim zones pace-primary, HR secondary.** — decision 1.

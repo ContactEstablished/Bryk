@@ -239,10 +239,6 @@ No `[Authorize]`, Identity, or `AddAuthentication` exists in the codebase yet �
 
 Direction: custom email+password signup plus Google/Apple OAuth, with Bryk owning the user store. Evaluate ASP.NET Core Identity before hand-rolling — it provides password hashing, token generation, lockout, and external-login plumbing without ceding identity ownership. The Phase 12 auth ADR picks the table layout (Identity in its own table linked 1:1 to `Athlete`, vs `Athlete : IdentityUser<Guid>`). **Approval required before any production auth code** (`[Authorize]`, claims logic, password hashing, token issuance).
 
-### Phase 10 shapes not yet final — ADR-0004 is *Proposed*
-
-`md/decisions/0004-structured-workout-and-zones.md` is awaiting Sr. Dev acceptance. Sport-tailored zones with auto-calc + overrides have shipped (`6fdafbe`), but confirm ADR-0004's acceptance before treating its structured-workout payload / zone field lists as locked.
-
 ---
 
 ## Tech debt (working list, not blocking)
@@ -271,15 +267,15 @@ This project has the **dotnet-claude-kit** plugin active. Use it rather than rei
 
 ## Project state pointers
 
-- Current phase: **Phase 10 — structured workouts + training zones** (in progress).
+- Current phase: **Phase 11** — load/TSS math + executed-workout capture. Phase 10 (structured workouts + training zones, ADR-0004) is complete.
 - ADRs (`/md/decisions/`) — read before touching the training/zone domain:
   - **0001** — Mesocycle superseded by TrainingPlan / PlannedWorkout / Workout (Accepted; retirement migration `DropMesocycleSurface` committed).
   - **0002** — Coaches are v2; v1 is athlete-only, one human = one `Athlete` (Accepted).
   - **0003** — TrainingPlan / PlannedWorkout / Workout field shapes (Accepted).
-  - **0004** — Structured-workout payload + training-zone model (**Proposed** — see Open decisions).
+  - **0004** — Structured-workout payload + training-zone model (Accepted).
 - `/md/product/feature-parity-trainingpeaks.md` — feature wishlist and status.
 - `/md/Tasks-<phase>-<n>.md` — per-task specs (Phase 10: `Tasks-10-1.md` … `Tasks-10-5.md`).
-- `/md/handoffs/` — session-end handoff documents. Most recent on disk: `2026-05-31-phase-8-queue.md`; Phase 9–10 progress is captured in ADRs 0003/0004 + git history.
+- `/md/handoffs/` — session-end handoff documents. Most recent: `2026-06-08-phase-10-complete.md`.
 - `git log --oneline -20` for recent commit history.
 
 On session start: read the latest handoff (or ask for one) and skim the relevant Tasks doc / ADR before starting work. Confirm clean working tree and green build (`dotnet build` + `pnpm run build`) before proposing the first task.
