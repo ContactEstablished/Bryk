@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
-import { Home, Activity, TrendingUp, Target, User, type LucideIcon } from 'lucide-vue-next'
+import { Home, Activity, TrendingUp, Target, User, Gauge, type LucideIcon } from 'lucide-vue-next'
 
 interface NavItem {
   icon: LucideIcon
@@ -14,6 +14,7 @@ const route = useRoute()
 
 const trainItems: NavItem[] = [
   { icon: Home, label: 'Dashboard', to: '/', routeName: 'home' },
+  { icon: Gauge, label: 'Zones', to: '/zones', routeName: 'zones' },
   { icon: Activity, label: 'Workouts' },
   { icon: TrendingUp, label: 'Progress' },
   { icon: Target, label: 'Goals' },
