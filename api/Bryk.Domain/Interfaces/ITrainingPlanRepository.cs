@@ -61,4 +61,33 @@ public interface ITrainingPlanRepository
     /// Stages an existing <see cref="PlannedWorkout"/> for deletion. Does NOT call SaveChanges.
     /// </summary>
     void RemovePlannedWorkout(PlannedWorkout plannedWorkout);
+
+    /// <summary>
+    /// Loads a single <see cref="PlannedWorkout"/> with its structured payload —
+    /// <see cref="PlannedWorkout.Blocks"/> ordered by <see cref="WorkoutBlock.OrderIndex"/>, each with its
+    /// <see cref="WorkoutBlock.Steps"/> ordered by <see cref="WorkoutStep.OrderIndex"/>. No-tracking, split
+    /// query; the caller uses the result for display and ownership checks and stages mutations explicitly.
+    /// </summary>
+    Task<PlannedWorkout?> GetPlannedWorkoutWithStructureAsync(Guid plannedWorkoutId, CancellationToken ct = default);
+
+    /// <summary>Stages a new <see cref="WorkoutBlock"/> for insertion. Does NOT call SaveChanges.</summary>
+    Task AddWorkoutBlockAsync(WorkoutBlock block, CancellationToken ct = default);
+
+    /// <summary>Stages an existing <see cref="WorkoutBlock"/> for update. Does NOT call SaveChanges.</summary>
+    void UpdateWorkoutBlock(WorkoutBlock block);
+
+    /// <summary>
+    /// Stages an existing <see cref="WorkoutBlock"/> for deletion; its <see cref="WorkoutBlock.Steps"/>
+    /// cascade. Does NOT call SaveChanges.
+    /// </summary>
+    void RemoveWorkoutBlock(WorkoutBlock block);
+
+    /// <summary>Stages a new <see cref="WorkoutStep"/> for insertion. Does NOT call SaveChanges.</summary>
+    Task AddWorkoutStepAsync(WorkoutStep step, CancellationToken ct = default);
+
+    /// <summary>Stages an existing <see cref="WorkoutStep"/> for update. Does NOT call SaveChanges.</summary>
+    void UpdateWorkoutStep(WorkoutStep step);
+
+    /// <summary>Stages an existing <see cref="WorkoutStep"/> for deletion. Does NOT call SaveChanges.</summary>
+    void RemoveWorkoutStep(WorkoutStep step);
 }

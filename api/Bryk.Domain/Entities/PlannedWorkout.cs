@@ -15,6 +15,7 @@ public class PlannedWorkout : IAuditable
     public decimal? PlannedLoad { get; set; }
 
     public TrainingPlan TrainingPlan { get; set; } = null!;
+    public ICollection<WorkoutBlock> Blocks { get; set; } = new List<WorkoutBlock>();
 
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }

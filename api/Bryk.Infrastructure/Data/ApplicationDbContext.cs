@@ -19,6 +19,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<PlannedWorkout> PlannedWorkouts => Set<PlannedWorkout>();
     public DbSet<Workout> Workouts => Set<Workout>();
     public DbSet<AthleteSportZone> AthleteSportZones => Set<AthleteSportZone>();
+    public DbSet<WorkoutBlock> WorkoutBlocks => Set<WorkoutBlock>();
+    public DbSet<WorkoutStep> WorkoutSteps => Set<WorkoutStep>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -132,6 +134,12 @@ public class ApplicationDbContext : DbContext
             // AthleteId is a denormalized, indexed column with no FK to Athlete (ADR-0003):
             // ownership cascades through TrainingPlan; this composite index serves the "This Week" range query.
             entity.HasIndex(e => new { e.AthleteId, e.ScheduledDate });
+
+            // Structured-workout payload (ADR-0004 §2): blocks cascade with the planned workout.
+            entity.HasMany(e => e.Blocks)
+                .WithOne(b => b.PlannedWorkout)
+                .HasForeignKey(b => b.PlannedWorkoutId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         // Workout configuration
@@ -159,6 +167,35 @@ public class ApplicationDbContext : DbContext
             // Denormalized AthleteId, no FK to Athlete (ADR-0004 §1). One override row per
             // athlete/sport/zone/metric.
             entity.HasIndex(e => new { e.AthleteId, e.Sport, e.ZoneNumber, e.Metric }).IsUnique();
+        });
+
+        // WorkoutBlock configuration (ADR-0004 §2)
+        modelBuilder.Entity<WorkoutBlock>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            // Ordered child steps cascade with the block.
+            entity.HasMany(e => e.Steps)
+                .WithOne(s => s.WorkoutBlock)
+                .HasForeignKey(s => s.WorkoutBlockId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => new { e.PlannedWorkoutId, e.OrderIndex });
+            // Denormalized AthleteId, no FK to Athlete (ADR-0003/0004).
+            entity.HasIndex(e => e.AthleteId);
+        });
+
+        // WorkoutStep configuration (ADR-0004 §2)
+        modelBuilder.Entity<WorkoutStep>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Title).HasMaxLength(200);
+            entity.Property(e => e.LoadKg).HasPrecision(6, 2);
+            entity.Property(e => e.Rpe).HasPrecision(3, 1);
+
+            entity.HasIndex(e => new { e.WorkoutBlockId, e.OrderIndex });
+            // Denormalized AthleteId, no FK to Athlete (ADR-0003/0004).
+            entity.HasIndex(e => e.AthleteId);
         });
     }
 

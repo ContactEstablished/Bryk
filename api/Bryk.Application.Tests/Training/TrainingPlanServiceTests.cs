@@ -218,5 +218,13 @@ public class TrainingPlanServiceTests
 
         public void UpdatePlannedWorkout(PlannedWorkout plannedWorkout) => UpdatedPlannedWorkout = plannedWorkout;
         public void RemovePlannedWorkout(PlannedWorkout plannedWorkout) => RemovedPlannedWorkout = plannedWorkout;
+
+        public Task<PlannedWorkout?> GetPlannedWorkoutWithStructureAsync(Guid plannedWorkoutId, CancellationToken ct = default) => throw new NotImplementedException();
+        public Task AddWorkoutBlockAsync(WorkoutBlock block, CancellationToken ct = default) => throw new NotImplementedException();
+        public void UpdateWorkoutBlock(WorkoutBlock block) => throw new NotImplementedException();
+        public void RemoveWorkoutBlock(WorkoutBlock block) => throw new NotImplementedException();
+        public Task AddWorkoutStepAsync(WorkoutStep step, CancellationToken ct = default) => throw new NotImplementedException();
+        public void UpdateWorkoutStep(WorkoutStep step) => throw new NotImplementedException();
+        public void RemoveWorkoutStep(WorkoutStep step) => throw new NotImplementedException();
     }
 }
