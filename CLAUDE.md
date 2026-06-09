@@ -267,7 +267,7 @@ This project has the **dotnet-claude-kit** plugin active. Use it rather than rei
 
 ## Project state pointers
 
-- Current phase: **Phase 11** — load/TSS math + executed-workout capture. Phase 10 (structured workouts + training zones, ADR-0004) is complete.
+- Current phase: **Phase 12** — Authentication & Authorization (deferred; **approval-gated** — see Open decisions). Phase 11 (training-load engine + executed-workout capture, ADR-0005) is complete.
 - ADRs (`/md/decisions/`) — read before touching the training/zone domain:
   - **0001** — Mesocycle superseded by TrainingPlan / PlannedWorkout / Workout (Accepted; retirement migration `DropMesocycleSurface` committed).
   - **0002** — Coaches are v2; v1 is athlete-only, one human = one `Athlete` (Accepted).
@@ -276,7 +276,7 @@ This project has the **dotnet-claude-kit** plugin active. Use it rather than rei
   - **0005** — Training-load engine + executed-workout capture (Accepted; HR §1=a, strength §2=c).
 - `/md/product/feature-parity-trainingpeaks.md` — feature wishlist and status.
 - `/md/Tasks-<phase>-<n>.md` — per-task specs (Phase 10: `Tasks-10-1.md` … `Tasks-10-5.md`).
-- `/md/handoffs/` — session-end handoff documents. Most recent: `2026-06-08-phase-10-complete.md`.
+- `/md/handoffs/` — session-end handoff documents. Most recent: `2026-06-08-phase-11-complete.md`.
 - `git log --oneline -20` for recent commit history.
 
 On session start: read the latest handoff (or ask for one) and skim the relevant Tasks doc / ADR before starting work. Confirm clean working tree and green build (`dotnet build` + `pnpm run build`) before proposing the first task.
