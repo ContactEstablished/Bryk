@@ -44,6 +44,8 @@ Commit: `docs: add Phase 13 task specs`.
 
 For each task in order: implement → `dotnet build` + `dotnet test` (backend tasks) / `pnpm run build` + `pnpm test` from `ui/` (frontend tasks) → read your own diff → manual smoke (dev API + `pnpm dev`) → commit with a conventional message (`feat:`/`fix:`).
 
+**Commit messages:** plain conventional-commit messages only. Do NOT append a `Co-Authored-By:` trailer (or any AI co-author line) — it adds a second author and skews the GitHub contributor count. The commit author is already the repo's git user (Matthew Wilson).
+
 **Approval gates for this phase:** none expected — **no migrations, no new packages**. If you discover a needed column or package, STOP and ask before proceeding. Hard delete is the decided default (soft delete would be a migration → ask first).
 
 ### Step 3 — phase exit

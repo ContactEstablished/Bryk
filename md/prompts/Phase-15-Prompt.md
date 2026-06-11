@@ -45,6 +45,8 @@ Commit: `docs: add Phase 15 task specs`.
 
 Build + test + diff-read + visual smoke per task (this phase is chart-heavy — screenshot `/progress` against seed data at desktop and <820px widths), conventional commits.
 
+**Commit messages:** plain conventional-commit messages only. Do NOT append a `Co-Authored-By:` trailer (or any AI co-author line) — it adds a second author and skews the GitHub contributor count. The commit author is already the repo's git user (Matthew Wilson).
+
 **Approval gates:** none expected — **no migrations, no new packages** (hand-rolled SVG; peaks are compute-on-read). If anything seems to need either, STOP and ask.
 
 ### Step 3 — phase exit

@@ -44,6 +44,8 @@ Commit: `docs: add Phase 14 task specs`.
 
 Build + test + diff-read + smoke per task, conventional commits.
 
+**Commit messages:** plain conventional-commit messages only. Do NOT append a `Co-Authored-By:` trailer (or any AI co-author line) — it adds a second author and skews the GitHub contributor count. The commit author is already the repo's git user (Matthew Wilson).
+
 **Approval gates:** none expected — **no migrations, no new packages** (a `DailyLoadSnapshot` table is explicitly out of scope; if performance argues for it, STOP and ask). The new `AnalyticsController` is additive API surface, not a breaking change.
 
 ### Step 3 — phase exit
