@@ -7,6 +7,7 @@ import type {
   WorkoutStructureRequest,
   WorkoutResponse,
   LogWorkoutRequest,
+  UpdateWorkoutRequest,
   PlannedSport,
 } from '@/types/training'
 
@@ -102,4 +103,21 @@ export async function getWorkout(id: string): Promise<WorkoutResponse> {
     throw new Error('Unexpected empty response from GET /workouts/{id}')
   }
   return result
+}
+
+// Replace-style edit (Task 13-1): recomputes load server-side; returns the saved workout.
+export async function updateWorkout(id: string, req: UpdateWorkoutRequest): Promise<WorkoutResponse> {
+  const result = await apiFetch<WorkoutResponse>(`/workouts/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(req),
+  })
+  if (result === null) {
+    throw new Error('Unexpected empty response from PUT /workouts/{id}')
+  }
+  return result
+}
+
+// Hard delete (Task 13-1): 204, no body.
+export async function deleteWorkout(id: string): Promise<void> {
+  await apiFetch<void>(`/workouts/${id}`, { method: 'DELETE' })
 }

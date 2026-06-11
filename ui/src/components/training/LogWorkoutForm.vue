@@ -19,11 +19,22 @@ import { useTrainingStore } from '@/stores/training'
 import { ApiError } from '@/services/api'
 import { extractApiValidationMessages } from '@/services/apiErrors'
 import { logWorkoutSchema, type LogWorkoutFormValues } from '@/schemas/workouts'
-import type { LogWorkoutRequest, PlannedWorkoutResponse, PlannedSport } from '@/types/training'
+import type {
+  LogWorkoutRequest,
+  PlannedWorkoutResponse,
+  PlannedSport,
+  WorkoutResponse,
+} from '@/types/training'
 
-// When launched from a planned workout: seeds a step-result row per planned step + shows planned-vs-actual.
-const props = defineProps<{ plannedWorkout?: PlannedWorkoutResponse | null }>()
-const emit = defineEmits<{ logged: []; close: [] }>()
+// Launched from a planned workout: seeds a step-result row per planned step + shows planned-vs-actual.
+// Launched with `workout`: edit mode — pre-fills from the workout and saves via PUT instead of logging.
+const props = defineProps<{
+  plannedWorkout?: PlannedWorkoutResponse | null
+  workout?: WorkoutResponse | null
+}>()
+const emit = defineEmits<{ logged: []; saved: []; close: [] }>()
+
+const isEdit = computed(() => props.workout != null)
 
 const store = useTrainingStore()
 
@@ -35,7 +46,7 @@ function utcTodayIso(): string {
   return `${yyyy}-${mm}-${dd}`
 }
 
-const sport = ref<PlannedSport>(props.plannedWorkout?.sport ?? 'Run')
+const sport = ref<PlannedSport>(props.workout?.sport ?? props.plannedWorkout?.sport ?? 'Run')
 const isPlanned = computed(() => props.plannedWorkout != null)
 
 const sportOptions: { value: PlannedSport; label: string; icon: LucideIcon }[] = [
@@ -66,18 +77,31 @@ function emptyResult(workoutStepId: string | null = null) {
   }
 }
 
+// Edit mode pre-fills from the workout (incl. its step results); otherwise seed from the planned steps.
+const initialStepResults = props.workout
+  ? props.workout.stepResults.map((r) => ({
+      workoutStepId: r.workoutStepId,
+      actualDurationSeconds: r.actualDurationSeconds,
+      actualDistanceMeters: r.actualDistanceMeters,
+      avgPower: r.avgPower,
+      avgHr: r.avgHr,
+      avgPace: r.avgPace,
+      rpe: r.rpe,
+    }))
+  : plannedSteps.value.map((s) => emptyResult(s.id))
+
 const form = useForm<LogWorkoutFormValues>({
   validationSchema: toTypedSchema(logWorkoutSchema),
   initialValues: {
-    completedDate: utcTodayIso(),
-    actualDurationSeconds: null,
-    actualDistanceMeters: null,
-    avgHr: null,
-    maxHr: null,
-    loadOverride: null,
-    rpe: null,
-    notes: null,
-    stepResults: plannedSteps.value.map((s) => emptyResult(s.id)),
+    completedDate: props.workout?.completedDate ?? utcTodayIso(),
+    actualDurationSeconds: props.workout?.actualDurationSeconds ?? null,
+    actualDistanceMeters: props.workout?.actualDistanceMeters ?? null,
+    avgHr: props.workout?.avgHr ?? null,
+    maxHr: props.workout?.maxHr ?? null,
+    loadOverride: props.workout?.loadOverride ?? null,
+    rpe: props.workout?.rpe ?? null,
+    notes: props.workout?.notes ?? null,
+    stepResults: initialStepResults,
   },
 })
 
@@ -108,7 +132,7 @@ const onSubmit = form.handleSubmit(async (values) => {
   const req: LogWorkoutRequest = {
     sport: sport.value,
     completedDate: values.completedDate,
-    plannedWorkoutId: props.plannedWorkout?.id ?? null,
+    plannedWorkoutId: props.workout?.plannedWorkoutId ?? props.plannedWorkout?.id ?? null,
     actualDurationSeconds: values.actualDurationSeconds ?? null,
     actualDistanceMeters: values.actualDistanceMeters ?? null,
     avgHr: values.avgHr ?? null,
@@ -128,18 +152,25 @@ const onSubmit = form.handleSubmit(async (values) => {
   }
 
   try {
-    await store.logWorkout(req)
-    justLogged.value = true
-    emit('logged')
+    if (props.workout) {
+      await store.updateWorkout(props.workout.id, req)
+      justLogged.value = true
+      emit('saved')
+    } else {
+      await store.logWorkout(req)
+      justLogged.value = true
+      emit('logged')
+    }
   } catch (e) {
+    const verb = isEdit.value ? 'save' : 'log'
     const messages = extractApiValidationMessages(e)
     globalError.value = messages
       ? messages.join(' ')
       : e instanceof ApiError
-        ? `Couldn't log: ${e.statusText} (${e.status})`
+        ? `Couldn't ${verb}: ${e.statusText} (${e.status})`
         : e instanceof Error
-          ? `Couldn't log: ${e.message}`
-          : "Couldn't log — please try again."
+          ? `Couldn't ${verb}: ${e.message}`
+          : `Couldn't ${verb} — please try again.`
   }
 })
 
@@ -150,7 +181,8 @@ const isSubmitting = form.isSubmitting
   <section class="rounded-[10px] border border-border bg-[#0e1218] p-4 space-y-4">
     <div class="flex items-center justify-between">
       <h4 class="text-sm font-semibold">
-        Log workout<span v-if="isPlanned && plannedWorkout"> &middot; {{ plannedWorkout.title }}</span>
+        <template v-if="isEdit">Edit workout</template>
+        <template v-else>Log workout<span v-if="isPlanned && plannedWorkout"> &middot; {{ plannedWorkout.title }}</span></template>
       </h4>
       <Button type="button" variant="ghost" size="sm" @click="emit('close')">Close</Button>
     </div>
@@ -277,9 +309,9 @@ const isSubmitting = form.isSubmitting
       <div class="flex items-center justify-end gap-3">
         <span v-if="justLogged" class="flex items-center gap-1 text-sm text-muted-foreground">
           <CheckCircle2 :size="16" class="text-primary" />
-          Logged
+          {{ isEdit ? 'Saved' : 'Logged' }}
         </span>
-        <Button type="submit" :disabled="isSubmitting">Log workout</Button>
+        <Button type="submit" :disabled="isSubmitting">{{ isEdit ? 'Save changes' : 'Log workout' }}</Button>
       </div>
     </form>
   </section>

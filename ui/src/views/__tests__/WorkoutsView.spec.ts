@@ -8,6 +8,7 @@ import type { WorkoutResponse } from '@/types/training'
 function makeWorkout(o: Partial<WorkoutResponse> & { id: string }): WorkoutResponse {
   return {
     plannedWorkoutId: null,
+    trainingPlanId: null,
     sport: 'Run',
     completedDate: '2026-06-10',
     actualDurationSeconds: 1800,

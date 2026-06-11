@@ -51,6 +51,9 @@ export interface WorkoutStepResultResponse {
 export interface WorkoutResponse {
   id: string
   plannedWorkoutId: string | null
+  // Plan owning the linked planned workout — populated only on the single-workout detail read so the
+  // detail view can reach GET .../structure; null on list reads and unlinked workouts (Task 13-1).
+  trainingPlanId: string | null
   sport: PlannedSport
   completedDate: string
   actualDurationSeconds: number | null
@@ -89,6 +92,9 @@ export interface LogWorkoutRequest {
   notes: string | null
   stepResults: WorkoutStepResultDto[]
 }
+
+// Replace-style edit body (Task 13-1); same shape as a log (the PUT replaces actuals + step results).
+export type UpdateWorkoutRequest = LogWorkoutRequest
 
 // ── Write-side request shapes (Task 9-6), mirroring Bryk.Application.Training request DTOs ──
 

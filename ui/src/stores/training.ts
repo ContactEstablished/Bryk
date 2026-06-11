@@ -9,8 +9,11 @@ import {
   logWorkout as logWorkoutApi,
   getRecentWorkouts as getRecentWorkoutsApi,
   getWorkouts as getWorkoutsApi,
+  getWorkout as getWorkoutApi,
+  updateWorkout as updateWorkoutApi,
+  deleteWorkout as deleteWorkoutApi,
 } from '@/services/training'
-import type { PlannedSport } from '@/types/training'
+import type { PlannedSport, UpdateWorkoutRequest } from '@/types/training'
 import type {
   ThisWeekResponse,
   TrainingPlanRequest,
@@ -161,6 +164,45 @@ export const useTrainingStore = defineStore('training', () => {
     }
   }
 
+  // ── Single workout detail (Task 13-4) ──
+  const currentWorkout = ref<WorkoutResponse | null>(null)
+  const loadingCurrent = ref(false)
+  const currentError = ref<ApiError | Error | null>(null)
+
+  async function loadWorkout(id: string) {
+    loadingCurrent.value = true
+    currentError.value = null
+    currentWorkout.value = null
+    try {
+      currentWorkout.value = await getWorkoutApi(id)
+    } catch (e) {
+      currentError.value = e as ApiError | Error
+    } finally {
+      loadingCurrent.value = false
+    }
+  }
+
+  // Refresh the surfaces that show a workout after it changes (dashboard feed + history list).
+  async function refreshWorkoutSurfaces() {
+    await loadRecentWorkouts()
+    if (workouts.value) await loadWorkouts(workoutsFilter.value)
+  }
+
+  // Edit a workout (replace-style); the PUT returns server truth (recomputed load). Re-throws for the form.
+  async function updateWorkout(id: string, req: UpdateWorkoutRequest): Promise<WorkoutResponse> {
+    const updated = await updateWorkoutApi(id, req)
+    currentWorkout.value = updated
+    await refreshWorkoutSurfaces()
+    return updated
+  }
+
+  // Hard-delete a workout, then refresh the lists. Re-throws for the confirm handler.
+  async function deleteWorkout(id: string): Promise<void> {
+    await deleteWorkoutApi(id)
+    if (currentWorkout.value?.id === id) currentWorkout.value = null
+    await refreshWorkoutSurfaces()
+  }
+
   return {
     thisWeek,
     loadingThisWeek,
@@ -184,5 +226,11 @@ export const useTrainingStore = defineStore('training', () => {
     workoutsHasMore,
     loadWorkouts,
     loadMoreWorkouts,
+    currentWorkout,
+    loadingCurrent,
+    currentError,
+    loadWorkout,
+    updateWorkout,
+    deleteWorkout,
   }
 })

@@ -30,6 +30,11 @@ const router = createRouter({
       component: () => import('@/views/WorkoutsView.vue'),
     },
     {
+      path: '/workouts/:id',
+      name: 'workout-detail',
+      component: () => import('@/views/WorkoutDetailView.vue'),
+    },
+    {
       path: '/zones',
       name: 'zones',
       component: () => import('@/views/ZonesView.vue'),
