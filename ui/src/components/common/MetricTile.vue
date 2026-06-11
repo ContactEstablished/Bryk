@@ -70,11 +70,10 @@ const displayValue = computed(() => {
         </DeltaChip>
       </div>
 
+      <slot name="footer" />
+
       <div v-if="spark && spark.length >= 2 && !placeholder" class="mt-auto">
         <Sparkline :data="spark" :accent="sparkAccent" />
-      </div>
-      <div v-else-if="$slots.footer" class="mt-auto">
-        <slot name="footer" />
       </div>
     </template>
   </div>

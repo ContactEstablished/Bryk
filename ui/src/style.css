@@ -205,6 +205,30 @@
   }
 }
 
+/* Staggered entrance for grid/list children. `backwards` holds the from-state
+   during each child's delay; the global reduced-motion rule neutralizes it. */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.stagger-in > * {
+  animation: rise-in 400ms cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
+.stagger-in > :nth-child(1) { animation-delay: 0ms; }
+.stagger-in > :nth-child(2) { animation-delay: 50ms; }
+.stagger-in > :nth-child(3) { animation-delay: 100ms; }
+.stagger-in > :nth-child(4) { animation-delay: 150ms; }
+.stagger-in > :nth-child(5) { animation-delay: 200ms; }
+.stagger-in > :nth-child(6) { animation-delay: 250ms; }
+.stagger-in > :nth-child(7) { animation-delay: 300ms; }
+.stagger-in > :nth-child(8) { animation-delay: 350ms; }
+
 ::selection {
   background: oklch(0.68 0.19 250 / 0.35);
   color: var(--bryk-fg-0);

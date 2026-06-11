@@ -44,7 +44,17 @@ const formattedDate = computed(() => {
     v-if="!onboarded"
     class="flex min-h-screen flex-col items-center justify-center gap-8"
   >
-    <h1 class="text-6xl font-bold text-white">Bryk</h1>
+    <div class="flex flex-col items-center gap-5">
+      <div
+        class="flex size-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary-hi to-primary-lo text-xl font-extrabold tracking-[-0.04em] text-primary-foreground shadow-[0_0_0_1px_oklch(0.68_0.19_250_/_0.4),0_10px_30px_var(--bryk-accent-glow)]"
+      >
+        B
+      </div>
+      <div class="flex flex-col items-center gap-2">
+        <h1 class="text-6xl font-bold tracking-[-0.04em] text-foreground">Bryk</h1>
+        <p class="eyebrow">Performance Training</p>
+      </div>
+    </div>
 
     <p
       v-if="store.loadingStatus"
@@ -74,7 +84,7 @@ const formattedDate = computed(() => {
   <!-- Dashboard shell -->
   <AppShell v-else title="Dashboard" :subtitle="formattedDate">
     <!-- Top stat row -->
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="stagger-in grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <WeeklyLoadCard />
       <RestingHrCard />
       <PlaceholderCard
@@ -88,7 +98,7 @@ const formattedDate = computed(() => {
     </div>
 
     <!-- Middle row: training plan + primary goal -->
-    <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+    <div class="stagger-in grid grid-cols-1 gap-6 lg:grid-cols-3">
       <div class="lg:col-span-2">
         <ThisWeekCard />
       </div>
@@ -96,6 +106,8 @@ const formattedDate = computed(() => {
     </div>
 
     <!-- Bottom: recent activity -->
-    <RecentActivityCard />
+    <div class="stagger-in">
+      <RecentActivityCard />
+    </div>
   </AppShell>
 </template>

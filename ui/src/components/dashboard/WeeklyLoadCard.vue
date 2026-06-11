@@ -1,30 +1,37 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
+import MetricTile from '@/components/common/MetricTile.vue'
 import { useTrainingStore } from '@/stores/training'
 
 const store = useTrainingStore()
 
 onMounted(() => {
   if (!store.thisWeek) void store.loadThisWeek()
+  if (!store.recentWorkouts) void store.loadRecentWorkouts()
+})
+
+// Effective loads of recent workouts in chronological order — an honest
+// "recent training" sparkline until a weekly-history endpoint exists.
+const loadSpark = computed(() => {
+  const workouts = store.recentWorkouts
+  if (!workouts) return null
+  return [...workouts]
+    .reverse()
+    .map((w) => w.effectiveLoad)
+    .filter((l): l is number => l != null)
 })
 </script>
 
 <template>
-  <div class="rounded-lg border bg-card p-5">
-    <h3 class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-      Weekly Load
-    </h3>
-
-    <!-- Loading (this week not yet fetched) -->
-    <p v-if="!store.thisWeek" class="mt-3 text-sm text-muted-foreground">
-      Loading…
-    </p>
-
-    <!-- Populated: the summed effective load for the current week. -->
-    <div v-else class="mt-3">
-      <span class="font-mono text-3xl font-semibold">{{ store.thisWeek.weeklyLoad ?? 0 }}</span>
-      <span class="ml-1 text-sm text-muted-foreground">TSS</span>
-      <p class="mt-1 text-xs text-muted-foreground">planned this week</p>
-    </div>
-  </div>
+  <MetricTile
+    label="Weekly Load"
+    :value="store.thisWeek?.weeklyLoad ?? 0"
+    unit="TSS"
+    :spark="loadSpark"
+    :loading="!store.thisWeek"
+  >
+    <template #footer>
+      <p class="text-xs text-muted-foreground">planned this week</p>
+    </template>
+  </MetricTile>
 </template>

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import MetricTile from '@/components/common/MetricTile.vue'
+
 defineProps<{
   title: string
   subtitle?: string
@@ -6,15 +8,11 @@ defineProps<{
 </script>
 
 <template>
-  <div class="rounded-lg border bg-card p-5">
-    <h3 class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-      {{ title }}
-    </h3>
-    <div class="mt-3">
-      <span class="font-mono text-3xl font-semibold text-muted-foreground/40">—</span>
-    </div>
-    <p v-if="subtitle" class="mt-3 text-xs text-muted-foreground">
-      {{ subtitle }}
-    </p>
-  </div>
+  <MetricTile :label="title" placeholder>
+    <template v-if="subtitle" #footer>
+      <p class="mt-auto font-mono text-[11px] leading-relaxed text-muted-foreground">
+        {{ subtitle }}
+      </p>
+    </template>
+  </MetricTile>
 </template>
