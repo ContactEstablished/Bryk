@@ -3,6 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useFieldArray, useForm } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { CheckCircle2 } from 'lucide-vue-next'
+import AppShell from '@/components/layout/AppShell.vue'
 import { Button } from '@/components/ui/button'
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
@@ -171,15 +172,12 @@ const isSubmitting = form.isSubmitting
 </script>
 
 <template>
-  <main class="mx-auto max-w-3xl px-6 py-10">
-    <header>
-      <h1 class="text-2xl font-semibold tracking-tight">Create Training Plan</h1>
-      <p class="mt-1 text-sm text-muted-foreground">
-        Name your plan, set its window, and schedule planned workouts.
-      </p>
-    </header>
-
-    <form class="mt-8 space-y-8" @submit="onSubmit">
+  <AppShell
+    title="Create Training Plan"
+    subtitle="Name your plan, set its window, and schedule planned workouts."
+  >
+    <div class="mx-auto w-full max-w-3xl">
+    <form class="space-y-8" @submit="onSubmit">
       <!-- Plan details -->
       <section class="rounded-lg border bg-card p-6 space-y-4">
         <h2 class="text-lg font-semibold">Plan details</h2>
@@ -406,5 +404,6 @@ const isSubmitting = form.isSubmitting
       :title="buildTarget.title"
       @close="buildTarget = null"
     />
-  </main>
+    </div>
+  </AppShell>
 </template>

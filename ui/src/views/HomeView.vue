@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import { Button } from '@/components/ui/button'
 import { Activity } from 'lucide-vue-next'
 import { useOnboardingStore } from '@/stores/onboarding'
-import DashboardSidebar from '@/components/dashboard/DashboardSidebar.vue'
+import AppShell from '@/components/layout/AppShell.vue'
 import PlaceholderCard from '@/components/dashboard/PlaceholderCard.vue'
 import PrimaryGoalCard from '@/components/dashboard/PrimaryGoalCard.vue'
 import RestingHrCard from '@/components/dashboard/RestingHrCard.vue'
@@ -72,41 +72,30 @@ const formattedDate = computed(() => {
   </div>
 
   <!-- Dashboard shell -->
-  <div v-else class="flex min-h-screen">
-    <DashboardSidebar />
+  <AppShell v-else title="Dashboard" :subtitle="formattedDate">
+    <!-- Top stat row -->
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <WeeklyLoadCard />
+      <RestingHrCard />
+      <PlaceholderCard
+        title="Sleep Avg"
+        subtitle="Post-v1 — needs a device or health-app integration."
+      />
+      <PlaceholderCard
+        title="Form (TSB)"
+        subtitle="Will populate with the Performance Management Chart (Phase 11)."
+      />
+    </div>
 
-    <main class="flex-1 px-10 py-8">
-      <header class="border-b border-border pb-6">
-        <h1 class="text-2xl font-semibold tracking-tight">Dashboard</h1>
-        <p class="mt-1 text-sm text-muted-foreground">{{ formattedDate }}</p>
-      </header>
-
-      <!-- Top stat row -->
-      <div class="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <WeeklyLoadCard />
-        <RestingHrCard />
-        <PlaceholderCard
-          title="Sleep Avg"
-          subtitle="Post-v1 — needs a device or health-app integration."
-        />
-        <PlaceholderCard
-          title="Form (TSB)"
-          subtitle="Will populate with the Performance Management Chart (Phase 11)."
-        />
+    <!-- Middle row: training plan + primary goal -->
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div class="lg:col-span-2">
+        <ThisWeekCard />
       </div>
+      <PrimaryGoalCard />
+    </div>
 
-      <!-- Middle row: training plan + primary goal -->
-      <div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div class="lg:col-span-2">
-          <ThisWeekCard />
-        </div>
-        <PrimaryGoalCard />
-      </div>
-
-      <!-- Bottom: recent activity -->
-      <div class="mt-6">
-        <RecentActivityCard />
-      </div>
-    </main>
-  </div>
+    <!-- Bottom: recent activity -->
+    <RecentActivityCard />
+  </AppShell>
 </template>

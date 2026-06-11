@@ -9,7 +9,8 @@ function mountView() {
       plugins: [
         createTestingPinia({ createSpy: () => () => {} }),
       ],
-      stubs: { RouterLink: RouterLinkStub },
+      // AppSidebar needs a live router (useRoute); stub it — the form under test doesn't.
+      stubs: { RouterLink: RouterLinkStub, AppSidebar: true },
     },
     attachTo: document.body,
   })
