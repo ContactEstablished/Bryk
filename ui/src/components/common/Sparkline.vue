@@ -55,9 +55,11 @@ const lastPoint = computed(() => points.value[points.value.length - 1])
         <stop offset="100%" :stop-color="stroke" stop-opacity="0" />
       </linearGradient>
     </defs>
-    <path :d="areaPath" :fill="`url(#${gradientId})`" />
+    <path class="sparkline-fill" :d="areaPath" :fill="`url(#${gradientId})`" />
     <path
+      class="sparkline-line"
       :d="linePath"
+      pathLength="1"
       fill="none"
       :stroke="stroke"
       stroke-width="1.6"
@@ -65,6 +67,6 @@ const lastPoint = computed(() => points.value[points.value.length - 1])
       stroke-linejoin="round"
       vector-effect="non-scaling-stroke"
     />
-    <circle :cx="lastPoint[0]" :cy="lastPoint[1]" r="2.5" :fill="stroke" />
+    <circle class="sparkline-dot" :cx="lastPoint[0]" :cy="lastPoint[1]" r="2.5" :fill="stroke" />
   </svg>
 </template>

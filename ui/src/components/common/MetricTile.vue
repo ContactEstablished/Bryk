@@ -36,7 +36,7 @@ const displayValue = computed(() => {
 
 <template>
   <div
-    class="card-surface flex min-h-[132px] flex-col gap-3 p-5 pb-4"
+    class="card-surface hover-lift flex min-h-[132px] flex-col gap-3 p-5 pb-4"
     :class="placeholder ? 'border-dashed' : ''"
   >
     <div class="flex items-center gap-2">
