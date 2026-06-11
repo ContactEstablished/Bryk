@@ -1,3 +1,5 @@
+using Bryk.Domain.Entities;
+
 namespace Bryk.Application.Training.Workouts;
 
 /// <summary>
@@ -29,6 +31,10 @@ public interface IWorkoutService
     /// <summary>Returns a completed workout with its step results; 404 if missing or foreign.</summary>
     Task<WorkoutResponse> GetAsync(Guid id, CancellationToken ct = default);
 
-    /// <summary>Returns the current athlete's most recent completed workouts (newest first).</summary>
-    Task<IReadOnlyList<WorkoutResponse>> GetRecentAsync(int take, CancellationToken ct = default);
+    /// <summary>
+    /// Returns the current athlete's completed workouts, newest first, with optional <paramref name="from"/>/
+    /// <paramref name="to"/> (inclusive <c>CompletedDate</c> bounds) and <paramref name="sport"/> filters,
+    /// paged by <paramref name="skip"/> (≥ 0, default 0) and <paramref name="take"/> (clamped 1..100, default 20).
+    /// </summary>
+    Task<IReadOnlyList<WorkoutResponse>> GetWorkoutsAsync(DateOnly? from, DateOnly? to, Sport? sport, int? skip, int? take, CancellationToken ct = default);
 }

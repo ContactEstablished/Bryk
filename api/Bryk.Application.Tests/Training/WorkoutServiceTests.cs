@@ -249,6 +249,45 @@ public class WorkoutServiceTests
         uow.SaveCount.Should().Be(0);
     }
 
+    [Fact]
+    public async Task GetWorkoutsAsync_ClampsTakeAndSkip()
+    {
+        var repo = new StubWorkoutRepository();
+        var service = NewService(repo, new StubPlanRepository(), new StubUnitOfWork());
+
+        await service.GetWorkoutsAsync(null, null, null, skip: -5, take: 500);
+        repo.LastFilter!.Value.Take.Should().Be(100);
+        repo.LastFilter.Value.Skip.Should().Be(0);
+
+        await service.GetWorkoutsAsync(null, null, null, skip: null, take: 0);
+        repo.LastFilter!.Value.Take.Should().Be(20);    // 0/absent -> default page size
+
+        await service.GetWorkoutsAsync(null, null, null, skip: null, take: null);
+        repo.LastFilter!.Value.Take.Should().Be(20);
+    }
+
+    [Fact]
+    public async Task GetWorkoutsAsync_ForwardsFiltersAndMaps()
+    {
+        var from = new DateOnly(2026, 1, 1);
+        var to = new DateOnly(2026, 1, 31);
+        var repo = new StubWorkoutRepository
+        {
+            Filtered = new List<Workout> { OwnedWorkout(), OwnedWorkout() }
+        };
+        var service = NewService(repo, new StubPlanRepository(), new StubUnitOfWork());
+
+        var result = await service.GetWorkoutsAsync(from, to, Sport.Run, skip: 10, take: 25);
+
+        repo.LastFilter!.Value.From.Should().Be(from);
+        repo.LastFilter.Value.To.Should().Be(to);
+        repo.LastFilter.Value.Sport.Should().Be(Sport.Run);
+        repo.LastFilter.Value.Skip.Should().Be(10);
+        repo.LastFilter.Value.Take.Should().Be(25);
+        result.Should().HaveCount(2);
+        result.Should().OnlyContain(r => r.TrainingPlanId == null);   // list reads stay single-table
+    }
+
     private sealed class StubCurrentUserService(Guid athleteId) : ICurrentUserService
     {
         public Guid GetCurrentAthleteId() => athleteId;
@@ -290,8 +329,16 @@ public class WorkoutServiceTests
 
         public void Delete(Workout workout) => Deleted = workout;
 
+        public IReadOnlyList<Workout> Filtered { get; init; } = new List<Workout>();
+        public (DateOnly? From, DateOnly? To, Sport? Sport, int Skip, int Take)? LastFilter { get; private set; }
+
+        public Task<IReadOnlyList<Workout>> GetByAthleteFilteredAsync(Guid athleteId, DateOnly? from, DateOnly? to, Sport? sport, int skip, int take, CancellationToken ct = default)
+        {
+            LastFilter = (from, to, sport, skip, take);
+            return Task.FromResult(Filtered);
+        }
+
         public Task<IReadOnlyList<Workout>> GetByAthleteInRangeAsync(Guid athleteId, DateOnly start, DateOnly end, CancellationToken ct = default) => throw new NotImplementedException();
-        public Task<IReadOnlyList<Workout>> GetRecentByAthleteAsync(Guid athleteId, int take, CancellationToken ct = default) => throw new NotImplementedException();
         public void Update(Workout workout) => throw new NotImplementedException();
     }
 

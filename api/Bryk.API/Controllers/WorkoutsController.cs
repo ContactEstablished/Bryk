@@ -1,5 +1,6 @@
 using Asp.Versioning;
 using Bryk.Application.Training.Workouts;
+using Bryk.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Bryk.API.Controllers;
@@ -25,11 +26,22 @@ public class WorkoutsController(IWorkoutService workoutService) : ControllerBase
         return Ok(result);
     }
 
-    /// <summary>Returns the current athlete's most recent completed workouts (newest first); pass take to bound the count.</summary>
+    /// <summary>
+    /// Returns the current athlete's completed workouts, newest first. All query parameters are optional:
+    /// <c>from</c>/<c>to</c> bound <c>CompletedDate</c> (inclusive), <c>sport</c> narrows by discipline,
+    /// and <c>skip</c>/<c>take</c> page the result (<c>take</c> clamped to 1..100, default 20; <c>skip</c>
+    /// ≥ 0, default 0).
+    /// </summary>
     [HttpGet]
-    public async Task<IActionResult> GetRecentAsync([FromQuery] int take, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetWorkoutsAsync(
+        [FromQuery] DateOnly? from,
+        [FromQuery] DateOnly? to,
+        [FromQuery] Sport? sport,
+        [FromQuery] int? skip,
+        [FromQuery] int? take,
+        CancellationToken cancellationToken)
     {
-        IReadOnlyList<WorkoutResponse> result = await workoutService.GetRecentAsync(take, cancellationToken);
+        IReadOnlyList<WorkoutResponse> result = await workoutService.GetWorkoutsAsync(from, to, sport, skip, take, cancellationToken);
         return Ok(result);
     }
 

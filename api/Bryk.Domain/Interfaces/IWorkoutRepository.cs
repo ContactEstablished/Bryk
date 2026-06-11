@@ -23,8 +23,13 @@ public interface IWorkoutRepository
     /// </summary>
     Task<IReadOnlyList<Workout>> GetByAthleteInRangeAsync(Guid athleteId, DateOnly start, DateOnly end, CancellationToken ct = default);
 
-    /// <summary>Returns the athlete's most recent completed workouts (up to <paramref name="take"/>), newest first. No-tracking.</summary>
-    Task<IReadOnlyList<Workout>> GetRecentByAthleteAsync(Guid athleteId, int take, CancellationToken ct = default);
+    /// <summary>
+    /// Returns the athlete's completed workouts, newest first (<see cref="Workout.CompletedDate"/> desc,
+    /// then <see cref="IAuditable.CreatedAt"/> desc), with optional <paramref name="from"/>/<paramref name="to"/>
+    /// (inclusive <see cref="Workout.CompletedDate"/> bounds) and <paramref name="sport"/> filters, paged by
+    /// <paramref name="skip"/>/<paramref name="take"/>. Entity only (no step results). No-tracking.
+    /// </summary>
+    Task<IReadOnlyList<Workout>> GetByAthleteFilteredAsync(Guid athleteId, DateOnly? from, DateOnly? to, Sport? sport, int skip, int take, CancellationToken ct = default);
 
     /// <summary>Stages a new <see cref="Workout"/> (with its step results) for insertion. Does NOT call SaveChanges.</summary>
     Task AddAsync(Workout workout, CancellationToken ct = default);

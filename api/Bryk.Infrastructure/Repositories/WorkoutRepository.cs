@@ -31,13 +31,18 @@ public class WorkoutRepository(ApplicationDbContext db) : IWorkoutRepository
             .ToListAsync(ct);
     }
 
-    public async Task<IReadOnlyList<Workout>> GetRecentByAthleteAsync(Guid athleteId, int take, CancellationToken ct = default)
+    public async Task<IReadOnlyList<Workout>> GetByAthleteFilteredAsync(Guid athleteId, DateOnly? from, DateOnly? to, Sport? sport, int skip, int take, CancellationToken ct = default)
     {
-        return await db.Workouts
-            .AsNoTracking()
-            .Where(w => w.AthleteId == athleteId)
+        var query = db.Workouts.AsNoTracking().Where(w => w.AthleteId == athleteId);
+
+        if (from is { } f) query = query.Where(w => w.CompletedDate >= f);
+        if (to is { } t) query = query.Where(w => w.CompletedDate <= t);
+        if (sport is { } s) query = query.Where(w => w.Sport == s);
+
+        return await query
             .OrderByDescending(w => w.CompletedDate)
             .ThenByDescending(w => w.CreatedAt)
+            .Skip(skip)
             .Take(take)
             .ToListAsync(ct);
     }

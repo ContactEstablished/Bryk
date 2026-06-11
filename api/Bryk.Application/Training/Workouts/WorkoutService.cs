@@ -136,10 +136,14 @@ public class WorkoutService(
         return await MapWithPlanAsync(workout, ct);
     }
 
-    public async Task<IReadOnlyList<WorkoutResponse>> GetRecentAsync(int take, CancellationToken ct = default)
+    public async Task<IReadOnlyList<WorkoutResponse>> GetWorkoutsAsync(DateOnly? from, DateOnly? to, Sport? sport, int? skip, int? take, CancellationToken ct = default)
     {
-        var capped = take is > 0 and <= 100 ? take : 10;
-        var workouts = await workoutRepo.GetRecentByAthleteAsync(currentUser.GetCurrentAthleteId(), capped, ct);
+        // Pagination convention: take clamped 1..100 (default 20); skip >= 0 (default 0). Out-of-range clamps, never rejects.
+        var pageSize = take switch { null or <= 0 => 20, > 100 => 100, _ => take.Value };
+        var offset = skip is > 0 ? skip.Value : 0;
+
+        var workouts = await workoutRepo.GetByAthleteFilteredAsync(
+            currentUser.GetCurrentAthleteId(), from, to, sport, offset, pageSize, ct);
         return workouts.Select(Map).ToList();
     }
 
