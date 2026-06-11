@@ -31,7 +31,7 @@ onMounted(() => {
 const trainItems: NavItem[] = [
   { icon: Home, label: 'Dashboard', to: '/', routeName: 'home' },
   { icon: Gauge, label: 'Zones', to: '/zones', routeName: 'zones' },
-  { icon: CalendarRange, label: 'Training', to: '/training', routeName: 'training' },
+  { icon: CalendarRange, label: 'Training', to: '/plans', routeName: 'plans' },
   { icon: Activity, label: 'Workouts', to: '/workouts', routeName: 'workouts' },
   { icon: TrendingUp, label: 'Progress' },
   { icon: Target, label: 'Goals' },

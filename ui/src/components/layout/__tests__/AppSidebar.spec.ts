@@ -9,6 +9,7 @@ const routes = [
   { path: '/', name: 'home', component: stubView },
   { path: '/zones', name: 'zones', component: stubView },
   { path: '/training', name: 'training', component: stubView },
+  { path: '/plans', name: 'plans', component: stubView },
   { path: '/workouts', name: 'workouts', component: stubView },
   { path: '/profile', name: 'profile', component: stubView },
 ]

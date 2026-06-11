@@ -32,6 +32,19 @@ export async function createPlan(req: TrainingPlanRequest): Promise<TrainingPlan
   return result
 }
 
+// Plan browser (Task 13-5). List returns summaries (no planned workouts); detail includes them.
+export async function getPlans(): Promise<TrainingPlanResponse[]> {
+  return (await apiFetch<TrainingPlanResponse[]>('/trainingplans')) ?? []
+}
+
+export async function getPlan(id: string): Promise<TrainingPlanResponse> {
+  const result = await apiFetch<TrainingPlanResponse>(`/trainingplans/${id}`)
+  if (result === null) {
+    throw new Error('Unexpected empty response from GET /trainingplans/{id}')
+  }
+  return result
+}
+
 // Structured-workout read/write (Task 10-4) — blocks + steps through the planned-workout aggregate.
 export async function getStructure(
   planId: string,

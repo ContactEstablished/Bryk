@@ -4,6 +4,8 @@ import { ApiError } from '@/services/api'
 import {
   getThisWeek,
   createPlan as createPlanApi,
+  getPlans as getPlansApi,
+  getPlan as getPlanApi,
   getStructure as getStructureApi,
   saveStructure as saveStructureApi,
   logWorkout as logWorkoutApi,
@@ -48,6 +50,40 @@ export const useTrainingStore = defineStore('training', () => {
     const created = await createPlanApi(req)
     await loadThisWeek()
     return created
+  }
+
+  // ── Plan browser (Task 13-5) ──
+  const plans = ref<TrainingPlanResponse[] | null>(null)
+  const loadingPlans = ref(false)
+  const plansError = ref<ApiError | Error | null>(null)
+
+  async function loadPlans() {
+    loadingPlans.value = true
+    plansError.value = null
+    try {
+      plans.value = await getPlansApi()
+    } catch (e) {
+      plansError.value = e as ApiError | Error
+    } finally {
+      loadingPlans.value = false
+    }
+  }
+
+  const currentPlan = ref<TrainingPlanResponse | null>(null)
+  const loadingPlan = ref(false)
+  const planError = ref<ApiError | Error | null>(null)
+
+  async function loadPlan(id: string) {
+    loadingPlan.value = true
+    planError.value = null
+    currentPlan.value = null
+    try {
+      currentPlan.value = await getPlanApi(id)
+    } catch (e) {
+      planError.value = e as ApiError | Error
+    } finally {
+      loadingPlan.value = false
+    }
   }
 
   // ── Structured-workout payload (Task 10-5) ──
@@ -209,6 +245,14 @@ export const useTrainingStore = defineStore('training', () => {
     thisWeekError,
     loadThisWeek,
     createPlan,
+    plans,
+    loadingPlans,
+    plansError,
+    loadPlans,
+    currentPlan,
+    loadingPlan,
+    planError,
+    loadPlan,
     structure,
     loadingStructure,
     structureError,
