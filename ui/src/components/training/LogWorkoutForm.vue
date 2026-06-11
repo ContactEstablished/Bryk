@@ -2,17 +2,19 @@
 import { computed, ref } from 'vue'
 import { useFieldArray, useForm } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
-import { CheckCircle2 } from 'lucide-vue-next'
+import {
+  Bike,
+  CheckCircle2,
+  Dumbbell,
+  Footprints,
+  Medal,
+  Waves,
+  type LucideIcon,
+} from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import RpeSelector from '@/components/common/RpeSelector.vue'
 import { useTrainingStore } from '@/stores/training'
 import { ApiError } from '@/services/api'
 import { extractApiValidationMessages } from '@/services/apiErrors'
@@ -36,12 +38,12 @@ function utcTodayIso(): string {
 const sport = ref<PlannedSport>(props.plannedWorkout?.sport ?? 'Run')
 const isPlanned = computed(() => props.plannedWorkout != null)
 
-const sportOptions = [
-  { value: 'Swim', label: 'Swim' },
-  { value: 'Bike', label: 'Bike' },
-  { value: 'Run', label: 'Run' },
-  { value: 'Triathlon', label: 'Triathlon' },
-  { value: 'Strength', label: 'Strength' },
+const sportOptions: { value: PlannedSport; label: string; icon: LucideIcon }[] = [
+  { value: 'Swim', label: 'Swim', icon: Waves },
+  { value: 'Bike', label: 'Bike', icon: Bike },
+  { value: 'Run', label: 'Run', icon: Footprints },
+  { value: 'Triathlon', label: 'Triathlon', icon: Medal },
+  { value: 'Strength', label: 'Strength', icon: Dumbbell },
 ]
 
 // Flatten the planned steps (for seeding + the planned-vs-actual labels).
@@ -145,7 +147,7 @@ const isSubmitting = form.isSubmitting
 </script>
 
 <template>
-  <section class="rounded-md border p-4 space-y-4">
+  <section class="rounded-[10px] border border-border bg-[#0e1218] p-4 space-y-4">
     <div class="flex items-center justify-between">
       <h4 class="text-sm font-semibold">
         Log workout<span v-if="isPlanned && plannedWorkout"> &middot; {{ plannedWorkout.title }}</span>
@@ -154,18 +156,30 @@ const isSubmitting = form.isSubmitting
     </div>
 
     <form class="space-y-4" @submit="onSubmit">
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <!-- Sport: selectable only when unplanned. -->
-        <div v-if="!isPlanned" class="space-y-1">
-          <span class="text-xs font-medium">Sport</span>
-          <Select :model-value="sport" @update:model-value="(v) => (sport = v as PlannedSport)">
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem v-for="opt in sportOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</SelectItem>
-            </SelectContent>
-          </Select>
+      <!-- Sport: selectable only when unplanned. -->
+      <div v-if="!isPlanned" class="space-y-2">
+        <span class="eyebrow block">Sport</span>
+        <div class="flex flex-wrap gap-1.5">
+          <button
+            v-for="opt in sportOptions"
+            :key="opt.value"
+            type="button"
+            class="inline-flex items-center gap-1.5 rounded-full border px-3 py-2 text-[13px] font-medium transition-all duration-[120ms]"
+            :class="
+              sport === opt.value
+                ? 'border-primary bg-primary-glow text-primary-hi'
+                : 'border-border-strong bg-[#0d1015] text-subtle hover:border-[#3a4252] hover:text-foreground'
+            "
+            :aria-pressed="sport === opt.value"
+            @click="sport = opt.value"
+          >
+            <component :is="opt.icon" :size="14" />
+            {{ opt.label }}
+          </button>
         </div>
+      </div>
 
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <FormField v-slot="{ componentField }" name="completedDate">
           <FormItem>
             <FormLabel>Completed date</FormLabel>
@@ -177,32 +191,48 @@ const isSubmitting = form.isSubmitting
 
       <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <FormField v-slot="{ componentField }" name="actualDurationSeconds">
-          <FormItem><FormLabel class="text-xs">Duration (sec)</FormLabel><FormControl><Input type="number" v-bind="componentField" /></FormControl><FormMessage /></FormItem>
+          <FormItem><FormLabel>Duration (sec)</FormLabel><FormControl><Input type="number" v-bind="componentField" /></FormControl><FormMessage /></FormItem>
         </FormField>
         <FormField v-slot="{ componentField }" name="actualDistanceMeters">
-          <FormItem><FormLabel class="text-xs">Distance (m)</FormLabel><FormControl><Input type="number" v-bind="componentField" /></FormControl><FormMessage /></FormItem>
+          <FormItem><FormLabel>Distance (m)</FormLabel><FormControl><Input type="number" v-bind="componentField" /></FormControl><FormMessage /></FormItem>
         </FormField>
         <FormField v-slot="{ componentField }" name="avgHr">
-          <FormItem><FormLabel class="text-xs">Avg HR</FormLabel><FormControl><Input type="number" v-bind="componentField" /></FormControl><FormMessage /></FormItem>
+          <FormItem><FormLabel>Avg HR</FormLabel><FormControl><Input type="number" v-bind="componentField" /></FormControl><FormMessage /></FormItem>
         </FormField>
         <FormField v-slot="{ componentField }" name="maxHr">
-          <FormItem><FormLabel class="text-xs">Max HR</FormLabel><FormControl><Input type="number" v-bind="componentField" /></FormControl><FormMessage /></FormItem>
-        </FormField>
-        <FormField v-slot="{ componentField }" name="rpe">
-          <FormItem><FormLabel class="text-xs">RPE</FormLabel><FormControl><Input type="number" step="0.1" v-bind="componentField" /></FormControl><FormMessage /></FormItem>
+          <FormItem><FormLabel>Max HR</FormLabel><FormControl><Input type="number" v-bind="componentField" /></FormControl><FormMessage /></FormItem>
         </FormField>
         <FormField v-slot="{ componentField }" name="loadOverride">
-          <FormItem><FormLabel class="text-xs">Load (override)</FormLabel><FormControl><Input type="number" step="0.01" v-bind="componentField" /></FormControl><FormMessage /></FormItem>
+          <FormItem><FormLabel>Load (override)</FormLabel><FormControl><Input type="number" step="0.01" v-bind="componentField" /></FormControl><FormMessage /></FormItem>
         </FormField>
       </div>
 
+      <!-- Perceived effort: tap-to-select 1-10 grid (decimal RPE stays on per-step rows). -->
+      <FormField v-slot="{ value, handleChange }" name="rpe">
+        <FormItem>
+          <FormLabel>
+            Perceived effort · RPE<span
+              v-if="value != null"
+              class="ml-1 font-mono normal-case tracking-normal text-subtle"
+            >{{ value }}</span>
+          </FormLabel>
+          <FormControl>
+            <RpeSelector
+              :model-value="(value as number | null) ?? null"
+              @update:model-value="handleChange"
+            />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      </FormField>
+
       <FormField v-slot="{ componentField }" name="notes">
-        <FormItem><FormLabel class="text-xs">Notes</FormLabel><FormControl><Input v-bind="componentField" /></FormControl><FormMessage /></FormItem>
+        <FormItem><FormLabel>Notes</FormLabel><FormControl><Input v-bind="componentField" /></FormControl><FormMessage /></FormItem>
       </FormField>
 
       <!-- Per-step actuals (optional; seeded from the plan for comparison). -->
       <fieldset class="space-y-3">
-        <legend class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Per-step actuals</legend>
+        <legend class="eyebrow">Per-step actuals</legend>
         <div v-if="stepResults.length === 0" class="text-xs text-muted-foreground/60">No per-step actuals.</div>
 
         <div
@@ -217,22 +247,22 @@ const isSubmitting = form.isSubmitting
           </div>
           <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
             <FormField v-slot="{ componentField }" :name="`stepResults[${index}].actualDurationSeconds`">
-              <FormItem><FormLabel class="text-[11px]">Dur (s)</FormLabel><FormControl><Input type="number" v-bind="componentField" /></FormControl><FormMessage /></FormItem>
+              <FormItem><FormLabel>Dur (s)</FormLabel><FormControl><Input type="number" v-bind="componentField" /></FormControl><FormMessage /></FormItem>
             </FormField>
             <FormField v-slot="{ componentField }" :name="`stepResults[${index}].avgPower`">
-              <FormItem><FormLabel class="text-[11px]">Power</FormLabel><FormControl><Input type="number" v-bind="componentField" /></FormControl><FormMessage /></FormItem>
+              <FormItem><FormLabel>Power</FormLabel><FormControl><Input type="number" v-bind="componentField" /></FormControl><FormMessage /></FormItem>
             </FormField>
             <FormField v-slot="{ componentField }" :name="`stepResults[${index}].avgHr`">
-              <FormItem><FormLabel class="text-[11px]">HR</FormLabel><FormControl><Input type="number" v-bind="componentField" /></FormControl><FormMessage /></FormItem>
+              <FormItem><FormLabel>HR</FormLabel><FormControl><Input type="number" v-bind="componentField" /></FormControl><FormMessage /></FormItem>
             </FormField>
             <FormField v-slot="{ componentField }" :name="`stepResults[${index}].avgPace`">
-              <FormItem><FormLabel class="text-[11px]">Pace</FormLabel><FormControl><Input type="number" v-bind="componentField" /></FormControl><FormMessage /></FormItem>
+              <FormItem><FormLabel>Pace</FormLabel><FormControl><Input type="number" v-bind="componentField" /></FormControl><FormMessage /></FormItem>
             </FormField>
             <FormField v-slot="{ componentField }" :name="`stepResults[${index}].actualDistanceMeters`">
-              <FormItem><FormLabel class="text-[11px]">Dist (m)</FormLabel><FormControl><Input type="number" v-bind="componentField" /></FormControl><FormMessage /></FormItem>
+              <FormItem><FormLabel>Dist (m)</FormLabel><FormControl><Input type="number" v-bind="componentField" /></FormControl><FormMessage /></FormItem>
             </FormField>
             <FormField v-slot="{ componentField }" :name="`stepResults[${index}].rpe`">
-              <FormItem><FormLabel class="text-[11px]">RPE</FormLabel><FormControl><Input type="number" step="0.1" v-bind="componentField" /></FormControl><FormMessage /></FormItem>
+              <FormItem><FormLabel>RPE</FormLabel><FormControl><Input type="number" step="0.1" v-bind="componentField" /></FormControl><FormMessage /></FormItem>
             </FormField>
           </div>
         </div>

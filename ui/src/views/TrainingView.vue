@@ -179,8 +179,11 @@ const isSubmitting = form.isSubmitting
     <div class="mx-auto w-full max-w-3xl">
     <form class="space-y-8" @submit="onSubmit">
       <!-- Plan details -->
-      <section class="rounded-lg border bg-card p-6 space-y-4">
-        <h2 class="text-lg font-semibold">Plan details</h2>
+      <section class="card-surface p-6 space-y-4">
+        <div class="flex items-baseline justify-between gap-3 border-b border-border pb-4">
+          <h2 class="text-lg font-semibold">Plan details</h2>
+          <span class="eyebrow">Step 1 · Plan window</span>
+        </div>
 
         <FormField v-slot="{ componentField }" name="name">
           <FormItem>
@@ -256,9 +259,12 @@ const isSubmitting = form.isSubmitting
       </section>
 
       <!-- Planned workouts -->
-      <section class="rounded-lg border bg-card p-6">
-        <h2 class="text-lg font-semibold">Planned workouts</h2>
-        <p class="mt-1 text-sm text-muted-foreground">
+      <section class="card-surface p-6">
+        <div class="flex items-baseline justify-between gap-3 border-b border-border pb-4">
+          <h2 class="text-lg font-semibold">Planned workouts</h2>
+          <span class="eyebrow">Step 2 · Sessions</span>
+        </div>
+        <p class="mt-4 text-sm text-muted-foreground">
           Schedule the sessions for this plan. You can add more later.
         </p>
 
@@ -269,10 +275,10 @@ const isSubmitting = form.isSubmitting
         <div
           v-for="(field, index) in fields"
           :key="field.key"
-          class="mt-4 space-y-4 rounded-md border p-4"
+          class="mt-4 space-y-4 rounded-[10px] border border-border bg-[#0e1218] p-4"
         >
           <div class="flex items-center justify-between">
-            <span class="text-sm font-medium">Workout {{ index + 1 }}</span>
+            <span class="eyebrow">Workout {{ index + 1 }}</span>
             <Button type="button" variant="ghost" size="sm" @click="remove(index)">Remove</Button>
           </div>
 
@@ -351,11 +357,11 @@ const isSubmitting = form.isSubmitting
 
       <div
         v-if="justCreated"
-        class="flex items-center gap-2 rounded-md bg-primary/10 px-4 py-3 text-sm"
+        class="flex items-center gap-2 rounded-md border border-primary-lo bg-primary-glow px-4 py-3 text-sm text-primary-hi"
       >
-        <CheckCircle2 :size="16" class="text-primary" />
+        <CheckCircle2 :size="16" />
         <span>Plan created.</span>
-        <router-link to="/" class="font-medium text-primary hover:underline">
+        <router-link to="/" class="font-medium underline-offset-4 hover:underline">
           View on your dashboard
         </router-link>
       </div>
@@ -366,7 +372,7 @@ const isSubmitting = form.isSubmitting
     </form>
 
     <!-- Structured-workout builder (Task 10-5), launched from the just-created plan's workouts. -->
-    <section v-if="createdPlan && !buildTarget" class="mt-8 rounded-lg border bg-card p-6">
+    <section v-if="createdPlan && !buildTarget" class="card-surface mt-8 p-6">
       <h2 class="text-lg font-semibold">Build structured workouts</h2>
       <p class="mt-1 text-sm text-muted-foreground">
         Add interval blocks and steps to the workouts you just scheduled.

@@ -119,7 +119,7 @@ const isSubmitting = form.isSubmitting
 </script>
 
 <template>
-  <section class="rounded-lg border bg-card p-6 space-y-4">
+  <section class="card-surface p-6 space-y-4">
     <div class="flex items-center justify-between">
       <div>
         <h3 class="text-lg font-semibold">Build workout<span v-if="title">: {{ title }}</span></h3>

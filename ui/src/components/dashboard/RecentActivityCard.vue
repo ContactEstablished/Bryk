@@ -70,7 +70,9 @@ function onLogged() {
       </Button>
     </div>
 
-    <LogWorkoutForm v-if="showLog" class="p-6" @logged="onLogged" @close="showLog = false" />
+    <div v-if="showLog" class="p-5">
+      <LogWorkoutForm @logged="onLogged" @close="showLog = false" />
+    </div>
 
     <template v-else>
       <p v-if="!store.recentWorkouts" class="px-6 py-4 text-sm text-muted-foreground">Loading…</p>

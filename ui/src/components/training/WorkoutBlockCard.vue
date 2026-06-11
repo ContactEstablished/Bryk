@@ -41,9 +41,9 @@ function addStep() {
 </script>
 
 <template>
-  <div class="rounded-md border p-4 space-y-4">
+  <div class="rounded-[10px] border border-border bg-[#0e1218] p-4 space-y-4">
     <div class="flex items-center justify-between gap-4">
-      <span class="text-sm font-medium">Block {{ blockIndex + 1 }}</span>
+      <span class="eyebrow">Block {{ blockIndex + 1 }}</span>
       <Button type="button" variant="ghost" size="sm" @click="emit('remove')">Remove block</Button>
     </div>
 
