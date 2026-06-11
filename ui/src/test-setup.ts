@@ -9,6 +9,23 @@ if (typeof globalThis.PointerEvent === 'undefined') {
   }
 }
 
+// jsdom has no matchMedia; report prefers-reduced-motion as ON so animated
+// values (useCountUp, CSS-driven counters) render their final state
+// synchronously and text assertions stay valid.
+if (!window.matchMedia) {
+  window.matchMedia = ((query: string) =>
+    ({
+      matches: query.includes('prefers-reduced-motion'),
+      media: query,
+      addEventListener() {},
+      removeEventListener() {},
+      addListener() {},
+      removeListener() {},
+      onchange: null,
+      dispatchEvent: () => false,
+    }) as MediaQueryList) as typeof window.matchMedia
+}
+
 // jsdom does not implement these; reka-ui's SelectTrigger calls them.
 if (typeof Element !== 'undefined') {
   if (!Element.prototype.hasPointerCapture) {
