@@ -1,8 +1,10 @@
 # ROADMAP — Bryk
 
-**Status as of 2026-05-26.** Source of truth for phased Bryk development. Read alongside `CLAUDE.md` (workflow, conventions, pending decisions, tech debt), `md/decisions/` (architectural decision records), and `md/product/feature-parity-trainingpeaks.md` (parity wishlist with status tags). Phase plans below win on scope; the parity doc is the candidate inventory.
+**Status as of 2026-06-11.** Source of truth for phased Bryk development. Read alongside `CLAUDE.md` (workflow, conventions, pending decisions, tech debt), `md/decisions/` (architectural decision records), and `md/product/feature-parity-trainingpeaks.md` (parity wishlist with status tags). Phase plans below win on scope; the parity doc is the candidate inventory.
 
 **Phase 7 reshape note.** This roadmap reflects a renumbering decided 2026-05-26 after ADR-0001 (supersede Mesocycle) and ADR-0002 (coaches are v2). Old Phase 7 (TrainingPlan domain) becomes new Phase 9. Two new phases — 7 (closeout) and 8 (profile + dashboard warmups) — are inserted. Downstream numbers shift by +2. Per-phase entries below reflect the new numbering; ADR documents capture the decisions that drove the reshape.
+
+**2026-06-11 reshape note.** Phases 8–11 shipped (see `md/handoffs/`); the ledger is updated to match. Authentication moves 14 → **12**, matching CLAUDE.md's phase pointer (regenerated 2026-06-07). The old rows 12/13/15/16/17 are superseded and their scope absorbed into the new Phases 13–21: old 12 Calendar → new 16; old 13 PMC → new 14 (engine) + 15 (Progress page); old 15 ATP → new 18; old 16 docs/security + old 17 cutover → new 21; old 17's read-only file-import seam → new 19. New phases 13–21 below were scoped 2026-06-11 against the post-Phase-11 codebase and the UI redesign that landed the same week.
 
 This roadmap is intentionally verbose. Each phase entry exists to seed Cursor prompts — the success criteria, dependencies, and task groups should compose directly into Pattern A prompts without the architect re-deriving context.
 
@@ -16,7 +18,7 @@ Non-negotiable per phase. They constrain how prompts get written and how diffs g
 - **Surgical changes.** Each prompt names exactly what to modify and explicitly states what NOT to modify. Adjacent code, comments, formatting are off-limits unless the prompt names them.
 - **Goal-driven execution.** Every prompt carries a verifiable success criterion. With Phase 6 test infrastructure landed, *done* means: build is green, tests pass, manual smoke test for the affected endpoint passes, diff reads cleanly.
 - **One logical change per commit.** Conventional prefixes (`feat:`, `refactor:`, `docs:`, `fix:`, `chore:`). Architect reads the diff, proposes the message; user commits and pastes the hash.
-- **Cursor + DeepSeek is the default executor.** Pattern A. Architect writes prompts; Cursor writes code. Pattern B (architect edits directly) is reserved for trivial mechanical edits, file reads for validation, and one-off scratch scripts. Model selection per `CLAUDE.md` — Haiku for mechanical, DeepSeek for default coding (preferred through pricing review on 2026-05-05), Sonnet for second opinion, Opus for complex design.
+- **Claude Code is the architect and implementer.** Per `CLAUDE.md` (regenerated 2026-06-07), the architect designs the work, writes the code, and validates it directly. Phase work is seeded by per-phase task specs at `md/Tasks-N-n.md`; external executor sessions (e.g., Opus-driven) follow the same specs and conventions.
 - **Verify what you read.** Before a prompt is written, the relevant files are read, `git status` checked, build verified green. Repo-state claims that turn out wrong are expensive — they generate prompts that make wrong assumptions.
 - **Sr. Dev approval gates** as listed in `CLAUDE.md`: migrations, new packages (first-party `Microsoft.Extensions.*` exempt), API breaking changes, cross-cutting concerns (auth, middleware, versioning, transactions), persistence boundary changes, Dapper switches, deviations from convention.
 
@@ -33,16 +35,20 @@ Non-negotiable per phase. They constrain how prompts get written and how diffs g
 | 5  | Vue onboarding wizard (Required / Recommended / Goals)                           | ✅ Complete       |
 | 6  | Test infrastructure (xUnit + Vitest + CI)                                        | ✅ Complete       |
 | 7  | Closeout: ADRs, tech-debt sweep, secrets hygiene, Phase 5 handoff                | ✅ Complete       |
-| 8  | Profile editing + dashboard warmup cards                                         | ⏳ Planned        |
-| 9  | TrainingPlan / PlannedWorkout / Workout domain & API + This Week card            | ⏳ Planned        |
-| 10 | Zones, thresholds, structured workout builder                                    | ⏳ Planned        |
-| 11 | TSS / IF / NP engine + workout execution capture + Recent Activity / Weekly Load cards | ⏳ Planned  |
-| 12 | Calendar view + scheduling UX                                                    | ⏳ Planned        |
-| 13 | Performance Management Chart (CTL / ATL / TSB) + Form (TSB) card                 | ⏳ Planned        |
-| 14 | Authentication & Identity (custom + OAuth)                                       | ⏳ Planned        |
-| 15 | Annual Training Plan (ATP) with A/B/C events                                     | ⏳ Planned        |
-| 16 | Documentation, configuration, security hardening                                 | ⏳ Planned        |
-| 17 | v1 cutover: integration seams, observability, polish                             | ⏳ Planned        |
+| 8  | Profile editing + dashboard warmup cards                                         | ✅ Complete       |
+| 9  | TrainingPlan / PlannedWorkout / Workout domain & API + This Week card            | ✅ Complete       |
+| 10 | Zones, thresholds, structured workout builder                                    | ✅ Complete       |
+| 11 | Training-load engine + executed-workout capture + Recent Activity / Weekly Load cards | ✅ Complete  |
+| 12 | Authentication & Authorization (approval-gated)                                  | ⏳ Next           |
+| 13 | Workout history & plan browser                                                   | ⏳ Planned        |
+| 14 | Daily-load history & PMC engine (CTL / ATL / TSB / ACWR)                         | ⏳ Planned        |
+| 15 | Progress page (PMC chart, weekly load, time-in-zone, peaks)                      | ⏳ Planned        |
+| 16 | Calendar & scheduling (reschedule, compliance coloring)                          | ⏳ Planned        |
+| 17 | Goals & events surface (Goals page, ProgressRing, plan↔event links)              | ⏳ Planned        |
+| 18 | ATP / periodization engine (weekly targets, ramp, taper)                         | ⏳ Planned        |
+| 19 | Activity file import (.fit / .tcx / .gpx)                                        | ⏳ Planned        |
+| 20 | Wellness metrics (sleep, RHR, weight, soreness, HRV)                             | ⏳ Planned        |
+| 21 | Production hardening & deployment                                                | ⏳ Planned        |
 
 Post-v1 expansion (v2 coach features, device sync, marketplace, virtual training, etc.) is tracked in `md/product/feature-parity-trainingpeaks.md` and folded back into this roadmap only when a candidate gets scoped.
 
@@ -194,7 +200,9 @@ Post-v1 expansion (v2 coach features, device sync, marketplace, virtual training
 
 ---
 
-## Phase 8 — Profile editing + dashboard warmup cards ⏳
+## Phase 8 — Profile editing + dashboard warmup cards ✅
+
+**Shipped.** `/profile` surface, Primary Goal + Resting HR cards live. Entry below kept as the historical plan; see `md/handoffs/2026-05-31-phase-8-queue.md` and subsequent handoffs.
 
 **Goal.** Replace the read-only summary-card band-aid from Phase 5 with a real edit-my-profile surface. Light up the two cheapest dashboard cards (Primary Goal, Resting HR) using data already collected during onboarding.
 
@@ -230,7 +238,9 @@ Post-v1 expansion (v2 coach features, device sync, marketplace, virtual training
 
 ---
 
-## Phase 9 — TrainingPlan / PlannedWorkout / Workout domain & API + This Week card ⏳
+## Phase 9 — TrainingPlan / PlannedWorkout / Workout domain & API + This Week card ✅
+
+**Shipped.** See ADR-0003 (`md/decisions/0003-trainingplan-domain-shape.md`) for the final entity shapes — the periodization fields landed as `BuildWeeks` / `RecoveryWeeks` / `RecoveryWeekPercentage` (not the names sketched below). Entry kept as the historical plan.
 
 **Goal.** Introduce the v1 training data model — a plan owns planned workouts; planned workouts mature into executed workouts. This is the spine for everything from Phase 10 onward. Ship it all the way through to a populated "This Week" dashboard card so it's not domain-work-in-a-vacuum.
 
@@ -265,7 +275,9 @@ Post-v1 expansion (v2 coach features, device sync, marketplace, virtual training
 
 ---
 
-## Phase 10 — Zones, thresholds, structured workout builder ⏳
+## Phase 10 — Zones, thresholds, structured workout builder ✅
+
+**Shipped.** See ADR-0004 and `md/handoffs/2026-06-08-phase-10-complete.md`. Entry kept as the historical plan.
 
 **Goal.** Make `PlannedWorkout` *structured*: typed steps targeting power/HR/pace, derived from the per-sport thresholds the athlete supplied in onboarding.
 
@@ -288,7 +300,9 @@ Post-v1 expansion (v2 coach features, device sync, marketplace, virtual training
 
 ---
 
-## Phase 11 — TSS / IF / NP engine + workout execution capture + Recent Activity / Weekly Load cards ⏳
+## Phase 11 — TSS / IF / NP engine + workout execution capture + Recent Activity / Weekly Load cards ✅
+
+**Shipped.** See ADR-0005 and `md/handoffs/2026-06-08-phase-11-complete.md` — `LoadCalculator` (pure TSS math), weekly load, executed-`Workout` capture with per-step actuals, `db/dev-seed.sql`. Entry kept as the historical plan.
 
 **Goal.** Compute load metrics for completed workouts so downstream analytics (Phase 13 PMC) have data to draw on. Light up two more dashboard cards along the way.
 
@@ -317,105 +331,294 @@ Post-v1 expansion (v2 coach features, device sync, marketplace, virtual training
 
 ---
 
-## Phase 12 — Calendar view + scheduling UX ⏳
+## Phase 12 — Authentication & Authorization ⏳ (next, approval-gated)
 
-**Goal.** Athletes see past/future workouts on a calendar, reschedule by date, and create unplanned workouts inline. This is the hub view per the parity doc and the eventual surface behind the dashboard sidebar's Calendar item.
+**Goal.** Replace the dev stub with real authentication. Direction: custom signup (email + password) plus OAuth via Google and Apple. Per ADR-0002, one human = one `Athlete` — no separate `User` entity at the domain level. **Approval-gated end-to-end** per CLAUDE.md Open Decisions: no `[Authorize]`, Identity, or `AddAuthentication` lands without Sr. Dev approval.
 
 **Success criteria.**
-- Vue calendar component (week + month modes minimum). Library choice: prefer a headless calendar primitive over a heavyweight component lib; if none fits, scope a custom component. New library deps require Sr. Dev approval.
-- API: `GET /api/v1/calendar?from=&to=` returns merged planned + executed workouts within the range. Paged or capped — decide explicitly.
-- Reschedule action: PATCH-style endpoint that moves a `PlannedWorkout` to a new date.
-- Inline create: from a date cell, create a `PlannedWorkout` or directly log an unplanned `Workout`.
-- Drag-and-drop reschedule is **out of scope for v1**. Click-to-edit date is sufficient.
-- Tests: integration test for the calendar query, store-level test for the reschedule action.
+- The Phase 12 auth ADR captures the binding evaluation of ASP.NET Core Identity vs hand-rolled, plus the table-layout decision: Identity in its own table linked 1:1 to `Athlete`, vs `Athlete : IdentityUser<Guid>`. Sr. Dev approval before any code lands.
+- Migration generated, reviewed, **approved before apply**.
+- OAuth providers (Google, Apple) wired through the external-login flow; token strategy decided and committed (cookie vs JWT — cookie default if the SPA is same-origin).
+- `ICurrentUserService` production implementation reads from `ClaimsPrincipal`; all consumers from Phase 4 onward continue unchanged.
+- `[Authorize]` applied everywhere except auth endpoints; anonymous rejection covered by tests.
+- Signup / login / OAuth-callback / logout Vue surfaces ship, with route guards in `src/router/`.
 
-**Dependencies.** Phases 9, 10, 11 (so cells have something to render).
+**Dependencies.** None hard; must precede production traffic. Phases 13–20 *can* execute on the dev stub if sequencing demands it (all athlete resolution flows through `ICurrentUserService`, so the later swap doesn't touch feature code), but auth remains the declared next phase.
 
 ---
 
-## Phase 13 — Performance Management Chart (CTL / ATL / TSB) + Form (TSB) card ⏳
+## Math conventions (single source of truth for Phases 14–18)
 
-**Goal.** Compute the canonical training-load chart so athletes can see fitness, fatigue, and form trends. Light up the final top-row dashboard card.
-
-**Success criteria.**
-- CTL (42-day exponentially-weighted average), ATL (7-day EWMA), TSB (CTL − ATL) computed from executed workouts' TSS. Decide explicitly whether to compute on-demand vs persist a daily rollup table (latter scales; former simpler). Document the decision in an ADR.
-- API: `GET /api/v1/pmc?from=&to=&sports=` returns the time series. Filter by sport(s) — endurance athletes commonly want bike-only or run-only views.
-- Vue chart view. Chart library: TBD in this phase; treat as a Sr. Dev approval gate (likely `vue-chartjs`, `apexcharts`, or `@unovis/vue` — whichever pairs cleanly with Vue 3 + TS).
-- The dashboard's Form (TSB) placeholder card is replaced with real content: current TSB value plus a tiny sparkline of the last 7-14 days, with a colored productive/neutral/fresh status badge.
-- Tests: golden-series tests for the PMC math (synthetic 90-day input → expected curves), API test for the endpoint.
-
-**Dependencies.** Phase 11 (TSS data exists).
+- **Daily load** = Σ `EffectiveLoad` (= `LoadOverride ?? ComputedLoad`) across workouts sharing a `CompletedDate`. Empty days contribute **0** — zeros are load-bearing for EWMA decay; never skip them.
+- **CTL** ("fitness") = 42-day EWMA: `CTL_today = CTL_yesterday + (load_today − CTL_yesterday)/42`.
+- **ATL** ("fatigue") = 7-day EWMA: `ATL_today = ATL_yesterday + (load_today − ATL_yesterday)/7`.
+- **TSB** ("form") = `CTL_yesterday − ATL_yesterday` (yesterday's values, by convention).
+- **ACWR** = 7-day acute ÷ 28-day chronic (same units); sweet spot ~0.8–1.3; >1.5 elevated risk; undefined (render "—") with <28 days of history.
+- **Time-in-zone honesty:** with manual entry, time-in-zone derives from planned structure (per-step duration × zone target) for linked workouts, else coarse session-level AvgHr classification, else "unclassified". Label it "estimated" in the UI until Phase 19 file import supplies real samples.
 
 ---
 
-## Phase 14 — Authentication & Identity (custom + OAuth) ⏳
+## Phase 13 — Workout history & plan browser ⏳
 
-**Goal.** Replace the dev stub with real authentication. Direction: custom signup (email + password) plus OAuth via Google and Apple. Per ADR-0002, one human = one `Athlete` — no separate `User` entity at the domain level.
+**Goal.** Make logged training browsable: the Workouts nav item goes live with a filterable history list, a workout detail page with step-level planned-vs-actual, full edit/delete on workouts, and a plan browser that reopens the structure builder on existing planned workouts (the carried Phase-10 gap).
 
-**Success criteria.**
-- ADR captures the binding evaluation of ASP.NET Core Identity vs hand-rolled, plus the implementation choice on table layout: `ApplicationUser : IdentityUser<Guid>` linked 1:1 to `Athlete`, vs `Athlete : IdentityUser<Guid>`. `CLAUDE.md` recommendation is to evaluate Identity first; this phase makes that evaluation decisive. Sr. Dev approval before any code lands.
-- If ASP.NET Core Identity: code lands under `Bryk.Infrastructure/Identity/`. Migration generated, **Sr. Dev approval before apply**.
-- OAuth providers (Google, Apple) wired through ASP.NET external login flow if Identity is chosen, or equivalent OIDC plumbing otherwise. Apple Sign-In key-rotation noted in the deployment doc.
-- Token strategy decided and committed (cookie vs JWT). Cookie auth is the default if the SPA is same-origin in dev/prod; JWT only if there's a clear cross-origin or mobile driver. Refresh-token rotation strategy documented and implemented (or deliberate deferral captured).
-- `ICurrentUserService` production implementation reads from `ClaimsPrincipal`. All consumers from Phase 4 onward continue to work unchanged.
-- `[Authorize]` attributes applied to controllers (everything except auth endpoints themselves). Anonymous request rejection covered by tests.
-- Signup / login / OAuth-callback / logout Vue surfaces ship. Route guards in `src/router/`.
-- Tests: integration tests for signup, login, OAuth callback (mocked external), authorized vs unauthorized request rejection.
+**Why now / depends on.** First feature phase after auth: everything downstream (PMC, Progress, Calendar, import) needs trustworthy history and a place to land. Closes the API write-gap before analytics bake on top.
 
-**Dependencies.** Phase 6 ✅. Should land before any production traffic. May land earlier than this numeric slot if a real-traffic milestone arrives — re-sequence if so.
+**Backend scope.**
+- **No migration expected** (all fields exist). If a task discovers a needed column — stop, Sr. Dev approval first.
+- `PUT /api/v1/workouts/{id}` — replace-style update (session actuals + step results, like the structure endpoint). **Recompute `ComputedLoad` via `LoadCalculator` on every update**; `LoadOverride` survives unless explicitly cleared. 404 for missing/foreign.
+- `DELETE /api/v1/workouts/{id}` — hard delete, cascades step results, 204.
+- Extend `GET /api/v1/workouts`: `from`/`to` (DateOnly on `CompletedDate`), `sport`, `skip`/`take` (capped, newest-first). Non-breaking; becomes the date-range workhorse Phase 14 reuses.
+- Planned-vs-actual: keep `WorkoutResponse` lean — the client composes with the existing `GET .../structure` endpoint (confirm in task 1; any response change must be additive).
+- `UpdateWorkoutRequest` validator mirrors `LogWorkoutRequest` rules. `WorkoutService.UpdateAsync/DeleteAsync` + repo date-range/paged query; UoW commit-once.
 
-**Architect notes.** Per `CLAUDE.md`, no `[Authorize]` attributes, claims-based logic, password hashing, or token issuance lands without explicit Sr. Dev approval. This phase is gated end-to-end.
+**Frontend scope.**
+- `WorkoutsView.vue` at `/workouts`; flip the inert sidebar item (and mobile tab bar) live in `ui/src/components/layout/AppSidebar.vue`. Rows reuse the Recent Activity pattern: `TypePill`, EffectiveLoad, duration, `DeltaChip` vs planned where linked. Sport + date-range filter bar, "load more" pagination.
+- `WorkoutDetailView.vue` at `/workouts/:id` — `MetricTile` strip (load/duration/distance/avg-max HR, `useCountUp`); per-step planned-vs-actual table **finally displaying `AvgPower`/`AvgPace` and `Workout.Notes`**; edit via `LogWorkoutForm` in a new edit mode; delete with confirm.
+- Plan browser: plan list → detail → planned-workout rows with "Edit structure" reopening `WorkoutStructureBuilder` against existing GET/PUT structure endpoints. Browse + structure-edit only (plan metadata editing is Phase 18).
 
----
+**Decisions needed.** Hard vs soft delete (recommend hard for v1; soft = migration + approval). Pagination convention (recommend skip/take + capped take; record as a convention entry — every later list endpoint follows it).
 
-## Phase 15 — Annual Training Plan (ATP) with A/B/C events ⏳
+**Out of scope.** Calendar rendering (16), aggregates/charts (14–15), plan-metadata editing (18), "save as template", file upload (19).
 
-**Goal.** Athletes set season-long target events with priority, and Bryk computes a load progression that respects taper/peak rhythm. Builds on the periodization fields seeded onto `TrainingPlan` in Phase 9 (carried forward from the retired `Mesocycle` per ADR-0001).
+**Success criteria.** Workouts nav live; list filters and paginates 20+ seeded workouts; detail shows step planned-vs-actual incl. AvgPower/AvgPace/Notes; editing duration/RPE changes ComputedLoad on save; delete removes from list + dashboard feed; plan browser reopens, edits, saves an existing structure that survives reload.
 
-**Success criteria.**
-- `TrainingPlan` extended (or paired) with an annual view: list of `Event` rows tagged A/B/C with target dates. The existing `Event` entity from Phase 4 onboarding (with `EventPriority`) is the seed.
-- Load engine: given a list of A/B/C events plus a fitness baseline (CTL), generate weekly TSS targets across the season honoring build/recovery ratios and taper requirements before A-events. The methodology fields on `TrainingPlan` (Polarized / Pyramidal / Periodization / Norwegian) parameterize the engine.
-- API: `GET /api/v1/atp` returns the computed weekly target curve. POST/PUT to recompute when events change.
-- Vue ATP view shows the curve alongside event markers, lets the athlete drag-adjust ratios or peak duration. Drag-adjust is acceptable here — this is a planning surface, not real-time data.
-- Tests: golden-event-list tests (e.g., one A-event mid-season + two B-events) → expected weekly target series.
-
-**Dependencies.** Phases 11 (TSS), 13 (CTL baseline). Phase 14 nice-to-have but not strictly required if the dev-stub identity is still acceptable for the ATP surface.
+**Estimated size.** **L** — 5 task docs (13-1 PUT/DELETE + recompute; 13-2 list filters/pagination; 13-3 WorkoutsView + nav; 13-4 detail + edit/delete; 13-5 plan browser).
 
 ---
 
-## Phase 16 — Documentation, configuration, security hardening ⏳
+## Phase 14 — Daily-load history & PMC engine (CTL / ATL / TSB / ACWR) ⏳
 
-**Goal.** Close the gap between aspiration and reality in `README.md` and supporting docs. Clean up committed dev config. Document deployment.
+**Goal.** Deterministic server-side analytics: daily load series, CTL/ATL/TSB, ACWR — lighting up the dashboard "Form (TSB)" placeholder tile.
 
-**Success criteria.**
-- `README.md` reflects actual implemented state. Specifically:
-  - Remove or qualify Electron/SQLite/MySQL/AI-provider claims that are not implemented (or, if anything has shipped through Phase 17's evaluation gate, narrow the wording to what shipped).
-  - Correct any architectural claims that don't match reality. The correct shape: services consume repositories; repositories own DbContext access; `IUnitOfWork` owns the persistence boundary.
-  - Update the data-model snippet to reflect the post-ADR-0001 model (TrainingPlan / PlannedWorkout / Workout; Mesocycle retired).
-  - Update the API overview table to match current routes.
-- Secrets hygiene from Phase 7 verified — no plaintext secrets reintroduced. `dotnet user-secrets` workflow stable.
-- `appsettings.json` audited for embedded secrets or environment-specific URLs; all moved to user secrets or environment variables.
-- CORS configuration distinguishes Development from Production with a documented allowlist strategy for prod origins.
-- Pre-existing NuGet vulnerability warnings in `Bryk.API` triaged: each warning either patched or explicitly accepted in a `md/security-notes.md` with rationale.
-- Deployment doc at `md/deployment.md`: how to run the API + frontend, environment-variable matrix, migration apply procedure, OAuth-provider setup.
-- `md/decisions/` ADR folder formalized; inline decisions (PMC storage, chart-library, calendar-library, etc.) materialized as ADRs if not already.
+**Why now / depends on.** Builds on 13's date-range surface and Phase 11's `EffectiveLoad`. Must precede 15 (Progress consumes it) and 18 (ATP targets are expressed against weekly load/CTL).
 
-**Dependencies.** None hard — can shift earlier if config drift becomes painful. Lower priority than feature phases but must land before any production-facing launch.
+**Backend scope.**
+- **No migration** — compute-on-read (bounded lookback, e.g. 180 days, seeded at first workout or 0). A `DailyLoadSnapshot` table is explicitly out (future approved migration if profiling demands).
+- New `Bryk.Application/Analytics/`: `PmcCalculator` (pure, like `LoadCalculator`: ordered zero-filled daily series → per-day `{date, load, ctl, atl, tsb}` per the math conventions above), `AcwrCalculator` (pure; null under 28 days — don't fake confidence), `IAnalyticsService`/`AnalyticsService` (groups workouts by `CompletedDate`, sums EffectiveLoad, zero-fills, delegates).
+- New `AnalyticsController`: `GET /api/v1/analytics/daily-load?from=&to=`; `GET /api/v1/analytics/pmc?from=&to=` returning the series **plus a `current` summary** (today's CTL/ATL/TSB/ACWR) so the dashboard needs one call.
+- Validation: range required, ≤ 400 days, `from <= to`, no future `to`. xUnit: EWMA seeding, zero-day decay, TSB yesterday-offset, ACWR insufficiency, LoadOverride respected; worked example (constant 100 TSS/day → CTL converges to 100).
+
+**Frontend scope.**
+- Form (TSB) tile goes live: `MetricTile` + `useCountUp`, signed TSB, `DeltaChip` vs 7 days ago, interpretation label (lock bands in the task doc: e.g. >+10 fresh / −10..+10 neutral / <−10 fatigued).
+- ACWR chip on `WeeklyLoadCard` (in/out of 0.8–1.3 styling). New analytics service module + Pinia slice. Big charts wait for 15.
+
+**Decisions needed.** **ADR: PMC computation strategy** (compute-on-read vs snapshots; lookback/seeding rule — 15 and 18 silently depend on it). Controller naming nod (`AnalyticsController`). TSB interpretation band values.
+
+**Out of scope.** Charts (15), per-sport PMC split, snapshot/caching table, wellness inputs into form (20 stays separate).
+
+**Success criteria.** PMC endpoint matches hand-verifiable EWMA examples in tests; Form tile shows a real TSB that changes after logging/deleting a workout (via Phase 13 endpoints) and matches `current`; ACWR renders "—" under 28 days of history.
+
+**Estimated size.** **M** — 4 task docs (14-1 calculators + tests; 14-2 service + endpoints; 14-3 Form tile + ACWR chip; 14-4 seeded verification + wiring polish).
 
 ---
 
-## Phase 17 — v1 cutover: integration seams, observability, polish ⏳
+## Phase 15 — Progress page (PMC chart, weekly load, time-in-zone, peaks) ⏳
 
-**Goal.** Cross the v1 finish line. Anything that has to ship for the product to be "complete enough to invite real athletes" lives here.
+**Goal.** The Progress nav item goes live as the analytics home: ported PMC chart, weekly load bars with planned hatch + optimal band, time-in-zone (honestly labeled), personal records/peaks.
 
-**Success criteria.**
-- **Observability.** Structured logging (Serilog or `Microsoft.Extensions.Logging` with a JSON sink — decide explicitly), correlation IDs through requests, at minimum INFO coverage of service-layer happy paths and ERROR coverage of caught exceptions in middleware. Sr. Dev approval before adding a logging dependency.
-- **Tech-debt mop-up.** Items 6, 8, 9, 10, 11 from `CLAUDE.md` revisited: `NotImplementedException` → 501, `DbUpdateException` / unique-constraint → 409 with diagnostics, RFC 7807 ProblemDetails *if and only if* external consumers are imminent, multi-version Swagger doc generation if v2 has shipped, remaining NuGet warnings.
-- **Integration seams (read-only first).** Per the parity doc, Garmin/Wahoo/Apple Health two-way sync is post-v1, but a read-only file import (`.fit`, `.tcx`, `.gpx`) into the Phase 11 completion flow is achievable here. Treat as a Sr. Dev approval gate (new parser dependency, payload size limits, validation).
-- **Performance pass.** Spot-check the heaviest endpoints under realistic data volume (calendar range, PMC range, ATP recompute). Add `.AsNoTracking()` / `.AsSplitQuery()` where missing. Decide whether any query crosses into Dapper territory — Sr. Dev approval if it does.
-- **Final smoke matrix.** End-to-end onboarding → plan creation → workout execution → calendar → PMC. Documented in the v1 cutover handoff.
+**Why now / depends on.** Strictly after 14 (consumes its endpoints) and 13 (history + list conventions). The deliberately deferred design-export charts finally earn their data.
 
-**Dependencies.** Everything prior.
+**Backend scope (no migration; compute-on-read).**
+- `GET /api/v1/analytics/weekly-load?weeks=8` — per ISO week `{weekStart, plannedLoad, actualLoad}` + 4-week rolling average + optimal band (decision below). Planned = Σ scheduled `PlannedWorkout` effective loads; actual = Σ completed `EffectiveLoad`.
+- `GET /api/v1/analytics/time-in-zone?from=&to=&sport=` — zone histogram in seconds with per-method breakdown (`structure`/`sessionAvg`/`unclassified`) per the math conventions. **Stays coarse until 19 — do not pretend otherwise.**
+- `GET /api/v1/analytics/peaks?sport=` — session-level records only: highest single-workout load, longest duration/distance, best session avg pace (run/swim), highest session AvgPower (bike). *Not* duration-curve peaks (need samples, 19+).
+- Validation: weeks 1–26; range bounds as 14.
+
+**Frontend scope.**
+- `ProgressView.vue` at `/progress`; nav live. **Port `PMCChart`** (CTL/ATL lines + daily load bars; hand-rolled SVG, no chart lib) with 6w/3m/6m range toggle. **Port `LoadChart`** (8-week bars, planned hatch, optimal band, 4-week trend). The design-export reference is `charts.jsx` inside the Claude Design export (`Bryk UI.zip`); `ui/src/components/common/Sparkline.vue` demonstrates the established porting pattern.
+- Time-in-zone stacked bars in `ZonesView` zone colors + "estimated" badge driven by the method breakdown.
+- Peaks as `MetricTile` grid with `TypePill` + `DeltaChip` for in-range records.
+- Reuse `Sparkline`, eyebrow/card-surface utilities, `useCountUp`.
+
+**Decisions needed.** **Optimal-band definition** (recommend ACWR-safe range: 0.8–1.3 × trailing 4-week average; must agree with 18's ramp model — lock once). Peaks persistence (recommend compute-on-read; persisting = migration, pairs better with 19). Range-picker URL/query convention.
+
+**Out of scope.** Sample-based analytics (power curves, decoupling, lap splits — 19+), per-sport PMC tabs, chart export/share, customizable dashboards.
+
+**Success criteria.** `/progress` renders all four sections from seed data, zero console errors, no chart lib in package.json; planned hatch vs actual fill distinguishable and band/trend move when workouts change; time-in-zone badge logic correct and per-method seconds sum to total; Vitest covers chart data-transform composables.
+
+**Estimated size.** **L** — 5 task docs (15-1 weekly-load + peaks endpoints; 15-2 time-in-zone + classification tests; 15-3 PMCChart port; 15-4 LoadChart port; 15-5 zone/peaks UI + assembly/nav).
+
+---
+
+## Phase 16 — Calendar & scheduling (reschedule, compliance coloring) ⏳
+
+**Goal.** Month/week training calendar merging planned + completed workouts + events, with reschedule (drag on desktop, tap-to-move on mobile) and compliance coloring.
+
+**Why now / depends on.** Needs 13; benefits from 14's load context; floats vs 15/17 but placed here to complete the daily-use loop (plan → see week → do → log) before ATP densifies scheduling.
+
+**Backend scope (no migration).**
+- `GET /api/v1/calendar?from=&to=` — day-keyed merged feed: planned items, completed items, events (race days render with A/B/C priority). Range ≤ ~62 days.
+- `PATCH /api/v1/trainingplans/{id}/plannedworkouts/{pwId}/schedule` — body `{scheduledDate}` only (dedicated lightweight endpoint; avoids full-DTO PUT misuse). Validate date within plan window.
+- Compliance classified server-side in the feed (one home for the rule): past planned — `green` completed within 80–120% of PlannedLoad; `yellow` 50–80% or >120%; `red` missed; `grey` future; `unplanned` tag for unmatched completions; null-PlannedLoad falls back to duration ratio else completed=green. Thresholds locked as a product decision (reused by 18).
+
+**Frontend scope.**
+- `CalendarView.vue` at `/calendar` — recommend a new sidebar item (Training keeps authoring); confirm in task 1. Month grid + week strip (mobile defaults to week strip). Day cells: compact chips (`TypePill` + load + compliance dot). Day detail popover linking planned→structure (13's browser) and completed→`/workouts/:id`.
+- Reschedule: hand-rolled pointer-event drag (desktop) + tap-to-select/tap-target (mobile). **No drag-and-drop library.**
+
+**Decisions needed.** Compliance thresholds + null-load fallback (mini-ADR; 18 reuses). Reject vs warn on rescheduling outside the plan window (recommend reject — plan dates stay meaningful for 18). Sidebar IA nod.
+
+**Out of scope.** Drag-to-copy/bulk week ops (v2), weather/availability tags, creating planned workouts from the calendar (revisit post-18), iCal export.
+
+**Success criteria.** Seeded planned/completed/event items render in correct cells across a month boundary; drag (desktop) and tap-move (mobile) persist and survive reload; past days color correctly against locked thresholds incl. a seeded missed + overcooked workout; out-of-window reschedule blocked with a visible message.
+
+**Estimated size.** **L** — 5 task docs (16-1 feed + compliance classifier; 16-2 schedule PATCH; 16-3 grid rendering; 16-4 reschedule interactions; 16-5 day detail + legend + nav).
+
+---
+
+## Phase 17 — Goals & events surface (Goals page, ProgressRing, plan↔event links) ⏳
+
+**Goal.** The Goals nav item goes live: goal list with date-based progress, event cards with countdown using the ported ProgressRing, and the dormant plan↔event link surfaced.
+
+**Why now / depends on.** Floats (could swap with 16); placed before 18 so ATP has a live event surface to anchor ramps. Closes a verified API gap: events/goals have **no GET endpoints at all** (the dashboard composes from profile reads).
+
+**Backend scope (no migration expected).**
+- `GET /api/v1/events` (ordered by date, `upcoming=true` filter; includes `Notes` + linked plan ids via reverse `TrainingPlan.EventId` lookup); `GET /api/v1/events/{id}`; `GET /api/v1/goals` (computed days-remaining + status).
+- Surface event name in plan summaries (additive only).
+
+**Frontend scope.**
+- `GoalsView.vue` at `/goals`; nav live. Goals section (cards: `GoalType` `TypePill`, description, target-date countdown) + Events section (date-ordered, A/B/C styling, **`Event.Notes` finally rendered**, linked-plan chip → plan browser).
+- **Port `ProgressRing`** from the design export (ticks + gradient + draw-in): fill = elapsed fraction of creation→target window (plan start when linked); center = days-to-go via `useCountUp`. Refactor dashboard `PrimaryGoalCard` to share the internals (one implementation, two surfaces).
+- Goal/event CRUD forms on-page wrapping existing POST/PUT/DELETE (vee-validate + zod, onboarding patterns).
+
+**Decisions needed.** Quantitative goal progress (`TargetValue/Unit/CurrentValue`) = migration + product decision — **recommend defer**; ship date-based honestly, record candidate in parity doc. Plan↔event write surface waits for 18's plan PUT (display-only here).
+
+**Out of scope.** Goal target-value tracking, auto-prioritization, event reminders/notifications, goal↔workout attribution.
+
+**Success criteria.** `/goals` lists seeded data from the new GETs; CRUD round-trips without touching onboarding; ProgressRing animates with correct elapsed fraction and the dashboard card renders identically via the shared component; linked events navigate to plan detail; Notes visible.
+
+**Estimated size.** **M** — 4 task docs (17-1 GET endpoints + linked-plan lookup; 17-2 ProgressRing port + PrimaryGoalCard refactor; 17-3 GoalsView + nav; 17-4 CRUD forms).
+
+---
+
+## Phase 18 — ATP / periodization engine (weekly targets, ramp, taper) ⏳
+
+**Goal.** Bring `BuildWeeks`/`RecoveryWeeks`/`RecoveryWeekPercentage` (dormant since ADR-0003) alive: auto-generated weekly load targets ramping toward the linked event, recovery-week scaling, taper, and weekly target-vs-actual on the dashboard.
+
+**Why now / depends on.** Needs 14 (load math + weekly conventions), 17 (live event surface), and 16's locked compliance bands. Last "training intelligence" phase before integrations.
+
+**Backend scope.**
+- **No migration** — columns exist; targets compute on read (persisted `WeeklyTarget` overrides = future migration; recommend against for v1).
+- `PUT /api/v1/trainingplans/{id}` — **new endpoint** (verified gap: no plan-metadata update exists). Name, dates, methodology, `EventId`, the three periodization fields. Validation: `BuildWeeks` 1–8, `RecoveryWeeks` ≥ 1, `RecoveryWeekPercentage` 0.3–0.9, dates coherent with event.
+- New `Bryk.Application/Training/Periodization/`: `WeeklyTargetCalculator` (pure: plan window + baseline + ramp + build/recovery cadence → `[{weekStart, targetLoad, isRecoveryWeek}]`, taper into a linked event), `IPeriodizationService` (baseline from trailing 4-week actuals via 14's series).
+- `GET /api/v1/trainingplans/{id}/weekly-targets` — targets merged with actuals.
+- xUnit: cadence (3 build + 1 recovery), ramp bounds, taper, no-event plans, degenerate short plans — exact values pinned.
+
+**Frontend scope.**
+- Plan detail (13's browser) gains a Periodization panel: edit fields + event link via the PUT; render the target ramp by **reusing 15's LoadChart** (targets in place of planned hatch).
+- `ThisWeekCard` gains target-vs-actual progress bar + `DeltaChip` (reusing 16's compliance bands). Calendar week headers optionally show the weekly target.
+
+**Decisions needed.** **ADR: ramp model** — baseline source, ramp cap (~5–8%/week, consistent with projected ACWR ≤ 1.3), taper rule. Write before any code task. Compute-on-read confirmation. Reject-vs-warn when shrinking plan dates orphans planned workouts (align with 16).
+
+**Out of scope.** Auto-generating planned *workouts* from targets (targets are numbers; authoring stays manual), multi-event season ATP, per-sport target split, coach overrides (v2).
+
+**Success criteria.** 3-build/1-recovery/60% on a 12-week linked plan yields a visible ramp with every 4th week dipped and a race-week taper, reproducible via pinned unit tests; This Week shows target vs actual flipping state on log; plan PUT round-trips from the UI; foreign plan 404s.
+
+**Estimated size.** **M/L** — 5 task docs (18-1 ramp ADR + calculator + tests; 18-2 plan PUT; 18-3 weekly-targets endpoint; 18-4 periodization panel; 18-5 dashboard tie-in).
+
+---
+
+## Phase 19 — Activity file import (.fit / .tcx / .gpx) ⏳
+
+**Goal.** Upload a device file → parsed `Workout` with real actuals + zone data, matched to a planned workout — upgrading time-in-zone from "estimated" to sample-based for imports.
+
+**Why now / depends on.** Needs 13 (detail/edit surface + match UX); pays off 15's honesty caveat. File import only — **no vendor OAuth in this roadmap window** (locked decision).
+
+**Backend scope.**
+- **Migration required (Sr. Dev approval, one reviewed set):** `ActivityFile` (Id, AthleteId, FileName, Format, ByteSize, raw bytes or path, UploadedAt, ParsedWorkoutId?); `Workout.SourceFileId?`; `WorkoutZoneDuration` child table (`WorkoutId, ZoneIndex, Seconds, Basis(power/hr/pace)`) — table over JSON so 15's time-in-zone unions it trivially.
+- **Package decision (flag loudly, approval):** `.tcx`/`.gpx` parse with `System.Xml.Linq` (no package). `.fit` is binary — request the official **Garmin FIT SDK** (`Garmin.FIT.Sdk` NuGet) up front; if denied, the phase degrades gracefully to TCX/GPX-only with FIT as a follow-up.
+- Parsers in `Bryk.Infrastructure` behind an Application `IActivityFileParser` abstraction. Extract sport, start, duration/distance, avg/max HR, avg power/pace + samples → session actuals + zone histogram (vs `AthleteSportZone`) + `ComputedLoad` via the existing `LoadCalculator` (imported power finally exercises the top IF branch with real numbers).
+- Two-step flow: `POST /api/v1/activityfiles` (multipart → 201 parsed preview + load + zone histogram + **match candidates**: planned workouts ±1 day, same sport, unlinked); `POST /api/v1/activityfiles/{id}/commit` (`{plannedWorkoutId?}` → creates Workout + zone rows, links); `DELETE /api/v1/activityfiles/{id}` (discard).
+- Validation: extension + magic-byte sniffing, size cap (~25 MB; Kestrel `MaxRequestBodySize` per-route), duplicate-commit rejection, sample sanity (HR 30–230 etc.), corrupt file → 400, nothing persisted on parse failure.
+- 15's time-in-zone updated to prefer `WorkoutZoneDuration` rows (method = `samples`).
+
+**Frontend scope.**
+- Upload entry on `WorkoutsView` (button + drop zone) → import review flow: parsed `MetricTile` strip, zone histogram preview (reuse 15's bars), match-candidate radio list, confirm → `/workouts/:id`. Detail gains a "from file" source badge; Progress "estimated" badge disappears for sample-covered ranges.
+
+**Decisions needed.** Garmin FIT SDK approval (headline — schedule before phase start). Migration approval. Raw-file storage (DB varbinary vs path; DB simplest pre-deployment, 21 may revisit). Persist raw samples? **Recommend no** for v1 — keep the file, persist derived aggregates, re-parse later if richer analytics land.
+
+**Out of scope.** Vendor OAuth/auto-sync, per-second sample persistence, power curves/decoupling/lap deep-dives, push-to-device, bulk/multi-file backfill.
+
+**Success criteria.** Committed test fixtures (.fit ride, .tcx run, .gpx activity) upload→preview→commit→appear in history with the correct IF branch driving load; import against a seeded same-day planned workout offers + links the match and the calendar shows real compliance; Progress shows `samples` method for imports; corrupt/oversized files fail clean.
+
+**Estimated size.** **L** — 6 task docs (19-1 migration + storage; 19-2 TCX/GPX parsers; 19-3 FIT parser behind approval; 19-4 endpoints + validation; 19-5 review UI + match flow; 19-6 zone-histogram integration).
+
+---
+
+## Phase 20 — Wellness metrics (sleep, RHR, weight, soreness, HRV) ⏳
+
+**Goal.** Manual daily wellness entry — sleep, resting HR, weight, soreness, HRV — turning on the Sleep placeholder tile and giving Resting HR a real history trend.
+
+**Why now / depends on.** Floats (needs only 12); scheduled late as additive context. Manual entry is the honest v1 answer to the "needs device integration" placeholder.
+
+**Backend scope.**
+- **Migration required (approval):** `DailyWellness` — Id, AthleteId, Date (DateOnly; **unique composite index AthleteId+Date**), SleepHours?, SleepQuality(1–5)?, RestingHr?, WeightKg?, Soreness(1–10)?, HrvMs?, Notes?, IAuditable. All metrics nullable — partial entries are the norm.
+- `PUT /api/v1/wellness/{date}` — idempotent per-day upsert; 400 future dates; ≥1 metric present. `GET /api/v1/wellness?from=&to=` (sparse OK). `GET /api/v1/wellness/summary` — 7-day averages + deltas vs prior 7, one call for tiles.
+- Validation ranges: SleepHours 0–16, RestingHr 25–120, WeightKg 30–250, Soreness 1–10, HrvMs 10–250.
+
+**Frontend scope.**
+- Dashboard "Today" wellness quick-entry card (collapsed → form). Sleep tile live: 7-day avg + `Sparkline` of nightly hours + `DeltaChip` vs prior week. `RestingHrCard` upgraded from the static onboarding value to entered history + sparkline. Weight/HRV as `MetricTile`+`Sparkline` pairs. Soreness input parameterizes `RpeSelector` into a shared scale selector (default to prop-parameterize over duplicate).
+
+**Decisions needed.** `DailyWellness` migration approval. HRV-adjusted readiness blending into TSB — **recommend no** for v1 (PMC stays pure per 14's ADR); parity-doc candidate. RpeSelector generalization call.
+
+**Out of scope.** Device/health sync (Whoop/Oura/Apple Health), readiness scores/recommendations, hydration/menstruation/nutrition (additive later — schema is one row per day), logging reminders.
+
+**Success criteria.** Today's entry persists, survives reload, re-submit updates not duplicates (upsert proven); Sleep tile shows real 7-day avg + sparkline; RestingHr sparkline reflects entries, not the onboarding constant; out-of-range and future dates rejected with field messages.
+
+**Estimated size.** **M** — 4 task docs (20-1 entity + migration + repo; 20-2 endpoints + validators; 20-3 entry form + tiles; 20-4 trends + selector reuse).
+
+---
+
+## Phase 21 — Production hardening & deployment ⏳
+
+**Goal.** The single hardening phase: correct error contracts, observability, security posture, containerization, a deployment target, and tech-debt burn-down — dev-mode app → deployable product. Absorbs old Phase 16 (docs/security) and old Phase 17 (cutover/observability) scope.
+
+**Why now / depends on.** Last by design; hardens the full 12–20 surface and removes Development conveniences.
+
+**Backend scope.**
+- **Error contract:** middleware emits **ProblemDetails (RFC 9457)** on every path; `DbUpdateException` → 409 (safe detail), `NotImplementedException` → 501, validation → 400 with field `errors`, keep 499. Controller audit: no try/catch, consistent 404-for-foreign.
+- **API docs:** per-version `SwaggerDoc` via ApiExplorer group names (kills the Program.cs TODO); Scalar dev-only or auth-gated in prod.
+- **Observability:** logging-stack decision (below), correlation IDs, `/health` (SQL check — hand-rolled DbContext ping to stay package-free, or approve `AspNetCore.HealthChecks.SqlServer`).
+- **Rate limiting:** `Microsoft.AspNetCore.RateLimiting` (in-framework, no package): default fixed-window + tighter policies on auth and the Phase 19 upload route.
+- **Security pass:** prod CORS allowlist, HSTS, secrets via env vars (document the prod source), test proving the DevAuth stub is unreachable outside Development, upload body-size limits re-verified.
+- **Schema cleanup migration (approval):** drop vestigial `AthleteSportProfile.CustomZonesJson` (superseded by `AthleteSportZone` since Phase 10) + audit findings.
+- **Tech-debt burn-down:** CLAUDE.md ledger sweep — pagination defaults, `.AsNoTracking()` audit, CancellationToken propagation, dead code, README rewritten to match reality (absorbs old Phase 16 scope).
+
+**Frontend scope.** Env-based API base URL; shared ProblemDetails parser for error toasts; 401 → login redirect hardening (Phase 12 follow-through); bundle audit; empty/loading/error-state polish across all 13–20 views.
+
+**Decisions needed (decision-dense — up-front ADR batch).** Logging stack (Serilog package vs built-in JSON console — decide with the deployment target). Containerization (Dockerfile vs SDK `PublishContainer`; how the SPA ships: API-served static vs separate host). Deployment target (App Service / container host / VPS — owns SQL hosting, secrets, TLS, CI deploy stage). `CustomZonesJson` drop approval. Rate-limit numbers. Swashbuckle vs built-in OpenAPI (explicitly *not now* unless appetite exists).
+
+**Out of scope.** Any product features (hard line), IaC/blue-green/autoscaling, load testing beyond smoke, account tiers/billing.
+
+**Success criteria.** Integration tests assert `application/problem+json` on 400/404/409/499/500/501; forced unique-violation yields 409; clean-machine boot via the chosen container path with healthy `/health` and a fresh DB lacking `CustomZonesJson`; CI builds the container and deploys to the target on main; structured correlated logs in production mode; scripted burst yields 429 on limited routes; prod config serves the SPA with the stub disabled and CORS locked.
+
+**Estimated size.** **L** — 6 task docs (21-1 ADR batch; 21-2 ProblemDetails + mapping + tests; 21-3 versioned docs + rate limiting + health; 21-4 security/secrets + cleanup migration; 21-5 containerization + CI deploy; 21-6 debt burn-down + UI states audit).
+
+---
+
+## Dependency graph (Phases 12–21)
+
+```
+12 (Auth)
+ └─→ 13 (History & Plan Browser)            [fixed first]
+      ├─→ 14 (PMC Engine) ──→ 15 (Progress) ─┐
+      ├─→ 16 (Calendar)   ←─ needs 13 only ──┼─→ 18 (ATP)   [needs 14 + 17; reuses 15's LoadChart + 16's bands]
+      ├─→ 17 (Goals/Events) ←─ floats ───────┘
+      ├─→ 19 (File Import)  ←─ needs 13; pays off 15's caveat
+      └─→ 20 (Wellness)     ←─ needs only 12; fully floating
+21 (Hardening) — fixed last.
+```
+
+Strictly ordered: 12→13; 13→14→15; {14,17}→18; 13→19; all→21. Floating: 16/17 may swap or slide before 15; 19 any time after 13; 20 anywhere from 14 on. If the FIT SDK approval stalls, pull 20 forward and let 19 slip. Cross-phase contracts to lock early: pagination convention (13), PMC ADR (14), compliance bands (16), optimal band (15 — must agree with 18's ramp model).
+
+## Deferred beyond this roadmap
+
+- **Vendor OAuth sync** (Garmin/Wahoo/Strava/Apple Health) — file import (19) covers the data need without partner onboarding, token storage, or webhooks.
+- **Coaches (v2)** — per ADR-0002; an epic atop the role model Phase 12 establishes.
+- **Marketplace / Coach Match** — requires coach critical mass.
+- **Virtual indoor training** — separate product effort.
+- **Notifications / email digests** — needs a mail provider + scheduling infra nothing else requires; revisit post-deployment.
+- **Account tiers (Free/Premium)** — premature before external users; Phase 21 deploys single-tier.
 
 ---
 
@@ -423,13 +626,12 @@ Post-v1 expansion (v2 coach features, device sync, marketplace, virtual training
 
 These are durable concerns that span multiple phases. Each is owned by the phase noted; raising any earlier is welcome if the situation warrants.
 
-- **Real authentication is deferred (owner: Phase 14).** The dev stub `ICurrentUserService` works because nothing currently distinguishes one athlete from another at the network boundary. The moment two real users exist, this is a critical incident waiting to happen.
+- **Real authentication is deferred (owner: Phase 12).** The dev stub `ICurrentUserService` works because nothing currently distinguishes one athlete from another at the network boundary. The moment two real users exist, this is a critical incident waiting to happen. If feature phases (13+) execute before 12 lands, all athlete resolution must keep flowing through `ICurrentUserService` so the swap stays a non-event.
 - **Test coverage is bootstrapped but still shallow (owner: every phase from 8 onward).** Phase 6 landed the safety net; coverage breadth grows phase by phase. Resist landing a feature without a test pinning it.
-- **README drift (owner: Phase 16).** README currently implies direct DbContext usage, an Electron shell, SQLite/MySQL providers, and AI providers — none match current code. Treat README as historical, not authoritative, until Phase 16.
-- **Plaintext dev SQL credentials (owner: Phase 7; Phase 16 verifies).** `api/Bryk.API/appsettings.Development.json` contains plaintext credentials. Dev-only label limits blast radius but file is committed.
-- **Aspirational README claims — Electron / SQLite / MySQL / AI providers (owner: Phase 16, with optional Phase 17 build-vs-drop decision).** None implemented. Either build (post-v1) or strip the claims; don't leave the gap open.
-- **Bleeding-edge frontend tooling (ongoing).** Vite 8, Tailwind 4, pre-release codegen dependencies. Pin and audit during Phase 16's dependency sweep; expect occasional churn from upstream releases.
-- **Hardcoded `SwaggerDoc("v1")` (owner: Phase 16, or sooner if v2 ships).** Tech debt item 10. TODO already in place.
+- **README drift (owner: Phase 21).** README currently implies direct DbContext usage, an Electron shell, SQLite/MySQL providers, and AI providers — none match current code. Treat README as historical, not authoritative, until the Phase 21 rewrite.
+- ~~**Plaintext dev SQL credentials.**~~ Resolved in Phase 7 — `dotnet user-secrets` workflow shipped; Phase 21's security pass re-verifies nothing regressed.
+- **Bleeding-edge frontend tooling (ongoing).** Vite 8, Tailwind 4, pre-release codegen dependencies. Pin and audit during Phase 21's dependency sweep; expect occasional churn from upstream releases.
+- **Hardcoded `SwaggerDoc("v1")` (owner: Phase 21, or sooner if v2 ships).** TODO already in place in `Program.cs`.
 
 **Recently resolved (kept here for the historical trail; details in ADRs):**
 - ~~**Mesocycle vs TrainingPlan.**~~ Resolved 2026-05-26 — see ADR-0001. Mesocycle superseded; TrainingPlan / PlannedWorkout / Workout is the unified framework. Strength is a first-class v1 discipline.
@@ -443,11 +645,11 @@ These are durable concerns that span multiple phases. Each is owned by the phase
 Tracked in `md/product/feature-parity-trainingpeaks.md`. When a candidate gets scoped, fold it back into this roadmap as a new phase entry and update the parity doc's status tag. Current high-likelihood post-v1 candidates:
 
 - **Coach surfaces** (v2 per ADR-0002) — dashboard, athlete roster, workout/plan libraries, group calendars, post-workout comments, in-app chat, notification digests, coach account tiers. A coach in v2 is an `Athlete` granted a coach role.
-- Device sync (Garmin / Wahoo / Apple Health / Coros / Suunto / Polar) two-way.
-- Compliance color coding on the calendar.
-- Peak Performances (auto-medal personal bests).
+- Device sync (Garmin / Wahoo / Apple Health / Coros / Suunto / Polar) two-way. (Read-only *file* import graduated into Phase 19.)
+- ~~Compliance color coding on the calendar.~~ Graduated into Phase 16.
+- ~~Peak Performances (auto-medal personal bests).~~ Graduated into Phase 15 (session-level; duration-curve peaks remain post-19).
 - StackUp-style benchmarking.
-- Health and recovery integrations (Whoop, Oura).
+- Health and recovery integrations (Whoop, Oura). (Manual wellness entry graduated into Phase 20.)
 - Account tiers (Free / Premium).
 - Indoor virtual training platform (separate product effort; `deferred`).
 - Marketplace / Coach Match revenue features (`deferred`, dependent on coach critical mass even after v2 coach surfaces ship).
