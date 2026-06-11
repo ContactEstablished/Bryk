@@ -10,6 +10,7 @@ namespace Bryk.Application.Training.Workouts;
 public class WorkoutService(
     ICurrentUserService currentUser,
     IValidator<LogWorkoutRequest> validator,
+    IValidator<UpdateWorkoutRequest> updateValidator,
     IWorkoutRepository workoutRepo,
     ITrainingPlanRepository planRepo,
     ILoadService loadService,
@@ -47,7 +48,7 @@ public class WorkoutService(
             Notes = request.Notes
         };
 
-        foreach (var result in BuildStepResults(request, planned, athleteId, workout.Id))
+        foreach (var result in BuildStepResults(request.StepResults, planned, athleteId, workout.Id))
         {
             workout.StepResults.Add(result);
         }
@@ -62,6 +63,68 @@ public class WorkoutService(
         return Map(saved ?? workout);
     }
 
+    public async Task<WorkoutResponse> UpdateAsync(Guid id, UpdateWorkoutRequest request, CancellationToken ct = default)
+    {
+        await updateValidator.ValidateOrThrowAsync(request, ct);
+        var athleteId = currentUser.GetCurrentAthleteId();
+
+        var workout = await workoutRepo.GetByIdTrackedAsync(id, ct);
+        if (workout is null || workout.AthleteId != athleteId)
+        {
+            throw new KeyNotFoundException();
+        }
+
+        // If (re)linked to a plan, verify ownership (and seed step results from its planned steps if none given).
+        PlannedWorkout? planned = null;
+        if (request.PlannedWorkoutId is { } pwId)
+        {
+            planned = await planRepo.GetPlannedWorkoutWithStructureAsync(pwId, ct);
+            if (planned is null || planned.AthleteId != athleteId)
+            {
+                throw new KeyNotFoundException();
+            }
+        }
+
+        workout.PlannedWorkoutId = request.PlannedWorkoutId;
+        workout.Sport = request.Sport;
+        workout.CompletedDate = request.CompletedDate;
+        workout.ActualDurationSeconds = request.ActualDurationSeconds;
+        workout.ActualDistanceMeters = request.ActualDistanceMeters;
+        workout.AvgHr = request.AvgHr;
+        workout.MaxHr = request.MaxHr;
+        workout.LoadOverride = request.LoadOverride;
+        workout.Rpe = request.Rpe;
+        workout.Notes = request.Notes;
+
+        // Replace the step-result list: clearing the tracked collection orphan-deletes the old rows
+        // (required FK → cascade), then stage the new ones.
+        workout.StepResults.Clear();
+        foreach (var result in BuildStepResults(request.StepResults, planned, athleteId, workout.Id))
+        {
+            workout.StepResults.Add(result);
+        }
+
+        // Recompute actual load from the edited actuals (LoadOverride is passed through above).
+        workout.ComputedLoad = await loadService.ComputeActualLoadAsync(workout, ct);
+
+        await unitOfWork.SaveChangesAsync(ct);
+
+        var saved = await workoutRepo.GetByIdAsync(workout.Id, ct);
+        return await MapWithPlanAsync(saved ?? workout, ct);
+    }
+
+    public async Task DeleteAsync(Guid id, CancellationToken ct = default)
+    {
+        var workout = await workoutRepo.GetByIdTrackedAsync(id, ct);
+        if (workout is null || workout.AthleteId != currentUser.GetCurrentAthleteId())
+        {
+            throw new KeyNotFoundException();
+        }
+
+        workoutRepo.Delete(workout);
+        await unitOfWork.SaveChangesAsync(ct);
+    }
+
     public async Task<WorkoutResponse> GetAsync(Guid id, CancellationToken ct = default)
     {
         var workout = await workoutRepo.GetByIdAsync(id, ct);
@@ -70,7 +133,7 @@ public class WorkoutService(
             throw new KeyNotFoundException();
         }
 
-        return Map(workout);
+        return await MapWithPlanAsync(workout, ct);
     }
 
     public async Task<IReadOnlyList<WorkoutResponse>> GetRecentAsync(int take, CancellationToken ct = default)
@@ -81,11 +144,11 @@ public class WorkoutService(
     }
 
     // Per-step actuals: from the request, else seeded (empty, linked) from the planned steps for comparison.
-    private static List<WorkoutStepResult> BuildStepResults(LogWorkoutRequest request, PlannedWorkout? planned, Guid athleteId, Guid workoutId)
+    private static List<WorkoutStepResult> BuildStepResults(List<WorkoutStepResultDto>? requestStepResults, PlannedWorkout? planned, Guid athleteId, Guid workoutId)
     {
-        if (request.StepResults is { Count: > 0 })
+        if (requestStepResults is { Count: > 0 })
         {
-            return request.StepResults.Select((dto, i) => new WorkoutStepResult
+            return requestStepResults.Select((dto, i) => new WorkoutStepResult
             {
                 Id = Guid.NewGuid(),
                 AthleteId = athleteId,
@@ -118,6 +181,20 @@ public class WorkoutService(
         }
 
         return new List<WorkoutStepResult>();
+    }
+
+    // Detail/edit reads also expose the linked plan id (so the client can reach GET .../structure for
+    // planned-vs-actual). Resolving it needs one extra lookup, so list reads stay on the plain Map.
+    private async Task<WorkoutResponse> MapWithPlanAsync(Workout w, CancellationToken ct)
+    {
+        var response = Map(w);
+        if (w.PlannedWorkoutId is { } pwId)
+        {
+            var planned = await planRepo.GetPlannedWorkoutWithStructureAsync(pwId, ct);
+            response.TrainingPlanId = planned?.TrainingPlanId;
+        }
+
+        return response;
     }
 
     private static WorkoutResponse Map(Workout w) => new()

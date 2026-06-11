@@ -32,4 +32,20 @@ public class WorkoutsController(IWorkoutService workoutService) : ControllerBase
         IReadOnlyList<WorkoutResponse> result = await workoutService.GetRecentAsync(take, cancellationToken);
         return Ok(result);
     }
+
+    /// <summary>Replaces a completed workout's actuals and step results, recomputing load. 404 if it does not exist or belongs to another athlete.</summary>
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> UpdateAsync(Guid id, [FromBody] UpdateWorkoutRequest request, CancellationToken cancellationToken)
+    {
+        WorkoutResponse result = await workoutService.UpdateAsync(id, request, cancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>Hard-deletes a completed workout (step results cascade). 404 if it does not exist or belongs to another athlete.</summary>
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> DeleteAsync(Guid id, CancellationToken cancellationToken)
+    {
+        await workoutService.DeleteAsync(id, cancellationToken);
+        return NoContent();
+    }
 }

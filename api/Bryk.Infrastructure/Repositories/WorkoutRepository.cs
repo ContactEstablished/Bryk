@@ -15,6 +15,13 @@ public class WorkoutRepository(ApplicationDbContext db) : IWorkoutRepository
             .FirstOrDefaultAsync(w => w.Id == id, ct);
     }
 
+    public async Task<Workout?> GetByIdTrackedAsync(Guid id, CancellationToken ct = default)
+    {
+        return await db.Workouts
+            .Include(w => w.StepResults)
+            .FirstOrDefaultAsync(w => w.Id == id, ct);
+    }
+
     public async Task<IReadOnlyList<Workout>> GetByAthleteInRangeAsync(Guid athleteId, DateOnly start, DateOnly end, CancellationToken ct = default)
     {
         return await db.Workouts

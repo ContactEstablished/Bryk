@@ -12,6 +12,12 @@ public interface IWorkoutRepository
     Task<Workout?> GetByIdAsync(Guid id, CancellationToken ct = default);
 
     /// <summary>
+    /// Loads a <see cref="Workout"/> with its <see cref="Workout.StepResults"/> <b>tracked</b>, for
+    /// update (replace the step-result collection) and delete (cascade the children). Returns null if missing.
+    /// </summary>
+    Task<Workout?> GetByIdTrackedAsync(Guid id, CancellationToken ct = default);
+
+    /// <summary>
     /// Returns the athlete's completed workouts whose <see cref="Workout.CompletedDate"/> is within
     /// [start, end] inclusive, newest first. Entity only (no step results). No-tracking.
     /// </summary>

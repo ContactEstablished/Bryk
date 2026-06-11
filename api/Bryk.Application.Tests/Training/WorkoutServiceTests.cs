@@ -15,9 +15,27 @@ public class WorkoutServiceTests
     private static WorkoutService NewService(StubWorkoutRepository workoutRepo, StubPlanRepository planRepo, StubUnitOfWork uow, decimal? computedLoad = 42m) =>
         new(new StubCurrentUserService(AthleteId),
             new LogWorkoutRequestValidator(),
+            new UpdateWorkoutRequestValidator(),
             workoutRepo, planRepo,
             new StubLoadService { Computed = computedLoad },
             uow);
+
+    private static UpdateWorkoutRequest ValidUpdate(Guid? plannedWorkoutId = null) => new()
+    {
+        Sport = Sport.Bike,
+        CompletedDate = DateOnly.FromDateTime(DateTime.UtcNow),
+        PlannedWorkoutId = plannedWorkoutId,
+        ActualDurationSeconds = 3000,
+        AvgHr = 145
+    };
+
+    private static Workout OwnedWorkout() => new()
+    {
+        Id = Guid.NewGuid(),
+        AthleteId = AthleteId,
+        Sport = Sport.Bike,
+        CompletedDate = DateOnly.FromDateTime(DateTime.UtcNow)
+    };
 
     private static LogWorkoutRequest ValidRequest(Guid? plannedWorkoutId = null) => new()
     {
@@ -115,6 +133,122 @@ public class WorkoutServiceTests
         await act.Should().ThrowAsync<KeyNotFoundException>();
     }
 
+    [Fact]
+    public async Task UpdateAsync_RecomputesComputedLoad_NoOverride()
+    {
+        var existing = OwnedWorkout();
+        var repo = new StubWorkoutRepository { Tracked = existing, ToReturn = existing };
+        var uow = new StubUnitOfWork();
+        var service = NewService(repo, new StubPlanRepository(), uow, computedLoad: 99m);
+
+        var result = await service.UpdateAsync(existing.Id, ValidUpdate());
+
+        existing.ComputedLoad.Should().Be(99m);
+        result.ComputedLoad.Should().Be(99m);
+        result.EffectiveLoad.Should().Be(99m);
+        result.IsLoadOverride.Should().BeFalse();
+        existing.ActualDurationSeconds.Should().Be(3000);
+        uow.SaveCount.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_LoadOverride_WinsOverComputed()
+    {
+        var existing = OwnedWorkout();
+        var repo = new StubWorkoutRepository { Tracked = existing, ToReturn = existing };
+        var uow = new StubUnitOfWork();
+        var service = NewService(repo, new StubPlanRepository(), uow, computedLoad: 99m);
+
+        var request = ValidUpdate();
+        request.LoadOverride = 150m;
+
+        var result = await service.UpdateAsync(existing.Id, request);
+
+        existing.ComputedLoad.Should().Be(99m);   // still recomputed
+        result.EffectiveLoad.Should().Be(150m);    // override wins
+        result.IsLoadOverride.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task UpdateAsync_ReplacesStepResults()
+    {
+        var existing = OwnedWorkout();
+        existing.StepResults.Add(new WorkoutStepResult { Id = Guid.NewGuid(), AthleteId = AthleteId, WorkoutId = existing.Id, OrderIndex = 0 });
+        var repo = new StubWorkoutRepository { Tracked = existing, ToReturn = existing };
+        var uow = new StubUnitOfWork();
+        var service = NewService(repo, new StubPlanRepository(), uow);
+
+        var request = ValidUpdate();
+        request.StepResults = new List<WorkoutStepResultDto> { new() { AvgPower = 210 }, new() { AvgPower = 220 } };
+
+        await service.UpdateAsync(existing.Id, request);
+
+        existing.StepResults.Should().HaveCount(2);
+        existing.StepResults.Select(r => r.OrderIndex).Should().Equal(0, 1);
+        existing.StepResults.Should().OnlyContain(r => r.AthleteId == AthleteId && r.WorkoutId == existing.Id);
+        uow.SaveCount.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_MissingOrForeign_ThrowsKeyNotFound()
+    {
+        var foreign = new Workout { Id = Guid.NewGuid(), AthleteId = Guid.NewGuid(), Sport = Sport.Run };
+        var repo = new StubWorkoutRepository { Tracked = foreign };
+        var uow = new StubUnitOfWork();
+        var service = NewService(repo, new StubPlanRepository(), uow);
+
+        var act = () => service.UpdateAsync(foreign.Id, ValidUpdate());
+
+        await act.Should().ThrowAsync<KeyNotFoundException>();
+        uow.SaveCount.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_ForeignPlannedWorkout_ThrowsKeyNotFound()
+    {
+        var existing = OwnedWorkout();
+        var planId = Guid.NewGuid();
+        var foreignPlanned = new PlannedWorkout { Id = planId, AthleteId = Guid.NewGuid(), Sport = Sport.Bike };
+        var repo = new StubWorkoutRepository { Tracked = existing, ToReturn = existing };
+        var planRepo = new StubPlanRepository { ToReturn = foreignPlanned };
+        var uow = new StubUnitOfWork();
+        var service = NewService(repo, planRepo, uow);
+
+        var act = () => service.UpdateAsync(existing.Id, ValidUpdate(planId));
+
+        await act.Should().ThrowAsync<KeyNotFoundException>();
+        uow.SaveCount.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_OwnedWorkout_StagesDeleteAndSaves()
+    {
+        var existing = OwnedWorkout();
+        var repo = new StubWorkoutRepository { Tracked = existing };
+        var uow = new StubUnitOfWork();
+        var service = NewService(repo, new StubPlanRepository(), uow);
+
+        await service.DeleteAsync(existing.Id);
+
+        repo.Deleted.Should().BeSameAs(existing);
+        uow.SaveCount.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_MissingOrForeign_ThrowsKeyNotFound()
+    {
+        var foreign = new Workout { Id = Guid.NewGuid(), AthleteId = Guid.NewGuid(), Sport = Sport.Run };
+        var repo = new StubWorkoutRepository { Tracked = foreign };
+        var uow = new StubUnitOfWork();
+        var service = NewService(repo, new StubPlanRepository(), uow);
+
+        var act = () => service.DeleteAsync(foreign.Id);
+
+        await act.Should().ThrowAsync<KeyNotFoundException>();
+        repo.Deleted.Should().BeNull();
+        uow.SaveCount.Should().Be(0);
+    }
+
     private sealed class StubCurrentUserService(Guid athleteId) : ICurrentUserService
     {
         public Guid GetCurrentAthleteId() => athleteId;
@@ -140,7 +274,9 @@ public class WorkoutServiceTests
     private sealed class StubWorkoutRepository : IWorkoutRepository
     {
         public Workout? ToReturn { get; init; }
+        public Workout? Tracked { get; init; }
         public Workout? Added { get; private set; }
+        public Workout? Deleted { get; private set; }
 
         public Task AddAsync(Workout workout, CancellationToken ct = default)
         {
@@ -150,10 +286,13 @@ public class WorkoutServiceTests
 
         public Task<Workout?> GetByIdAsync(Guid id, CancellationToken ct = default) => Task.FromResult(ToReturn ?? Added);
 
+        public Task<Workout?> GetByIdTrackedAsync(Guid id, CancellationToken ct = default) => Task.FromResult(Tracked);
+
+        public void Delete(Workout workout) => Deleted = workout;
+
         public Task<IReadOnlyList<Workout>> GetByAthleteInRangeAsync(Guid athleteId, DateOnly start, DateOnly end, CancellationToken ct = default) => throw new NotImplementedException();
         public Task<IReadOnlyList<Workout>> GetRecentByAthleteAsync(Guid athleteId, int take, CancellationToken ct = default) => throw new NotImplementedException();
         public void Update(Workout workout) => throw new NotImplementedException();
-        public void Delete(Workout workout) => throw new NotImplementedException();
     }
 
     private sealed class StubPlanRepository : ITrainingPlanRepository

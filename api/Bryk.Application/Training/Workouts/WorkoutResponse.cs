@@ -7,6 +7,9 @@ public class WorkoutResponse
 {
     public Guid Id { get; set; }
     public Guid? PlannedWorkoutId { get; set; }
+    // Plan that owns the linked PlannedWorkout. Populated only on the single-workout detail read so the
+    // client can reach GET .../structure for planned-vs-actual; null on list reads and unlinked workouts.
+    public Guid? TrainingPlanId { get; set; }
     public Sport Sport { get; set; }
     public DateOnly CompletedDate { get; set; }
     public int? ActualDurationSeconds { get; set; }

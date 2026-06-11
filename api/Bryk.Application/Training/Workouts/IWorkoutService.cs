@@ -15,6 +15,17 @@ public interface IWorkoutService
     /// </summary>
     Task<WorkoutResponse> LogAsync(LogWorkoutRequest request, CancellationToken ct = default);
 
+    /// <summary>
+    /// Replace-style update of a completed workout: validates, replaces the session actuals and the whole
+    /// step-result list, recomputes actual load, and persists in one commit. 404 if the workout (or a
+    /// supplied planned workout) is missing or foreign; <see cref="Exceptions.ValidationException"/> (→ 400)
+    /// on invalid input.
+    /// </summary>
+    Task<WorkoutResponse> UpdateAsync(Guid id, UpdateWorkoutRequest request, CancellationToken ct = default);
+
+    /// <summary>Hard-deletes a completed workout (step results cascade); 404 if missing or foreign.</summary>
+    Task DeleteAsync(Guid id, CancellationToken ct = default);
+
     /// <summary>Returns a completed workout with its step results; 404 if missing or foreign.</summary>
     Task<WorkoutResponse> GetAsync(Guid id, CancellationToken ct = default);
 
