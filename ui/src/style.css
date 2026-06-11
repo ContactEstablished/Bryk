@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn-vue/tailwind.css";
@@ -29,7 +29,7 @@
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
+  --radius: 0.75rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -38,45 +38,70 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* Bryk design palette — raw values live here only; theme vars reference them.
+     Source: Claude Design prototype (Bryk UI.zip styles.css). */
+  --bryk-bg-0: #0a0c10;
+  --bryk-bg-1: #11141a;
+  --bryk-bg-2: #181c24;
+  --bryk-bg-3: #20252f;
+  --bryk-line: #1f242d;
+  --bryk-line-2: #2a313d;
+  --bryk-fg-0: #f3f5f8;
+  --bryk-fg-1: #b6bcc7;
+  --bryk-fg-2: #7d8593;
+  --bryk-fg-3: #555c69;
+  --bryk-accent: oklch(0.68 0.19 250);
+  --bryk-accent-hi: oklch(0.78 0.19 250);
+  --bryk-accent-lo: oklch(0.55 0.18 250);
+  --bryk-accent-glow: oklch(0.68 0.19 250 / 0.18);
+  --bryk-accent-fg: #04060a;
+  --bryk-good: oklch(0.78 0.16 155);
+  --bryk-warn: oklch(0.82 0.15 75);
+  --bryk-bad: oklch(0.68 0.20 25);
+  --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.02) inset, 0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow-card-lg: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 18px 60px rgba(0, 0, 0, 0.55);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: var(--bryk-bg-0);
+  --foreground: var(--bryk-fg-0);
+  --card: var(--bryk-bg-1);
+  --card-foreground: var(--bryk-fg-0);
+  --popover: var(--bryk-bg-2);
+  --popover-foreground: var(--bryk-fg-0);
+  --primary: var(--bryk-accent);
+  --primary-foreground: var(--bryk-accent-fg);
+  --secondary: var(--bryk-bg-2);
+  --secondary-foreground: var(--bryk-fg-0);
+  --muted: var(--bryk-bg-2);
+  --muted-foreground: var(--bryk-fg-2);
+  /* shadcn's accent is its hover surface, not the brand accent — keep it neutral. */
+  --accent: var(--bryk-bg-2);
+  --accent-foreground: var(--bryk-fg-0);
+  --destructive: var(--bryk-bad);
+  --border: var(--bryk-line);
+  --input: var(--bryk-line-2);
+  --ring: var(--bryk-accent);
+  --chart-1: var(--bryk-accent);
+  --chart-2: oklch(0.78 0.16 75);
+  --chart-3: var(--bryk-good);
+  --chart-4: oklch(0.78 0.16 320);
+  --chart-5: oklch(0.78 0.16 195);
+  --sidebar: #0c0f14;
+  --sidebar-foreground: var(--bryk-fg-1);
+  --sidebar-primary: var(--bryk-accent);
+  --sidebar-primary-foreground: var(--bryk-accent-fg);
+  --sidebar-accent: var(--bryk-bg-2);
+  --sidebar-accent-foreground: var(--bryk-fg-0);
+  --sidebar-border: var(--bryk-line);
+  --sidebar-ring: var(--bryk-accent);
 }
 
 @theme inline {
-  --font-sans: 'Geist', sans-serif;
+  --font-sans: 'Inter Tight', 'Inter', system-ui, -apple-system, sans-serif;
   --font-heading: var(--font-sans);
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -114,6 +139,44 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Bryk extensions — brand accent ramps and semantic status colors. */
+  --color-primary-hi: var(--bryk-accent-hi);
+  --color-primary-lo: var(--bryk-accent-lo);
+  --color-primary-glow: var(--bryk-accent-glow);
+  --color-good: var(--bryk-good);
+  --color-warn: var(--bryk-warn);
+  --color-bad: var(--bryk-bad);
+  --color-raised: var(--bryk-bg-3);
+  --color-border-strong: var(--bryk-line-2);
+  --color-subtle: var(--bryk-fg-1);
+  --color-faint: var(--bryk-fg-3);
+}
+
+/* Mono uppercase micro-label — the design's signature "eyebrow" treatment. */
+@utility eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--color-muted-foreground);
+}
+
+/* Standard card: subtle vertical gradient + hairline border + inset highlight. */
+@utility card-surface {
+  position: relative;
+  background: linear-gradient(180deg, #131720 0%, #10141b 100%);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+/* Card variant with a radial accent sheen in the top-right corner. */
+@utility card-glow {
+  background:
+    radial-gradient(600px 200px at 100% 0%, var(--bryk-accent-glow), transparent 60%),
+    linear-gradient(180deg, #131720 0%, #10141b 100%);
 }
 
 @layer base {
@@ -121,15 +184,57 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-background text-foreground font-sans antialiased;
+    letter-spacing: -0.005em;
+    font-feature-settings: 'cv11', 'ss01', 'ss03';
+  }
+  /* Fixed accent-glow backdrop behind all content. */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(1200px 600px at 80% -10%, var(--bryk-accent-glow), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, oklch(0.68 0.19 250 / 0.08), transparent 60%);
+  }
+  #app {
+    position: relative;
+    z-index: 1;
   }
 }
 
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
+::selection {
+  background: oklch(0.68 0.19 250 / 0.35);
+  color: var(--bryk-fg-0);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--bryk-bg-3) transparent;
+}
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--bryk-bg-3);
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
