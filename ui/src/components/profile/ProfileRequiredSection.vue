@@ -96,8 +96,8 @@ const isSubmitting = form.isSubmitting
 </script>
 
 <template>
-  <section class="rounded-lg border bg-card p-6">
-    <h2 class="text-2xl font-semibold">Required Information</h2>
+  <section class="card-surface p-6">
+    <h2 class="text-2xl font-semibold tracking-[-0.02em]">Required Information</h2>
 
     <form v-if="store.required" class="mt-6 space-y-6" @submit="onSubmit">
       <FormField v-slot="{ componentField }" name="name">

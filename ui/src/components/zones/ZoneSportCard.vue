@@ -87,27 +87,36 @@ const isSubmitting = form.isSubmitting
 </script>
 
 <template>
-  <section class="rounded-lg border bg-card p-6">
-    <div class="flex items-center justify-between">
+  <section class="card-surface p-6">
+    <div class="flex items-center justify-between border-b border-border pb-4">
       <div>
-        <h2 class="text-xl font-semibold">{{ props.sport.sport }}</h2>
-        <p class="text-sm text-muted-foreground">
+        <h2 class="text-xl font-semibold tracking-[-0.02em]">{{ props.sport.sport }}</h2>
+        <p class="eyebrow mt-1">
           {{ props.sport.zones.length }} zones &middot; {{ metricUnit[props.sport.metric] ?? props.sport.metric }}
         </p>
       </div>
-      <span v-if="isOverridden" class="rounded border px-2 py-0.5 text-xs text-muted-foreground">
+      <span
+        v-if="isOverridden"
+        class="rounded border border-border-strong px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.08em] text-muted-foreground"
+      >
         Customized
       </span>
     </div>
 
     <form class="mt-6 space-y-4" @submit="onSubmit">
       <div class="grid grid-cols-[auto_1fr_1fr] items-end gap-x-3 gap-y-1">
-        <span class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Zone</span>
-        <span class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Lower</span>
-        <span class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Upper</span>
+        <span class="eyebrow">Zone</span>
+        <span class="eyebrow">Lower</span>
+        <span class="eyebrow">Upper</span>
 
         <template v-for="(zone, index) in props.sport.zones" :key="zone.zoneNumber">
-          <span class="pb-2 text-sm font-medium">Z{{ zone.zoneNumber }}</span>
+          <span class="flex items-center gap-2 pb-2 font-mono text-sm font-semibold tabular-nums">
+            <i
+              class="inline-block size-1.5 rounded-full"
+              :style="{ background: `var(--chart-${Math.min(zone.zoneNumber, 5)})` }"
+            />
+            Z{{ zone.zoneNumber }}
+          </span>
           <FormField v-slot="{ componentField }" :name="`zones[${index}].lowerBound`">
             <FormItem>
               <FormControl>

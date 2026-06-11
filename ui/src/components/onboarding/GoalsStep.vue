@@ -161,7 +161,7 @@ const isSubmitting = form.isSubmitting
 
 <template>
   <div>
-    <h3 class="text-2xl font-semibold">Set Your Goals</h3>
+    <h3 class="text-2xl font-semibold tracking-[-0.02em]">Set Your Goals</h3>
     <p class="mt-2 text-sm text-muted-foreground">
       Tell us about your upcoming events and training goals so we can plan your season.
     </p>
@@ -169,7 +169,7 @@ const isSubmitting = form.isSubmitting
     <form class="mt-6 space-y-10" @submit="onSubmit">
       <!-- Events -->
       <fieldset>
-        <legend class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Events</legend>
+        <legend class="eyebrow">Events</legend>
 
         <div v-if="eventFields.length === 0" class="mt-3 text-sm text-muted-foreground/60">
           No events added yet.
@@ -300,7 +300,7 @@ const isSubmitting = form.isSubmitting
 
       <!-- Goals -->
       <fieldset>
-        <legend class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Goals</legend>
+        <legend class="eyebrow">Goals</legend>
 
         <div v-if="goalFields.length === 0" class="mt-3 text-sm text-muted-foreground/60">
           No goals added yet.

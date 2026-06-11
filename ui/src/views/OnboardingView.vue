@@ -56,9 +56,11 @@ function jumpTo(stepId: OnboardingStep) {
 }
 
 function circleClass(stepId: OnboardingStep) {
-  if (isCompleted(stepId)) return 'bg-primary text-primary-foreground'
-  if (isActive(stepId)) return 'bg-primary text-primary-foreground ring-2 ring-ring ring-offset-2 ring-offset-background'
-  return 'bg-muted text-muted-foreground'
+  if (isCompleted(stepId))
+    return 'bg-gradient-to-b from-primary-hi to-primary text-primary-foreground'
+  if (isActive(stepId))
+    return 'bg-gradient-to-b from-primary-hi to-primary text-primary-foreground ring-2 ring-primary/50 ring-offset-2 ring-offset-background shadow-[0_4px_14px_var(--bryk-accent-glow)]'
+  return 'bg-muted text-faint'
 }
 
 function labelClass(stepId: OnboardingStep) {
@@ -88,7 +90,17 @@ function goToProfile() {
 <template>
   <div class="flex min-h-screen flex-col items-center justify-start px-4 py-16">
     <!-- Heading -->
-    <h1 class="text-6xl font-bold text-white">Bryk</h1>
+    <div class="flex flex-col items-center gap-4">
+      <div
+        class="flex size-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary-hi to-primary-lo text-xl font-extrabold tracking-[-0.04em] text-primary-foreground shadow-[0_0_0_1px_oklch(0.68_0.19_250_/_0.4),0_10px_30px_var(--bryk-accent-glow)]"
+      >
+        B
+      </div>
+      <div class="flex flex-col items-center gap-2">
+        <h1 class="text-6xl font-bold tracking-[-0.04em] text-foreground">Bryk</h1>
+        <p class="eyebrow">Performance Training</p>
+      </div>
+    </div>
 
     <!-- Loading -->
     <p
@@ -116,7 +128,7 @@ function goToProfile() {
       v-else-if="store.status && currentStep === 'done'"
       class="mt-16 flex flex-col items-center gap-4"
     >
-      <h2 class="text-3xl font-semibold text-white">You're all set!</h2>
+      <h2 class="text-3xl font-semibold tracking-[-0.02em] text-foreground">You're all set!</h2>
       <p class="text-center text-muted-foreground">
         Your profile is ready — you can update any of this later.
       </p>
@@ -136,7 +148,7 @@ function goToProfile() {
       class="mt-12 w-full max-w-3xl"
     >
       <!-- Stepper (hand-rolled) -->
-      <div class="rounded-lg border bg-card p-6">
+      <div class="card-surface p-6">
         <ol class="flex items-center">
           <template v-for="(step, idx) in stepDefinitions" :key="step.id">
             <li>
@@ -175,7 +187,7 @@ function goToProfile() {
       </div>
 
       <!-- Step body -->
-      <div class="mt-8 rounded-lg border bg-card p-6">
+      <div class="card-surface mt-8 p-6">
         <RequiredStep
           v-if="currentStep === 'required'"
           @next="handleStepNext"

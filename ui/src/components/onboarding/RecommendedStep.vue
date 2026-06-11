@@ -83,7 +83,7 @@ const isSubmitting = form.isSubmitting
 
 <template>
   <div>
-    <h3 class="text-2xl font-semibold">Recommended Profile</h3>
+    <h3 class="text-2xl font-semibold tracking-[-0.02em]">Recommended Profile</h3>
     <p class="mt-2 text-sm text-muted-foreground">
       Optional &mdash; fill out what you have. You can update any of this later.
     </p>
@@ -91,7 +91,7 @@ const isSubmitting = form.isSubmitting
     <form class="mt-6 space-y-8" @submit="onSubmit">
       <!-- Heart Rate -->
       <fieldset>
-        <legend class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Heart Rate</legend>
+        <legend class="eyebrow">Heart Rate</legend>
         <div class="mt-3 grid grid-cols-1 gap-6 sm:grid-cols-2">
           <FormField v-slot="{ componentField }" name="restingHr">
             <FormItem>
@@ -117,7 +117,7 @@ const isSubmitting = form.isSubmitting
 
       <!-- Sports -->
       <fieldset>
-        <legend class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Sports</legend>
+        <legend class="eyebrow">Sports</legend>
         <div class="mt-3 space-y-4">
           <div v-for="(sport, index) in sportLabels" :key="sport.sport">
             <!-- Sport checkbox row -->

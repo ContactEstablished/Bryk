@@ -142,7 +142,7 @@ const isSubmitting = form.isSubmitting
 <template>
   <div>
     <div class="flex items-start justify-between gap-4">
-      <h3 class="text-2xl font-semibold">Required Information</h3>
+      <h3 class="text-2xl font-semibold tracking-[-0.02em]">Required Information</h3>
       <div class="inline-flex rounded-md border bg-muted p-0.5">
         <button
           type="button"

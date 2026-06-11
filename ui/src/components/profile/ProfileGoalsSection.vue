@@ -36,8 +36,8 @@ onMounted(() => {
 </script>
 
 <template>
-  <section class="rounded-lg border bg-card p-6">
-    <h2 class="text-2xl font-semibold">Goals</h2>
+  <section class="card-surface p-6">
+    <h2 class="text-2xl font-semibold tracking-[-0.02em]">Goals</h2>
     <p class="mt-2 text-sm text-muted-foreground">
       Your upcoming events and training goals.
     </p>
@@ -45,7 +45,7 @@ onMounted(() => {
     <template v-if="store.goals">
       <!-- Events -->
       <fieldset class="mt-6">
-        <legend class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Events</legend>
+        <legend class="eyebrow">Events</legend>
 
         <div
           v-if="(store.goals?.events.length ?? 0) === 0 && eventDrafts.length === 0"
@@ -73,7 +73,7 @@ onMounted(() => {
 
       <!-- Goals -->
       <fieldset class="mt-10">
-        <legend class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Goals</legend>
+        <legend class="eyebrow">Goals</legend>
 
         <div
           v-if="(store.goals?.goals.length ?? 0) === 0 && goalDrafts.length === 0"
