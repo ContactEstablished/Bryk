@@ -7,6 +7,7 @@ import type {
   WorkoutStructureRequest,
   WorkoutResponse,
   LogWorkoutRequest,
+  PlannedSport,
 } from '@/types/training'
 
 export async function getThisWeek(): Promise<ThisWeekResponse> {
@@ -73,6 +74,26 @@ export async function logWorkout(req: LogWorkoutRequest): Promise<WorkoutRespons
 
 export async function getRecentWorkouts(take = 10): Promise<WorkoutResponse[]> {
   return (await apiFetch<WorkoutResponse[]>(`/workouts?take=${take}`)) ?? []
+}
+
+// Filtered/paged workout history (Task 13-2). All params optional; absent params are omitted.
+export interface WorkoutListParams {
+  from?: string
+  to?: string
+  sport?: PlannedSport
+  skip?: number
+  take?: number
+}
+
+export async function getWorkouts(params: WorkoutListParams = {}): Promise<WorkoutResponse[]> {
+  const qs = new URLSearchParams()
+  if (params.from) qs.set('from', params.from)
+  if (params.to) qs.set('to', params.to)
+  if (params.sport) qs.set('sport', params.sport)
+  if (params.skip != null) qs.set('skip', String(params.skip))
+  if (params.take != null) qs.set('take', String(params.take))
+  const query = qs.toString()
+  return (await apiFetch<WorkoutResponse[]>(`/workouts${query ? `?${query}` : ''}`)) ?? []
 }
 
 export async function getWorkout(id: string): Promise<WorkoutResponse> {

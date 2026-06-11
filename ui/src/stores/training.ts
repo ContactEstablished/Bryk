@@ -8,7 +8,9 @@ import {
   saveStructure as saveStructureApi,
   logWorkout as logWorkoutApi,
   getRecentWorkouts as getRecentWorkoutsApi,
+  getWorkouts as getWorkoutsApi,
 } from '@/services/training'
+import type { PlannedSport } from '@/types/training'
 import type {
   ThisWeekResponse,
   TrainingPlanRequest,
@@ -100,6 +102,65 @@ export const useTrainingStore = defineStore('training', () => {
     return created
   }
 
+  // ── Workout history list (Task 13-3) — filtered + paged via the 13-2 endpoint ──
+  const WORKOUTS_PAGE_SIZE = 20
+
+  interface WorkoutFilter {
+    sport: PlannedSport | null
+    from: string | null
+    to: string | null
+  }
+
+  const workouts = ref<WorkoutResponse[] | null>(null)
+  const workoutsFilter = ref<WorkoutFilter>({ sport: null, from: null, to: null })
+  const loadingWorkouts = ref(false)
+  const workoutsError = ref<ApiError | Error | null>(null)
+  const workoutsHasMore = ref(false)
+
+  function filterParams(filter: WorkoutFilter) {
+    return {
+      sport: filter.sport ?? undefined,
+      from: filter.from ?? undefined,
+      to: filter.to ?? undefined,
+    }
+  }
+
+  // Apply a filter set and load the first page (replaces the current list).
+  async function loadWorkouts(filter: WorkoutFilter) {
+    workoutsFilter.value = filter
+    loadingWorkouts.value = true
+    workoutsError.value = null
+    try {
+      const page = await getWorkoutsApi({ ...filterParams(filter), skip: 0, take: WORKOUTS_PAGE_SIZE })
+      workouts.value = page
+      workoutsHasMore.value = page.length === WORKOUTS_PAGE_SIZE
+    } catch (e) {
+      workoutsError.value = e as ApiError | Error
+    } finally {
+      loadingWorkouts.value = false
+    }
+  }
+
+  // Append the next page for the active filter ("load more").
+  async function loadMoreWorkouts() {
+    if (!workouts.value || !workoutsHasMore.value || loadingWorkouts.value) return
+    loadingWorkouts.value = true
+    workoutsError.value = null
+    try {
+      const page = await getWorkoutsApi({
+        ...filterParams(workoutsFilter.value),
+        skip: workouts.value.length,
+        take: WORKOUTS_PAGE_SIZE,
+      })
+      workouts.value = [...workouts.value, ...page]
+      workoutsHasMore.value = page.length === WORKOUTS_PAGE_SIZE
+    } catch (e) {
+      workoutsError.value = e as ApiError | Error
+    } finally {
+      loadingWorkouts.value = false
+    }
+  }
+
   return {
     thisWeek,
     loadingThisWeek,
@@ -116,5 +177,12 @@ export const useTrainingStore = defineStore('training', () => {
     recentError,
     loadRecentWorkouts,
     logWorkout,
+    workouts,
+    workoutsFilter,
+    loadingWorkouts,
+    workoutsError,
+    workoutsHasMore,
+    loadWorkouts,
+    loadMoreWorkouts,
   }
 })
