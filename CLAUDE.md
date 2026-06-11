@@ -267,7 +267,7 @@ This project has the **dotnet-claude-kit** plugin active. Use it rather than rei
 
 ## Project state pointers
 
-- Current phase: **Phase 12** — Authentication & Authorization (deferred; **approval-gated** — see Open decisions). Phase 11 (training-load engine + executed-workout capture, ADR-0005) is complete.
+- Current phase: **Phase 13 complete** (Workout history & plan browser — workout edit/delete + load recompute, filtered/paged `GET /workouts`, `WorkoutsView`/`WorkoutDetailView`/plan browser; no migration; see `md/handoffs/2026-06-11-phase-13-complete.md`). Next feature phase: **Phase 14** — Daily-load history & PMC engine (needs the PMC computation-strategy ADR first). **Phase 12** — Authentication & Authorization — remains deferred and **approval-gated** (see Open decisions). Phases 8–11 are complete.
 - ADRs (`/md/decisions/`) — read before touching the training/zone domain:
   - **0001** — Mesocycle superseded by TrainingPlan / PlannedWorkout / Workout (Accepted; retirement migration `DropMesocycleSurface` committed).
   - **0002** — Coaches are v2; v1 is athlete-only, one human = one `Athlete` (Accepted).

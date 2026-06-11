@@ -40,7 +40,7 @@ Non-negotiable per phase. They constrain how prompts get written and how diffs g
 | 10 | Zones, thresholds, structured workout builder                                    | ✅ Complete       |
 | 11 | Training-load engine + executed-workout capture + Recent Activity / Weekly Load cards | ✅ Complete  |
 | 12 | Authentication & Authorization (approval-gated)                                  | ⏳ Next           |
-| 13 | Workout history & plan browser                                                   | ⏳ Planned        |
+| 13 | Workout history & plan browser                                                   | ✅ Complete       |
 | 14 | Daily-load history & PMC engine (CTL / ATL / TSB / ACWR)                         | ⏳ Planned        |
 | 15 | Progress page (PMC chart, weekly load, time-in-zone, peaks)                      | ⏳ Planned        |
 | 16 | Calendar & scheduling (reschedule, compliance coloring)                          | ⏳ Planned        |
@@ -358,7 +358,9 @@ Post-v1 expansion (v2 coach features, device sync, marketplace, virtual training
 
 ---
 
-## Phase 13 — Workout history & plan browser ⏳
+## Phase 13 — Workout history & plan browser ✅
+
+**Shipped.** Workouts nav live with a filtered/paged history list (`WorkoutsView`), workout detail with step-level planned-vs-actual + edit/delete (`WorkoutDetailView`), and a plan browser reopening the Phase-10 structure builder (`PlansView`/`PlanDetailView`). `PUT`/`DELETE /workouts/{id}` (replace-style + load recompute, hard delete) and the filtered `GET /workouts` (skip/take pagination convention) landed with no migration. See `md/handoffs/2026-06-11-phase-13-complete.md` and `md/Tasks-13-1.md`…`13-5.md`. Entry kept as the historical plan.
 
 **Goal.** Make logged training browsable: the Workouts nav item goes live with a filterable history list, a workout detail page with step-level planned-vs-actual, full edit/delete on workouts, and a plan browser that reopens the structure builder on existing planned workouts (the carried Phase-10 gap).
 
