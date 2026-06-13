@@ -9,6 +9,9 @@ const props = withDefaults(
     label: string
     value?: string | number | null
     unit?: string
+    // Prepend a leading '+' for positive numeric values (negatives already carry '-'). For signed
+    // metrics like TSB where the sign conveys meaning. No effect on string/null values or zero.
+    signed?: boolean
     delta?: { text: string; dir: 'up' | 'down' | 'flat' } | null
     spark?: number[] | null
     sparkAccent?: boolean
@@ -18,6 +21,7 @@ const props = withDefaults(
   {
     value: null,
     unit: undefined,
+    signed: false,
     delta: null,
     spark: null,
     sparkAccent: true,
@@ -30,7 +34,8 @@ const numericValue = computed(() => (typeof props.value === 'number' ? props.val
 const animated = useCountUp(numericValue)
 const displayValue = computed(() => {
   if (props.value == null) return '—'
-  return typeof props.value === 'number' ? animated.value : props.value
+  if (typeof props.value !== 'number') return props.value
+  return props.signed && props.value > 0 ? `+${animated.value}` : animated.value
 })
 </script>
 

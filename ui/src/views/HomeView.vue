@@ -10,6 +10,7 @@ import PrimaryGoalCard from '@/components/dashboard/PrimaryGoalCard.vue'
 import RestingHrCard from '@/components/dashboard/RestingHrCard.vue'
 import ThisWeekCard from '@/components/dashboard/ThisWeekCard.vue'
 import WeeklyLoadCard from '@/components/dashboard/WeeklyLoadCard.vue'
+import FormCard from '@/components/dashboard/FormCard.vue'
 import RecentActivityCard from '@/components/dashboard/RecentActivityCard.vue'
 
 const router = useRouter()
@@ -91,10 +92,7 @@ const formattedDate = computed(() => {
         title="Sleep Avg"
         subtitle="Post-v1 — needs a device or health-app integration."
       />
-      <PlaceholderCard
-        title="Form (TSB)"
-        subtitle="Will populate with the Performance Management Chart (Phase 11)."
-      />
+      <FormCard />
     </div>
 
     <!-- Middle row: training plan + primary goal -->
