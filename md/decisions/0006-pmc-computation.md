@@ -1,7 +1,7 @@
 # ADR-0006 — PMC computation strategy (CTL / ATL / TSB / ACWR)
 
 **Date:** 2026-06-12
-**Status:** Proposed
+**Status:** Accepted (2026-06-12) — compute-on-read confirmed; `current` = range last day + null-for-fresh; TSB bands > +10 / ±10 / < −10.
 
 ## Context
 

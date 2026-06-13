@@ -267,13 +267,14 @@ This project has the **dotnet-claude-kit** plugin active. Use it rather than rei
 
 ## Project state pointers
 
-- Current phase: **Phase 13 complete** (Workout history & plan browser — workout edit/delete + load recompute, filtered/paged `GET /workouts`, `WorkoutsView`/`WorkoutDetailView`/plan browser; no migration; see `md/handoffs/2026-06-11-phase-13-complete.md`). Next feature phase: **Phase 14** — Daily-load history & PMC engine (needs the PMC computation-strategy ADR first). **Phase 12** — Authentication & Authorization — remains deferred and **approval-gated** (see Open decisions). Phases 8–11 are complete.
+- Current phase: **Phase 14 complete** (Daily-load history & PMC engine — compute-on-read `PmcCalculator`/`AcwrCalculator` + `AnalyticsService`, `GET /api/v1/analytics/daily-load` & `/pmc`, live dashboard Form (TSB) tile + Weekly Load ACWR chip; no migration; see `md/handoffs/2026-06-12-phase-14-complete.md` and ADR-0006). Next feature phase: **Phase 15** — Progress page (PMC chart, weekly load, time-in-zone, peaks), which consumes the Phase 14 endpoints. **Phase 12** — Authentication & Authorization — remains deferred and **approval-gated** (see Open decisions). Phases 8–11 and 13 are complete.
 - ADRs (`/md/decisions/`) — read before touching the training/zone domain:
   - **0001** — Mesocycle superseded by TrainingPlan / PlannedWorkout / Workout (Accepted; retirement migration `DropMesocycleSurface` committed).
   - **0002** — Coaches are v2; v1 is athlete-only, one human = one `Athlete` (Accepted).
   - **0003** — TrainingPlan / PlannedWorkout / Workout field shapes (Accepted).
   - **0004** — Structured-workout payload + training-zone model (Accepted).
   - **0005** — Training-load engine + executed-workout capture (Accepted; HR §1=a, strength §2=c).
+  - **0006** — PMC computation strategy: compute-on-read (no snapshot), 180-day seeded lookback, `current` = range last day (null for a fresh athlete), TSB bands > +10 / ±10 / < −10 (Accepted).
 - `/md/product/feature-parity-trainingpeaks.md` — feature wishlist and status.
 - `/md/Tasks-<phase>-<n>.md` — per-task specs (Phase 10: `Tasks-10-1.md` … `Tasks-10-5.md`).
 - `/md/handoffs/` — session-end handoff documents. Most recent: `2026-06-08-phase-11-complete.md`.

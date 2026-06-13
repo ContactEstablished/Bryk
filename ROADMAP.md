@@ -41,7 +41,7 @@ Non-negotiable per phase. They constrain how prompts get written and how diffs g
 | 11 | Training-load engine + executed-workout capture + Recent Activity / Weekly Load cards | ✅ Complete  |
 | 12 | Authentication & Authorization (approval-gated)                                  | ⏳ Next           |
 | 13 | Workout history & plan browser                                                   | ✅ Complete       |
-| 14 | Daily-load history & PMC engine (CTL / ATL / TSB / ACWR)                         | ⏳ Planned        |
+| 14 | Daily-load history & PMC engine (CTL / ATL / TSB / ACWR)                         | ✅ Complete       |
 | 15 | Progress page (PMC chart, weekly load, time-in-zone, peaks)                      | ⏳ Planned        |
 | 16 | Calendar & scheduling (reschedule, compliance coloring)                          | ⏳ Planned        |
 | 17 | Goals & events surface (Goals page, ProgressRing, plan↔event links)              | ⏳ Planned        |
@@ -389,7 +389,9 @@ Post-v1 expansion (v2 coach features, device sync, marketplace, virtual training
 
 ---
 
-## Phase 14 — Daily-load history & PMC engine (CTL / ATL / TSB / ACWR) ⏳
+## Phase 14 — Daily-load history & PMC engine (CTL / ATL / TSB / ACWR) ✅
+
+**Shipped.** Compute-on-read analytics per [ADR-0006](md/decisions/0006-pmc-computation.md): pure `PmcCalculator`/`AcwrCalculator` (`Bryk.Application/Analytics/`), `AnalyticsService` (zero-filled daily series over a bounded 180-day seeded lookback), and `AnalyticsController` — `GET /api/v1/analytics/daily-load` and `/pmc` (series + a `current` summary, null for a fresh athlete). The dashboard "Form (TSB)" placeholder is live (signed TSB, delta vs 7 days ago, Fresh/Neutral/Fatigued band) and `WeeklyLoadCard` gained an ACWR chip (in/out of 0.8–1.3, "—" under 28 days of history). No migration, no new packages. See `md/handoffs/2026-06-12-phase-14-complete.md` and `md/Tasks-14-1.md`…`14-4.md`. Entry kept as the historical plan.
 
 **Goal.** Deterministic server-side analytics: daily load series, CTL/ATL/TSB, ACWR — lighting up the dashboard "Form (TSB)" placeholder tile.
 
