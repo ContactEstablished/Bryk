@@ -339,6 +339,7 @@ public class WorkoutServiceTests
         }
 
         public Task<IReadOnlyList<Workout>> GetByAthleteInRangeAsync(Guid athleteId, DateOnly start, DateOnly end, CancellationToken ct = default) => throw new NotImplementedException();
+        public Task<DateOnly?> GetFirstWorkoutDateAsync(Guid athleteId, CancellationToken ct = default) => throw new NotImplementedException();
         public void Update(Workout workout) => throw new NotImplementedException();
     }
 

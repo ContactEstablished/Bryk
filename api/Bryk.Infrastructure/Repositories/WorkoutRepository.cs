@@ -47,6 +47,15 @@ public class WorkoutRepository(ApplicationDbContext db) : IWorkoutRepository
             .ToListAsync(ct);
     }
 
+    public async Task<DateOnly?> GetFirstWorkoutDateAsync(Guid athleteId, CancellationToken ct = default)
+    {
+        // Project to a nullable so an athlete with no workouts yields null instead of throwing on Min.
+        return await db.Workouts
+            .Where(w => w.AthleteId == athleteId)
+            .Select(w => (DateOnly?)w.CompletedDate)
+            .MinAsync(ct);
+    }
+
     public async Task AddAsync(Workout workout, CancellationToken ct = default) => await db.Workouts.AddAsync(workout, ct);
 
     public void Update(Workout workout) => db.Workouts.Update(workout);

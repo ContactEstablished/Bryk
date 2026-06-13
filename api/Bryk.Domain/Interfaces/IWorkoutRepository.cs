@@ -31,6 +31,12 @@ public interface IWorkoutRepository
     /// </summary>
     Task<IReadOnlyList<Workout>> GetByAthleteFilteredAsync(Guid athleteId, DateOnly? from, DateOnly? to, Sport? sport, int skip, int take, CancellationToken ct = default);
 
+    /// <summary>
+    /// The athlete's earliest <see cref="Workout.CompletedDate"/>, or null when they have no workouts. A
+    /// cheap <c>MIN</c> query — the first-workout anchor for the analytics seeding window (ADR-0006 §2).
+    /// </summary>
+    Task<DateOnly?> GetFirstWorkoutDateAsync(Guid athleteId, CancellationToken ct = default);
+
     /// <summary>Stages a new <see cref="Workout"/> (with its step results) for insertion. Does NOT call SaveChanges.</summary>
     Task AddAsync(Workout workout, CancellationToken ct = default);
 

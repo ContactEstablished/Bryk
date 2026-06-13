@@ -116,6 +116,7 @@ builder.Services.AddScoped<IThisWeekService, ThisWeekService>();
 builder.Services.AddScoped<IZoneService, ZoneService>();
 builder.Services.AddScoped<Bryk.Application.Training.Load.ILoadService, Bryk.Application.Training.Load.LoadService>();
 builder.Services.AddScoped<Bryk.Application.Training.Workouts.IWorkoutService, Bryk.Application.Training.Workouts.WorkoutService>();
+builder.Services.AddScoped<Bryk.Application.Analytics.IAnalyticsService, Bryk.Application.Analytics.AnalyticsService>();
 
 var app = builder.Build();
 
