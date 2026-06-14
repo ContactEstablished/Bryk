@@ -39,6 +39,8 @@ public class AnalyticsControllerTests
     [InlineData("/api/v1/analytics/pmc?from=2026-01-01")]       // to missing
     [InlineData("/api/v1/analytics/pmc?to=2026-01-01")]         // from missing
     [InlineData("/api/v1/analytics/daily-load")]                // daily-load shares the rule
+    [InlineData("/api/v1/analytics/time-in-zone")]              // time-in-zone shares the rule
+    [InlineData("/api/v1/analytics/time-in-zone?from=2026-01-01")]
     public async Task MissingRange_Returns400(string url)
     {
         await using var factory = new BrykWebApplicationFactory();
@@ -228,5 +230,32 @@ public class AnalyticsControllerTests
         // both workouts are Bike → filtering to Run yields nothing
         var run = await client.GetFromJsonAsync<PeaksResponse>("/api/v1/analytics/peaks?sport=Run", JsonOptions);
         run!.Records.Should().BeEmpty();
+    }
+
+    // ── time-in-zone ──
+
+    [Fact]
+    public async Task TimeInZone_UnlinkedNoHr_IsUnclassified_AndMethodsSumToTotal()
+    {
+        await using var factory = new BrykWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        // An unlinked workout with no AvgHr (and no athlete MaxHr in the in-memory DB) → unclassified;
+        // the duration is the whole total, proving the endpoint + the sums-to-total invariant end-to-end.
+        var day = Today.AddDays(-3);
+        await client.PostAsJsonAsync("/api/v1/workouts", LogWithOverride(day, 50m)); // duration 3600
+
+        var result = await client.GetFromJsonAsync<TimeInZoneResponse>(
+            $"/api/v1/analytics/time-in-zone?from={Iso(day.AddDays(-1))}&to={Iso(Today)}", JsonOptions);
+
+        result.Should().NotBeNull();
+        result!.TotalSeconds.Should().Be(3600);
+        result.MethodBreakdown.UnclassifiedSeconds.Should().Be(3600);
+        result.MethodBreakdown.StructureSeconds.Should().Be(0);
+        result.MethodBreakdown.SessionAvgSeconds.Should().Be(0);
+        (result.MethodBreakdown.StructureSeconds + result.MethodBreakdown.SessionAvgSeconds
+            + result.MethodBreakdown.UnclassifiedSeconds).Should().Be(result.TotalSeconds);
+        result.Zones.Should().HaveCount(5);
+        result.Zones.Sum(z => z.Seconds).Should().Be(0);
     }
 }

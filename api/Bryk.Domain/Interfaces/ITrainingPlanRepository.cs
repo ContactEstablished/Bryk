@@ -38,6 +38,14 @@ public interface ITrainingPlanRepository
     Task<IReadOnlyList<PlannedWorkout>> GetPlannedWorkoutsInRangeWithStructureAsync(Guid athleteId, DateOnly start, DateOnly end, CancellationToken ct = default);
 
     /// <summary>
+    /// The <see cref="PlannedWorkout"/>s whose <see cref="PlannedWorkout.Id"/> is in <paramref name="ids"/>,
+    /// each with its <see cref="PlannedWorkout.Blocks"/> (ordered) → steps (ordered) included (split query,
+    /// no-tracking) — the linked planned structures behind completed workouts, for time-in-zone (ADR-0007 §4).
+    /// An empty <paramref name="ids"/> returns an empty list with no query.
+    /// </summary>
+    Task<IReadOnlyList<PlannedWorkout>> GetPlannedWorkoutsByIdsWithStructureAsync(IEnumerable<Guid> ids, CancellationToken ct = default);
+
+    /// <summary>
     /// Stages a new <see cref="TrainingPlan"/> (with any seeded <see cref="PlannedWorkout"/> children)
     /// for insertion. Does NOT call SaveChanges.
     /// </summary>

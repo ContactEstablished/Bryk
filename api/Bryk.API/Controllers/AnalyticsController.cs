@@ -69,4 +69,21 @@ public class AnalyticsController(IAnalyticsService analyticsService) : Controlle
         PeaksResponse result = await analyticsService.GetPeaksAsync(sport, cancellationToken);
         return Ok(result);
     }
+
+    /// <summary>
+    /// Returns a coarse, <b>estimated</b> time-in-zone histogram (seconds per intensity bucket) over
+    /// <c>[from, to]</c>, optionally filtered to <paramref name="sport"/>, with a structure / session-HR /
+    /// unclassified method breakdown that sums to the total. Estimated until file import (Phase 19) supplies
+    /// real samples. Same range rules as the PMC endpoints.
+    /// </summary>
+    [HttpGet("time-in-zone")]
+    public async Task<IActionResult> GetTimeInZoneAsync(
+        [FromQuery] DateOnly? from,
+        [FromQuery] DateOnly? to,
+        [FromQuery] Sport? sport,
+        CancellationToken cancellationToken)
+    {
+        TimeInZoneResponse result = await analyticsService.GetTimeInZoneAsync(from, to, sport, cancellationToken);
+        return Ok(result);
+    }
 }

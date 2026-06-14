@@ -117,6 +117,31 @@ public class AnalyticsService(
         return new PeaksResponse { Records = records };
     }
 
+    public async Task<TimeInZoneResponse> GetTimeInZoneAsync(DateOnly? from, DateOnly? to, Sport? sport, CancellationToken ct = default)
+    {
+        // Reuse the PMC range contract (both required, from ≤ to, ≤ 400 days, no future to).
+        await validator.ValidateOrThrowAsync(new AnalyticsRangeRequest { From = from, To = to }, ct);
+        var fromDate = from!.Value;
+        var toDate = to!.Value;
+        var athleteId = currentUser.GetCurrentAthleteId();
+
+        var completed = await workoutRepo.GetByAthleteInRangeAsync(athleteId, fromDate, toDate, ct);
+        var workouts = sport is { } s ? completed.Where(w => w.Sport == s).ToList() : completed;
+
+        var linkedIds = workouts
+            .Where(w => w.PlannedWorkoutId is not null)
+            .Select(w => w.PlannedWorkoutId!.Value)
+            .Distinct()
+            .ToList();
+        var structures = (await planRepo.GetPlannedWorkoutsByIdsWithStructureAsync(linkedIds, ct))
+            .ToDictionary(p => p.Id);
+
+        var zones = await zoneService.GetZonesAsync(ct);
+        var athlete = await athleteRepo.GetWithSportProfilesAsync(athleteId, ct);
+
+        return TimeInZoneCalculator.Compute(workouts, structures, zones, athlete?.MaxHr);
+    }
+
     // Reduce a completed Workout to its peak-relevant figures. Pace is the honest session avg (distance ÷
     // time); power is the duration-weighted mean of the captured per-step powers (the only session power).
     private static PeakWorkoutSummary ToSummary(Workout workout)

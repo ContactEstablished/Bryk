@@ -47,6 +47,23 @@ public class TrainingPlanRepository(ApplicationDbContext db) : ITrainingPlanRepo
             .ToListAsync(ct);
     }
 
+    public async Task<IReadOnlyList<PlannedWorkout>> GetPlannedWorkoutsByIdsWithStructureAsync(IEnumerable<Guid> ids, CancellationToken ct = default)
+    {
+        var idList = ids.Distinct().ToList();
+        if (idList.Count == 0)
+        {
+            return new List<PlannedWorkout>();
+        }
+
+        return await db.PlannedWorkouts
+            .AsNoTracking()
+            .AsSplitQuery()
+            .Include(pw => pw.Blocks.OrderBy(b => b.OrderIndex))
+                .ThenInclude(b => b.Steps.OrderBy(s => s.OrderIndex))
+            .Where(pw => idList.Contains(pw.Id))
+            .ToListAsync(ct);
+    }
+
     public async Task AddAsync(TrainingPlan entity, CancellationToken ct = default)
     {
         await db.TrainingPlans.AddAsync(entity, ct);

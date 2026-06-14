@@ -33,4 +33,11 @@ public interface IAnalyticsService
     /// session-level only (ADR-0007 §2). Empty when the athlete has no qualifying workouts.
     /// </summary>
     Task<PeaksResponse> GetPeaksAsync(Sport? sport, CancellationToken ct = default);
+
+    /// <summary>
+    /// A coarse, honestly-"estimated" time-in-zone histogram (seconds) over <c>[from, to]</c>, optionally
+    /// filtered to <paramref name="sport"/>: planned structure for linked workouts, session AvgHr otherwise,
+    /// else unclassified (ADR-0007 §4). The per-method seconds sum to the total. Same range rules as the PMC.
+    /// </summary>
+    Task<TimeInZoneResponse> GetTimeInZoneAsync(DateOnly? from, DateOnly? to, Sport? sport, CancellationToken ct = default);
 }
