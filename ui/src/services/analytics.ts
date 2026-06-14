@@ -1,5 +1,5 @@
 import { apiFetch } from '@/services/api'
-import type { DailyLoadPoint, PmcResponse } from '@/types/analytics'
+import type { DailyLoadPoint, PmcResponse, WeeklyLoadResponse } from '@/types/analytics'
 
 // Local 'YYYY-MM-DD' (matches the DateOnly the API expects, with no timezone shift from toISOString).
 export function isoDate(d: Date): string {
@@ -48,4 +48,19 @@ export async function getPmc(from: string, to: string): Promise<PmcResponse> {
 // Provided for Phase 15's charts (not used by the Phase 14 tiles, which read pmc's current summary).
 export async function getDailyLoad(from: string, to: string): Promise<DailyLoadPoint[]> {
   return (await apiFetch<DailyLoadPoint[]>(`/analytics/daily-load?from=${from}&to=${to}`)) ?? []
+}
+
+// The Progress page weekly-load span toggle (ADR-0007 §5). The query param `?weeks=` carries the number.
+export const WEEKLY_LOAD_RANGES: { value: string; label: string }[] = [
+  { value: '8', label: '8W' },
+  { value: '12', label: '12W' },
+  { value: '26', label: '26W' },
+]
+
+export async function getWeeklyLoad(weeks: number): Promise<WeeklyLoadResponse> {
+  const result = await apiFetch<WeeklyLoadResponse>(`/analytics/weekly-load?weeks=${weeks}`)
+  if (result === null) {
+    throw new Error('Unexpected empty response from /analytics/weekly-load')
+  }
+  return result
 }

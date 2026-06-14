@@ -1,8 +1,14 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { ApiError } from '@/services/api'
-import { getPmc, defaultPmcRange, pmcRangeToDates, type PmcRange } from '@/services/analytics'
-import type { PmcPoint, PmcResponse, PmcSummary } from '@/types/analytics'
+import {
+  getPmc,
+  getWeeklyLoad,
+  defaultPmcRange,
+  pmcRangeToDates,
+  type PmcRange,
+} from '@/services/analytics'
+import type { PmcPoint, PmcResponse, PmcSummary, WeeklyLoadResponse } from '@/types/analytics'
 
 export const useAnalyticsStore = defineStore('analytics', () => {
   const pmc = ref<PmcResponse | null>(null)
@@ -46,6 +52,25 @@ export const useAnalyticsStore = defineStore('analytics', () => {
 
   const pmcSeries = computed<PmcPoint[]>(() => progressPmc.value?.series ?? [])
 
+  // Weekly-load chart state (ADR-0007 §3).
+  const weeklyLoad = ref<WeeklyLoadResponse | null>(null)
+  const weeklyLoadWeeks = ref<number>(8)
+  const weeklyLoadLoading = ref(false)
+  const weeklyLoadError = ref<ApiError | Error | null>(null)
+
+  async function loadWeeklyLoad(weeks: number) {
+    weeklyLoadWeeks.value = weeks
+    weeklyLoadLoading.value = true
+    weeklyLoadError.value = null
+    try {
+      weeklyLoad.value = await getWeeklyLoad(weeks)
+    } catch (e) {
+      weeklyLoadError.value = e as ApiError | Error
+    } finally {
+      weeklyLoadLoading.value = false
+    }
+  }
+
   // The current summary for the range's last day (today). Null for a fresh athlete — surfaces are honest.
   const current = computed<PmcSummary | null>(() => pmc.value?.current ?? null)
 
@@ -77,5 +102,10 @@ export const useAnalyticsStore = defineStore('analytics', () => {
     progressError,
     loadProgressPmc,
     pmcSeries,
+    weeklyLoad,
+    weeklyLoadWeeks,
+    weeklyLoadLoading,
+    weeklyLoadError,
+    loadWeeklyLoad,
   }
 })
