@@ -148,4 +148,85 @@ public class AnalyticsControllerTests
         pmc.Current.Acwr.Should().BeNull();             // < 28 days of history
         pmc.Series.Should().HaveCount(31);
     }
+
+    // ── weekly-load ──
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(27)]
+    public async Task WeeklyLoad_OutOfRange_Returns400(int weeks)
+    {
+        await using var factory = new BrykWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var response = await client.GetAsync($"/api/v1/analytics/weekly-load?weeks={weeks}");
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task WeeklyLoad_DefaultsTo8Weeks_FreshAthleteHasNoBand()
+    {
+        await using var factory = new BrykWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var result = await client.GetFromJsonAsync<WeeklyLoadResponse>(
+            "/api/v1/analytics/weekly-load", JsonOptions);
+
+        result.Should().NotBeNull();
+        result!.Weeks.Should().HaveCount(8);                                // default span
+        result.OptimalBand.Should().BeNull();                              // honest: no actual load
+        result.Weeks.Should().OnlyContain(w => w.ActualLoad == 0m && w.PlannedLoad == 0m);
+    }
+
+    [Fact]
+    public async Task WeeklyLoad_SumsCompletedActualLoad_AndComputesBand()
+    {
+        await using var factory = new BrykWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        await client.PostAsJsonAsync("/api/v1/workouts", LogWithOverride(Today, 75m));
+
+        var result = await client.GetFromJsonAsync<WeeklyLoadResponse>(
+            "/api/v1/analytics/weekly-load?weeks=8", JsonOptions);
+
+        result.Should().NotBeNull();
+        result!.Weeks.Sum(w => w.ActualLoad).Should().Be(75m);
+        result.Weeks[^1].ActualLoad.Should().Be(75m);                      // today is in the current (last) week
+        result.OptimalBand.Should().NotBeNull();                           // rolling average > 0
+    }
+
+    // ── peaks ──
+
+    [Fact]
+    public async Task Peaks_FreshAthlete_Empty()
+    {
+        await using var factory = new BrykWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var result = await client.GetFromJsonAsync<PeaksResponse>("/api/v1/analytics/peaks", JsonOptions);
+
+        result.Should().NotBeNull();
+        result!.Records.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task Peaks_LoadRecord_PicksMax_AndSportFilterRestricts()
+    {
+        await using var factory = new BrykWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        await client.PostAsJsonAsync("/api/v1/workouts", LogWithOverride(Today.AddDays(-2), 90m));
+        await client.PostAsJsonAsync("/api/v1/workouts", LogWithOverride(Today.AddDays(-1), 130m)); // best
+
+        var all = await client.GetFromJsonAsync<PeaksResponse>("/api/v1/analytics/peaks", JsonOptions);
+        var load = all!.Records.Single(r => r.Kind == PeakKind.Load);
+        load.Value.Should().Be(130m);
+        load.PreviousValue.Should().Be(90m);
+        load.IsRecent.Should().BeTrue();
+
+        // both workouts are Bike → filtering to Run yields nothing
+        var run = await client.GetFromJsonAsync<PeaksResponse>("/api/v1/analytics/peaks?sport=Run", JsonOptions);
+        run!.Records.Should().BeEmpty();
+    }
 }

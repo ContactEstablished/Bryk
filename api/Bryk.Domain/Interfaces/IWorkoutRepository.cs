@@ -37,6 +37,13 @@ public interface IWorkoutRepository
     /// </summary>
     Task<DateOnly?> GetFirstWorkoutDateAsync(Guid athleteId, CancellationToken ct = default);
 
+    /// <summary>
+    /// All the athlete's completed workouts (optionally filtered to <paramref name="sport"/>), newest first,
+    /// <b>with</b> their <see cref="Workout.StepResults"/> included (split query, no-tracking) — the
+    /// session-level peaks read; step results are needed only for the bike session-power derivation (ADR-0007 §2).
+    /// </summary>
+    Task<IReadOnlyList<Workout>> GetByAthleteWithStepResultsAsync(Guid athleteId, Sport? sport, CancellationToken ct = default);
+
     /// <summary>Stages a new <see cref="Workout"/> (with its step results) for insertion. Does NOT call SaveChanges.</summary>
     Task AddAsync(Workout workout, CancellationToken ct = default);
 

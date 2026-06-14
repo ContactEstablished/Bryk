@@ -1,5 +1,6 @@
 using Asp.Versioning;
 using Bryk.Application.Analytics;
+using Bryk.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Bryk.API.Controllers;
@@ -37,6 +38,35 @@ public class AnalyticsController(IAnalyticsService analyticsService) : Controlle
         CancellationToken cancellationToken)
     {
         PmcResponse result = await analyticsService.GetPmcAsync(from, to, cancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Returns per-ISO-week planned vs actual training load over the last <paramref name="weeks"/>
+    /// Monday-anchored weeks (default 8; an explicit value outside 1–26 returns 400), each with the 4-week
+    /// rolling average, plus the single optimal band (<c>[0.8, 1.3] ×</c> the trailing-4-week mean actual
+    /// load; null for a fresh athlete).
+    /// </summary>
+    [HttpGet("weekly-load")]
+    public async Task<IActionResult> GetWeeklyLoadAsync(
+        [FromQuery] int? weeks,
+        CancellationToken cancellationToken)
+    {
+        WeeklyLoadResponse result = await analyticsService.GetWeeklyLoadAsync(weeks, cancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Returns the current athlete's session-level personal records — highest load, longest duration and
+    /// distance, fastest average pace (run/swim), highest average power (bike) — optionally filtered to
+    /// <paramref name="sport"/>. Compute-on-read and session-level only (not sample-derived peaks).
+    /// </summary>
+    [HttpGet("peaks")]
+    public async Task<IActionResult> GetPeaksAsync(
+        [FromQuery] Sport? sport,
+        CancellationToken cancellationToken)
+    {
+        PeaksResponse result = await analyticsService.GetPeaksAsync(sport, cancellationToken);
         return Ok(result);
     }
 }

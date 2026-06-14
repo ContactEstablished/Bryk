@@ -1,3 +1,5 @@
+using Bryk.Domain.Entities;
+
 namespace Bryk.Application.Analytics;
 
 /// <summary>
@@ -17,4 +19,18 @@ public interface IAnalyticsService
     /// athlete with no workout history; its ACWR is null under 28 days of history.
     /// </summary>
     Task<PmcResponse> GetPmcAsync(DateOnly? from, DateOnly? to, CancellationToken ct = default);
+
+    /// <summary>
+    /// Per-ISO-week planned vs actual load over the last <paramref name="weeks"/> Monday-anchored weeks
+    /// (default 8, validated 1–26), plus the 4-week rolling average and the single optimal band
+    /// (<c>[0.8, 1.3] × trailing-4-week mean actual</c>, null for a fresh athlete) — ADR-0007 §1, §3.
+    /// </summary>
+    Task<WeeklyLoadResponse> GetWeeklyLoadAsync(int? weeks, CancellationToken ct = default);
+
+    /// <summary>
+    /// The athlete's session-level personal records (highest load, longest duration/distance, fastest avg
+    /// pace, highest avg power), optionally filtered to <paramref name="sport"/>. Compute-on-read,
+    /// session-level only (ADR-0007 §2). Empty when the athlete has no qualifying workouts.
+    /// </summary>
+    Task<PeaksResponse> GetPeaksAsync(Sport? sport, CancellationToken ct = default);
 }

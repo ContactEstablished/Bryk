@@ -56,6 +56,21 @@ public class WorkoutRepository(ApplicationDbContext db) : IWorkoutRepository
             .MinAsync(ct);
     }
 
+    public async Task<IReadOnlyList<Workout>> GetByAthleteWithStepResultsAsync(Guid athleteId, Sport? sport, CancellationToken ct = default)
+    {
+        var query = db.Workouts
+            .AsNoTracking()
+            .AsSplitQuery()
+            .Include(w => w.StepResults)
+            .Where(w => w.AthleteId == athleteId);
+
+        if (sport is { } s) query = query.Where(w => w.Sport == s);
+
+        return await query
+            .OrderByDescending(w => w.CompletedDate)
+            .ToListAsync(ct);
+    }
+
     public async Task AddAsync(Workout workout, CancellationToken ct = default) => await db.Workouts.AddAsync(workout, ct);
 
     public void Update(Workout workout) => db.Workouts.Update(workout);
