@@ -211,8 +211,11 @@ URL/query convention; plus the weekly-load and time-in-zone shapes.
   `ZoneTimeMethodBreakdownDto` shapes; a `WeeklyLoadRequest` (+ validator); `TimeInZoneRequest`
   reusing the ADR-0006 range rules + `sport`.
 - `AnalyticsService` gains `GetWeeklyLoadAsync`, `GetPeaksAsync`, `GetTimeInZoneAsync` (it takes
-  `ITrainingPlanRepository`, `IAthleteRepository`, `IZoneService` as new ctor deps, mirroring
-  `ThisWeekService`). One additive repo read: `ITrainingPlanRepository.GetPlannedWorkoutsByIdsWithStructureAsync`.
+  `ITrainingPlanRepository`, `IAthleteRepository`, `IZoneService`, `IValidator<WeeklyLoadRequest>` as new
+  ctor deps, mirroring `ThisWeekService`; the existing `IValidator<AnalyticsRangeRequest>` is reused for
+  the time-in-zone range). Two additive repo reads:
+  `ITrainingPlanRepository.GetPlannedWorkoutsByIdsWithStructureAsync` (time-in-zone's linked structures)
+  and `IWorkoutRepository.GetByAthleteWithStepResultsAsync` (peaks' bike session-power derivation).
 - `AnalyticsController` gains three additive actions. No DI changes beyond the new ctor deps (all
   already registered).
 - UI: `types/analytics.ts` + `services/analytics.ts` mirrors (the latter already has `getDailyLoad`
