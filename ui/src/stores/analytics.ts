@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { ApiError } from '@/services/api'
-import { getPmc, defaultPmcRange } from '@/services/analytics'
-import type { PmcResponse, PmcSummary } from '@/types/analytics'
+import { getPmc, defaultPmcRange, pmcRangeToDates, type PmcRange } from '@/services/analytics'
+import type { PmcPoint, PmcResponse, PmcSummary } from '@/types/analytics'
 
 export const useAnalyticsStore = defineStore('analytics', () => {
   const pmc = ref<PmcResponse | null>(null)
@@ -23,6 +23,29 @@ export const useAnalyticsStore = defineStore('analytics', () => {
     }
   }
 
+  // Progress-page PMC chart state, kept separate from the dashboard's fixed-90-day `pmc` (ADR-0007 §5).
+  // The pmc series already carries per-day `load`, so this single call feeds both the lines and the bars.
+  const progressPmc = ref<PmcResponse | null>(null)
+  const progressPmcRange = ref<PmcRange>('3m')
+  const progressLoading = ref(false)
+  const progressError = ref<ApiError | Error | null>(null)
+
+  async function loadProgressPmc(range: PmcRange) {
+    progressPmcRange.value = range
+    progressLoading.value = true
+    progressError.value = null
+    try {
+      const { from, to } = pmcRangeToDates(range)
+      progressPmc.value = await getPmc(from, to)
+    } catch (e) {
+      progressError.value = e as ApiError | Error
+    } finally {
+      progressLoading.value = false
+    }
+  }
+
+  const pmcSeries = computed<PmcPoint[]>(() => progressPmc.value?.series ?? [])
+
   // The current summary for the range's last day (today). Null for a fresh athlete — surfaces are honest.
   const current = computed<PmcSummary | null>(() => pmc.value?.current ?? null)
 
@@ -41,5 +64,18 @@ export const useAnalyticsStore = defineStore('analytics', () => {
     return { text, dir }
   })
 
-  return { pmc, loading, error, loadPmc, current, tsbDeltaVs7d }
+  return {
+    pmc,
+    loading,
+    error,
+    loadPmc,
+    current,
+    tsbDeltaVs7d,
+    progressPmc,
+    progressPmcRange,
+    progressLoading,
+    progressError,
+    loadProgressPmc,
+    pmcSeries,
+  }
 })

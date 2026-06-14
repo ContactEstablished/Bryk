@@ -18,6 +18,25 @@ export function defaultPmcRange(now: Date = new Date()): { from: string; to: str
   return { from: isoDate(fromDate), to }
 }
 
+// The Progress page PMC range toggle (ADR-0007 §5). The query param `?pmc=` carries one of these.
+export type PmcRange = '6w' | '3m' | '6m'
+
+export const PMC_RANGES: { value: PmcRange; label: string }[] = [
+  { value: '6w', label: '6W' },
+  { value: '3m', label: '3M' },
+  { value: '6m', label: '6M' },
+]
+
+const PMC_RANGE_DAYS: Record<PmcRange, number> = { '6w': 42, '3m': 90, '6m': 180 }
+
+// `to = today`, `from = today − {42|90|180} days`. Local dates, no timezone shift.
+export function pmcRangeToDates(range: PmcRange, now: Date = new Date()): { from: string; to: string } {
+  const to = isoDate(now)
+  const fromDate = new Date(now)
+  fromDate.setDate(fromDate.getDate() - PMC_RANGE_DAYS[range])
+  return { from: isoDate(fromDate), to }
+}
+
 export async function getPmc(from: string, to: string): Promise<PmcResponse> {
   const result = await apiFetch<PmcResponse>(`/analytics/pmc?from=${from}&to=${to}`)
   if (result === null) {
