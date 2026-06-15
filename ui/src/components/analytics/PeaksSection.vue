@@ -85,7 +85,7 @@ function peakDelta(r: PeakRecord): { text: string; dir: 'up' } | null {
     <div v-else-if="records.length > 0" class="grid grid-cols-2 gap-4 lg:grid-cols-4">
       <MetricTile
         v-for="r in records"
-        :key="r.kind"
+        :key="`${r.kind}-${r.sport}`"
         :label="KIND_LABEL[r.kind]"
         :value="peakValue(r)"
         :unit="peakUnit(r)"

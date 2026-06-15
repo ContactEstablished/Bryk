@@ -30,11 +30,18 @@ public static class PeaksCalculator
     {
         var records = new List<PeakRecordDto>();
 
+        // Load / Duration / Distance / Power share a unit across sports → one global best each.
         AddIfAny(records, Select(PeakKind.Load, Samples(summaries, s => s.Load), higherIsBetter: true, today));
         AddIfAny(records, Select(PeakKind.Duration, Samples(summaries, s => s.DurationSeconds), higherIsBetter: true, today));
         AddIfAny(records, Select(PeakKind.Distance, Samples(summaries, s => s.DistanceMeters), higherIsBetter: true, today));
-        AddIfAny(records, Select(PeakKind.Pace, Samples(summaries, s => s.AvgPaceSecPerUnit), higherIsBetter: false, today));
         AddIfAny(records, Select(PeakKind.Power, Samples(summaries, s => s.AvgPowerWatts), higherIsBetter: true, today));
+
+        // Pace is per-sport — run sec/km and swim sec/100 m are different units and must never be compared.
+        foreach (var paceSport in new[] { Sport.Run, Sport.Swim })
+        {
+            var paceSamples = Samples(summaries.Where(s => s.Sport == paceSport), s => s.AvgPaceSecPerUnit);
+            AddIfAny(records, Select(PeakKind.Pace, paceSamples, higherIsBetter: false, today));
+        }
 
         return records;
     }

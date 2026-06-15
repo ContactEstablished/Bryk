@@ -62,6 +62,24 @@ public class PeaksCalculatorTests
     }
 
     [Fact]
+    public void Pace_IsPerSport_RunAndSwimDoNotCompare()
+    {
+        // Swim sec/100 m (136) is numerically smaller than run sec/km (300) but the units differ — they must
+        // not collapse into one record. Expect one Pace record per sport, each with its own value/sport.
+        var summaries = new List<PeakWorkoutSummary>
+        {
+            Summary(Today, Sport.Run, pace: 300m),
+            Summary(Today, Sport.Swim, pace: 136m),
+        };
+
+        var paces = PeaksCalculator.Compute(summaries, Today).Where(r => r.Kind == PeakKind.Pace).ToList();
+
+        paces.Should().HaveCount(2);
+        paces.Should().Contain(r => r.Sport == Sport.Run && r.Value == 300m);
+        paces.Should().Contain(r => r.Sport == Sport.Swim && r.Value == 136m);
+    }
+
+    [Fact]
     public void IsRecent_BoundaryIs90DaysInclusive()
     {
         var summaries = new List<PeakWorkoutSummary>
