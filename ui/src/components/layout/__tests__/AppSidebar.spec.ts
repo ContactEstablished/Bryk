@@ -11,6 +11,7 @@ const routes = [
   { path: '/training', name: 'training', component: stubView },
   { path: '/plans', name: 'plans', component: stubView },
   { path: '/workouts', name: 'workouts', component: stubView },
+  { path: '/progress', name: 'progress', component: stubView },
   { path: '/profile', name: 'profile', component: stubView },
 ]
 
@@ -44,14 +45,14 @@ describe('AppSidebar', () => {
     wrapper.unmount()
   })
 
-  it('renders Workouts as a live link and keeps remaining items inert/soon', async () => {
+  it('renders Workouts and Progress as live links and keeps Goals inert/soon', async () => {
     const wrapper = await mountSidebar()
 
     const links = wrapper.findAll('a').map((a) => a.text())
     expect(links.some((t) => t.includes('Workouts'))).toBe(true)
-    expect(links.some((t) => t.includes('Progress'))).toBe(false)
+    expect(links.some((t) => t.includes('Progress'))).toBe(true)
     expect(links.some((t) => t.includes('Goals'))).toBe(false)
-    expect(wrapper.text()).toContain('Progress')
+    expect(wrapper.text()).toContain('Goals')
     expect(wrapper.text()).toContain('soon')
 
     wrapper.unmount()

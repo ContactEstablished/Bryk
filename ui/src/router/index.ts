@@ -49,6 +49,11 @@ const router = createRouter({
       name: 'zones',
       component: () => import('@/views/ZonesView.vue'),
     },
+    {
+      path: '/progress',
+      name: 'progress',
+      component: () => import('@/views/ProgressView.vue'),
+    },
   ],
 })
 

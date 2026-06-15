@@ -4,11 +4,20 @@ import { ApiError } from '@/services/api'
 import {
   getPmc,
   getWeeklyLoad,
+  getTimeInZone,
+  getPeaks,
   defaultPmcRange,
   pmcRangeToDates,
   type PmcRange,
 } from '@/services/analytics'
-import type { PmcPoint, PmcResponse, PmcSummary, WeeklyLoadResponse } from '@/types/analytics'
+import type {
+  PeaksResponse,
+  PmcPoint,
+  PmcResponse,
+  PmcSummary,
+  TimeInZoneResponse,
+  WeeklyLoadResponse,
+} from '@/types/analytics'
 
 export const useAnalyticsStore = defineStore('analytics', () => {
   const pmc = ref<PmcResponse | null>(null)
@@ -71,6 +80,37 @@ export const useAnalyticsStore = defineStore('analytics', () => {
     }
   }
 
+  // Time-in-zone + peaks (ADR-0007 §2, §4). `sport` empty = all sports.
+  const timeInZone = ref<TimeInZoneResponse | null>(null)
+  const timeInZoneLoading = ref(false)
+  const peaks = ref<PeaksResponse | null>(null)
+  const peaksLoading = ref(false)
+  const analyticsError = ref<ApiError | Error | null>(null)
+
+  async function loadTimeInZone(from: string, to: string, sport: string) {
+    timeInZoneLoading.value = true
+    analyticsError.value = null
+    try {
+      timeInZone.value = await getTimeInZone(from, to, sport || undefined)
+    } catch (e) {
+      analyticsError.value = e as ApiError | Error
+    } finally {
+      timeInZoneLoading.value = false
+    }
+  }
+
+  async function loadPeaks(sport: string) {
+    peaksLoading.value = true
+    analyticsError.value = null
+    try {
+      peaks.value = await getPeaks(sport || undefined)
+    } catch (e) {
+      analyticsError.value = e as ApiError | Error
+    } finally {
+      peaksLoading.value = false
+    }
+  }
+
   // The current summary for the range's last day (today). Null for a fresh athlete — surfaces are honest.
   const current = computed<PmcSummary | null>(() => pmc.value?.current ?? null)
 
@@ -107,5 +147,12 @@ export const useAnalyticsStore = defineStore('analytics', () => {
     weeklyLoadLoading,
     weeklyLoadError,
     loadWeeklyLoad,
+    timeInZone,
+    timeInZoneLoading,
+    peaks,
+    peaksLoading,
+    analyticsError,
+    loadTimeInZone,
+    loadPeaks,
   }
 })

@@ -33,7 +33,7 @@ const trainItems: NavItem[] = [
   { icon: Gauge, label: 'Zones', to: '/zones', routeName: 'zones' },
   { icon: CalendarRange, label: 'Training', to: '/plans', routeName: 'plans' },
   { icon: Activity, label: 'Workouts', to: '/workouts', routeName: 'workouts' },
-  { icon: TrendingUp, label: 'Progress' },
+  { icon: TrendingUp, label: 'Progress', to: '/progress', routeName: 'progress' },
   { icon: Target, label: 'Goals' },
 ]
 

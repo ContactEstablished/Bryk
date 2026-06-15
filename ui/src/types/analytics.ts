@@ -1,4 +1,5 @@
-// Mirrors the Bryk.Application.Analytics DTOs (ADR-0006). Dates are 'YYYY-MM-DD' (DateOnly).
+// Mirrors the Bryk.Application.Analytics DTOs (ADR-0006/0007). Dates are 'YYYY-MM-DD' (DateOnly).
+import type { PlannedSport } from '@/types/training'
 
 export interface DailyLoadPoint {
   date: string
@@ -46,4 +47,39 @@ export interface OptimalBand {
 export interface WeeklyLoadResponse {
   weeks: WeeklyLoadWeek[]
   optimalBand: OptimalBand | null
+}
+
+// Coarse, estimated time-in-zone (ADR-0007 §4). zoneNumber 1..5.
+export interface ZoneTime {
+  zoneNumber: number
+  seconds: number
+}
+
+export interface ZoneTimeMethodBreakdown {
+  structureSeconds: number
+  sessionAvgSeconds: number
+  unclassifiedSeconds: number
+}
+
+export interface TimeInZoneResponse {
+  zones: ZoneTime[]
+  methodBreakdown: ZoneTimeMethodBreakdown
+  totalSeconds: number
+}
+
+// Session-level peaks (ADR-0007 §2). value's unit is implied by kind + sport.
+export type PeakKind = 'Load' | 'Duration' | 'Distance' | 'Pace' | 'Power'
+
+export interface PeakRecord {
+  kind: PeakKind
+  sport: PlannedSport
+  value: number
+  achievedDate: string
+  achievedWorkoutId: string
+  isRecent: boolean
+  previousValue: number | null
+}
+
+export interface PeaksResponse {
+  records: PeakRecord[]
 }

@@ -1,5 +1,11 @@
 import { apiFetch } from '@/services/api'
-import type { DailyLoadPoint, PmcResponse, WeeklyLoadResponse } from '@/types/analytics'
+import type {
+  DailyLoadPoint,
+  PeaksResponse,
+  PmcResponse,
+  TimeInZoneResponse,
+  WeeklyLoadResponse,
+} from '@/types/analytics'
 
 // Local 'YYYY-MM-DD' (matches the DateOnly the API expects, with no timezone shift from toISOString).
 export function isoDate(d: Date): string {
@@ -61,6 +67,25 @@ export async function getWeeklyLoad(weeks: number): Promise<WeeklyLoadResponse> 
   const result = await apiFetch<WeeklyLoadResponse>(`/analytics/weekly-load?weeks=${weeks}`)
   if (result === null) {
     throw new Error('Unexpected empty response from /analytics/weekly-load')
+  }
+  return result
+}
+
+// `sport` is the enum name ('Bike'|'Run'|'Swim'|...); omit it (empty/undefined) for all sports.
+export async function getTimeInZone(from: string, to: string, sport?: string): Promise<TimeInZoneResponse> {
+  const sportQs = sport ? `&sport=${sport}` : ''
+  const result = await apiFetch<TimeInZoneResponse>(`/analytics/time-in-zone?from=${from}&to=${to}${sportQs}`)
+  if (result === null) {
+    throw new Error('Unexpected empty response from /analytics/time-in-zone')
+  }
+  return result
+}
+
+export async function getPeaks(sport?: string): Promise<PeaksResponse> {
+  const qs = sport ? `?sport=${sport}` : ''
+  const result = await apiFetch<PeaksResponse>(`/analytics/peaks${qs}`)
+  if (result === null) {
+    throw new Error('Unexpected empty response from /analytics/peaks')
   }
   return result
 }
