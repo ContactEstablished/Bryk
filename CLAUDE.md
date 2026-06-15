@@ -267,7 +267,7 @@ This project has the **dotnet-claude-kit** plugin active. Use it rather than rei
 
 ## Project state pointers
 
-- Current phase: **Phase 14 complete** (Daily-load history & PMC engine — compute-on-read `PmcCalculator`/`AcwrCalculator` + `AnalyticsService`, `GET /api/v1/analytics/daily-load` & `/pmc`, live dashboard Form (TSB) tile + Weekly Load ACWR chip; no migration; see `md/handoffs/2026-06-12-phase-14-complete.md` and ADR-0006). Next feature phase: **Phase 15** — Progress page (PMC chart, weekly load, time-in-zone, peaks), which consumes the Phase 14 endpoints. **Phase 12** — Authentication & Authorization — remains deferred and **approval-gated** (see Open decisions). Phases 8–11 and 13 are complete.
+- Current phase: **Phase 15 complete** (Progress page — compute-on-read `WeeklyLoadCalculator`/`PeaksCalculator`/`TimeInZoneCalculator` + `AnalyticsService` methods, `GET /api/v1/analytics/weekly-load` & `/peaks` & `/time-in-zone`, `/progress` `ProgressView` with hand-rolled-SVG `PMCChart`/`LoadChart` ports (no chart lib), time-in-zone stacked bar ("estimated") + session-level peaks grid, Progress nav live; no migration; see `md/handoffs/2026-06-14-phase-15-complete.md` and ADR-0007). Next feature phase: **Phase 16** — Calendar & scheduling. **Phase 12** — Authentication & Authorization — remains deferred and **approval-gated** (see Open decisions). Phases 8–11 and 13–14 are complete.
 - ADRs (`/md/decisions/`) — read before touching the training/zone domain:
   - **0001** — Mesocycle superseded by TrainingPlan / PlannedWorkout / Workout (Accepted; retirement migration `DropMesocycleSurface` committed).
   - **0002** — Coaches are v2; v1 is athlete-only, one human = one `Athlete` (Accepted).
@@ -275,9 +275,10 @@ This project has the **dotnet-claude-kit** plugin active. Use it rather than rei
   - **0004** — Structured-workout payload + training-zone model (Accepted).
   - **0005** — Training-load engine + executed-workout capture (Accepted; HR §1=a, strength §2=c).
   - **0006** — PMC computation strategy: compute-on-read (no snapshot), 180-day seeded lookback, `current` = range last day (null for a fresh athlete), TSB bands > +10 / ±10 / < −10 (Accepted).
+  - **0007** — Progress analytics: optimal band = `[0.8, 1.3] × trailing-4-week mean actual` (single horizontal band; Phase-18 ramp ceiling), peaks compute-on-read session-level (pace per-sport), time-in-zone coarse 5-level "estimated" (structure/sessionAvg/unclassified), range-picker `?pmc=&weeks=&sport=` (Accepted).
 - `/md/product/feature-parity-trainingpeaks.md` — feature wishlist and status.
 - `/md/Tasks-<phase>-<n>.md` — per-task specs (Phase 10: `Tasks-10-1.md` … `Tasks-10-5.md`).
-- `/md/handoffs/` — session-end handoff documents. Most recent: `2026-06-08-phase-11-complete.md`.
+- `/md/handoffs/` — session-end handoff documents. Most recent: `2026-06-14-phase-15-complete.md`.
 - `git log --oneline -20` for recent commit history.
 
 On session start: read the latest handoff (or ask for one) and skim the relevant Tasks doc / ADR before starting work. Confirm clean working tree and green build (`dotnet build` + `pnpm run build`) before proposing the first task.

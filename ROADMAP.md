@@ -42,7 +42,7 @@ Non-negotiable per phase. They constrain how prompts get written and how diffs g
 | 12 | Authentication & Authorization (approval-gated)                                  | ⏳ Next           |
 | 13 | Workout history & plan browser                                                   | ✅ Complete       |
 | 14 | Daily-load history & PMC engine (CTL / ATL / TSB / ACWR)                         | ✅ Complete       |
-| 15 | Progress page (PMC chart, weekly load, time-in-zone, peaks)                      | ⏳ Planned        |
+| 15 | Progress page (PMC chart, weekly load, time-in-zone, peaks)                      | ✅ Complete       |
 | 16 | Calendar & scheduling (reschedule, compliance coloring)                          | ⏳ Planned        |
 | 17 | Goals & events surface (Goals page, ProgressRing, plan↔event links)              | ⏳ Planned        |
 | 18 | ATP / periodization engine (weekly targets, ramp, taper)                         | ⏳ Planned        |
@@ -417,7 +417,9 @@ Post-v1 expansion (v2 coach features, device sync, marketplace, virtual training
 
 ---
 
-## Phase 15 — Progress page (PMC chart, weekly load, time-in-zone, peaks) ⏳
+## Phase 15 — Progress page (PMC chart, weekly load, time-in-zone, peaks) ✅
+
+**Shipped.** Compute-on-read analytics per [ADR-0007](md/decisions/0007-progress-analytics.md): pure `WeeklyLoadCalculator` / `PeaksCalculator` / `TimeInZoneCalculator` (`Bryk.Application/Analytics/`) + three additive `AnalyticsService` methods + `AnalyticsController` actions (`GET /analytics/weekly-load`, `/peaks`, `/time-in-zone`); and a `/progress` `ProgressView` composing hand-rolled-SVG `PMCChart` + `LoadChart` ports (no chart lib), a time-in-zone stacked bar (honestly "estimated"), and a session-level peaks `MetricTile` grid — Progress nav lit live. No migration, no new packages. See `md/handoffs/2026-06-14-phase-15-complete.md` and `md/Tasks-15-1.md`…`15-5.md`. Entry kept as the historical plan.
 
 **Goal.** The Progress nav item goes live as the analytics home: ported PMC chart, weekly load bars with planned hatch + optimal band, time-in-zone (honestly labeled), personal records/peaks.
 
