@@ -1,6 +1,6 @@
 # ROADMAP — Bryk
 
-**Status as of 2026-06-11.** Source of truth for phased Bryk development. Read alongside `CLAUDE.md` (workflow, conventions, pending decisions, tech debt), `md/decisions/` (architectural decision records), and `md/product/feature-parity-trainingpeaks.md` (parity wishlist with status tags). Phase plans below win on scope; the parity doc is the candidate inventory.
+**Status as of 2026-06-19.** Source of truth for phased Bryk development. Read alongside `CLAUDE.md` (workflow, conventions, pending decisions, tech debt), `md/decisions/` (architectural decision records), and `md/product/feature-parity-trainingpeaks.md` (parity wishlist with status tags). Phase plans below win on scope; the parity doc is the candidate inventory.
 
 **Phase 7 reshape note.** This roadmap reflects a renumbering decided 2026-05-26 after ADR-0001 (supersede Mesocycle) and ADR-0002 (coaches are v2). Old Phase 7 (TrainingPlan domain) becomes new Phase 9. Two new phases — 7 (closeout) and 8 (profile + dashboard warmups) — are inserted. Downstream numbers shift by +2. Per-phase entries below reflect the new numbering; ADR documents capture the decisions that drove the reshape.
 
@@ -43,7 +43,7 @@ Non-negotiable per phase. They constrain how prompts get written and how diffs g
 | 13 | Workout history & plan browser                                                   | ✅ Complete       |
 | 14 | Daily-load history & PMC engine (CTL / ATL / TSB / ACWR)                         | ✅ Complete       |
 | 15 | Progress page (PMC chart, weekly load, time-in-zone, peaks)                      | ✅ Complete       |
-| 16 | Calendar & scheduling (reschedule, compliance coloring)                          | ⏳ Planned        |
+| 16 | Calendar & scheduling (reschedule, compliance coloring)                          | ✅ Complete       |
 | 17 | Goals & events surface (Goals page, ProgressRing, plan↔event links)              | ⏳ Planned        |
 | 18 | ATP / periodization engine (weekly targets, ramp, taper)                         | ⏳ Planned        |
 | 19 | Activity file import (.fit / .tcx / .gpx)                                        | ⏳ Planned        |
