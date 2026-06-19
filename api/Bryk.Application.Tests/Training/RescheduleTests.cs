@@ -1,3 +1,4 @@
+using Bryk.Application.Calendar;
 using Bryk.Application.Calendar.Validators;
 using Bryk.Application.Common;
 using Bryk.Application.Training;
@@ -9,26 +10,9 @@ using Xunit;
 
 namespace Bryk.Application.Tests.Training;
 
-public class TrainingPlanServiceTests
+public class RescheduleTests
 {
     private static readonly Guid AthleteId = Guid.Parse("11111111-1111-1111-1111-111111111111");
-
-    private static TrainingPlanRequest ValidPlan(string name = "Base Block") => new()
-    {
-        Name = name,
-        Methodology = MethodologyChoice.Polarized,
-        StartDate = DateOnly.FromDateTime(DateTime.UtcNow),
-        EndDate = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(28)
-    };
-
-    private static PlannedWorkoutDto ValidWorkout(string title = "Easy Run") => new()
-    {
-        Sport = Sport.Run,
-        ScheduledDate = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(1),
-        Title = title,
-        PlannedDurationMinutes = 60,
-        PlannedLoad = 50.0m
-    };
 
     private static TrainingPlanService NewService(StubTrainingPlanRepository repo, StubUnitOfWork uow, Guid? athleteId = null) =>
         new(new StubCurrentUserService(athleteId ?? AthleteId),
@@ -37,140 +21,179 @@ public class TrainingPlanServiceTests
             new ScheduleRequestValidator(),
             repo, uow);
 
+    private static TrainingPlan PlanWithWindow(DateOnly start, DateOnly end, Guid? planId = null, Guid? athleteId = null,
+        Guid? pwId = null) =>
+        new()
+        {
+            Id = planId ?? Guid.NewGuid(),
+            AthleteId = athleteId ?? AthleteId,
+            StartDate = start,
+            EndDate = end,
+            PlannedWorkouts = new List<PlannedWorkout>
+            {
+                new()
+                {
+                    Id = pwId ?? Guid.NewGuid(),
+                    AthleteId = athleteId ?? AthleteId,
+                    TrainingPlanId = planId ?? Guid.NewGuid(),
+                    Sport = Sport.Run,
+                    ScheduledDate = start.AddDays(1),
+                    Title = "Easy Run",
+                    Description = "Keep it easy",
+                    PlannedDurationMinutes = 60,
+                    PlannedLoad = 50m,
+                    CreatedAt = DateTime.UtcNow
+                }
+            }
+        };
+
     [Fact]
-    public async Task CreateAsync_ValidRequest_PersistsForCurrentAthleteWithChildren()
+    public async Task RescheduleAsync_OnWindow_UpdatesScheduledDate()
     {
-        var repo = new StubTrainingPlanRepository();
+        var start = new DateOnly(2026, 6, 1);
+        var end = new DateOnly(2026, 6, 30);
+        var pwId = Guid.NewGuid();
+        var plan = PlanWithWindow(start, end, pwId: pwId);
+        var repo = new StubTrainingPlanRepository { ToReturn = plan };
         var uow = new StubUnitOfWork();
         var service = NewService(repo, uow);
 
-        var request = ValidPlan();
-        request.PlannedWorkouts = new List<PlannedWorkoutDto> { ValidWorkout("Long Ride") };
+        var request = new ScheduleRequest { ScheduledDate = new DateOnly(2026, 6, 15) };
 
-        var result = await service.CreateAsync(request);
+        await service.RescheduleAsync(plan.Id, pwId, request);
 
-        repo.Added.Should().NotBeNull();
-        repo.Added!.AthleteId.Should().Be(AthleteId);
-        repo.Added.PlannedWorkouts.Should().ContainSingle();
-        repo.Added.PlannedWorkouts.Single().AthleteId.Should().Be(AthleteId);
-        repo.Added.PlannedWorkouts.Single().TrainingPlanId.Should().Be(repo.Added.Id);
-        result.Id.Should().NotBeEmpty().And.Be(repo.Added.Id);
-        result.Name.Should().Be("Base Block");
-        result.PlannedWorkouts.Should().ContainSingle(pw => pw.Title == "Long Ride" && pw.Id != Guid.Empty);
+        repo.UpdatedPlannedWorkout.Should().NotBeNull();
+        repo.UpdatedPlannedWorkout!.ScheduledDate.Should().Be(new DateOnly(2026, 6, 15));
         uow.SaveCount.Should().Be(1);
     }
 
     [Fact]
-    public async Task CreateAsync_EndDateBeforeStartDate_ThrowsValidation()
+    public async Task RescheduleAsync_AtWindowStartBoundary_Succeeds()
     {
-        var repo = new StubTrainingPlanRepository();
-        var uow = new StubUnitOfWork();
-        var service = NewService(repo, uow);
-
-        var request = ValidPlan();
-        request.EndDate = request.StartDate.AddDays(-1);
-
-        var act = () => service.CreateAsync(request);
-
-        await act.Should().ThrowAsync<Bryk.Application.Exceptions.ValidationException>();
-        repo.Added.Should().BeNull();
-        uow.SaveCount.Should().Be(0);
-    }
-
-    [Fact]
-    public async Task AddPlannedWorkoutAsync_OwnedPlan_StagesAndReturnsResponse()
-    {
-        var planId = Guid.NewGuid();
-        var plan = new TrainingPlan { Id = planId, AthleteId = AthleteId };
+        var start = new DateOnly(2026, 6, 1);
+        var end = new DateOnly(2026, 6, 30);
+        var pwId = Guid.NewGuid();
+        var plan = PlanWithWindow(start, end, pwId: pwId);
         var repo = new StubTrainingPlanRepository { ToReturn = plan };
         var uow = new StubUnitOfWork();
         var service = NewService(repo, uow);
 
-        var result = await service.AddPlannedWorkoutAsync(planId, ValidWorkout("Tempo"));
+        var request = new ScheduleRequest { ScheduledDate = start };
 
-        repo.AddedPlannedWorkout.Should().NotBeNull();
-        repo.AddedPlannedWorkout!.TrainingPlanId.Should().Be(planId);
-        repo.AddedPlannedWorkout.AthleteId.Should().Be(AthleteId);
-        result.Id.Should().NotBeEmpty();
-        result.Title.Should().Be("Tempo");
-        result.TrainingPlanId.Should().Be(planId);
+        await service.RescheduleAsync(plan.Id, pwId, request);
+
+        repo.UpdatedPlannedWorkout.Should().NotBeNull();
+        repo.UpdatedPlannedWorkout!.ScheduledDate.Should().Be(start);
         uow.SaveCount.Should().Be(1);
     }
 
     [Fact]
-    public async Task AddPlannedWorkoutAsync_EmptyTitle_ThrowsValidation()
+    public async Task RescheduleAsync_AtWindowEndBoundary_Succeeds()
     {
-        var planId = Guid.NewGuid();
-        var plan = new TrainingPlan { Id = planId, AthleteId = AthleteId };
+        var start = new DateOnly(2026, 6, 1);
+        var end = new DateOnly(2026, 6, 30);
+        var pwId = Guid.NewGuid();
+        var plan = PlanWithWindow(start, end, pwId: pwId);
         var repo = new StubTrainingPlanRepository { ToReturn = plan };
         var uow = new StubUnitOfWork();
         var service = NewService(repo, uow);
 
-        var invalid = ValidWorkout();
-        invalid.Title = "";
+        var request = new ScheduleRequest { ScheduledDate = end };
 
-        var act = () => service.AddPlannedWorkoutAsync(planId, invalid);
+        await service.RescheduleAsync(plan.Id, pwId, request);
 
-        await act.Should().ThrowAsync<Bryk.Application.Exceptions.ValidationException>();
-        repo.AddedPlannedWorkout.Should().BeNull();
-        uow.SaveCount.Should().Be(0);
+        repo.UpdatedPlannedWorkout.Should().NotBeNull();
+        repo.UpdatedPlannedWorkout!.ScheduledDate.Should().Be(end);
+        uow.SaveCount.Should().Be(1);
     }
 
     [Fact]
-    public async Task UpdatePlannedWorkoutAsync_ForeignPlan_ThrowsKeyNotFound()
+    public async Task RescheduleAsync_BelowWindow_ThrowsValidationException()
     {
-        var planId = Guid.NewGuid();
-        var plan = new TrainingPlan { Id = planId, AthleteId = Guid.NewGuid() }; // belongs to someone else
+        var start = new DateOnly(2026, 6, 1);
+        var end = new DateOnly(2026, 6, 30);
+        var pwId = Guid.NewGuid();
+        var plan = PlanWithWindow(start, end, pwId: pwId);
         var repo = new StubTrainingPlanRepository { ToReturn = plan };
         var uow = new StubUnitOfWork();
         var service = NewService(repo, uow);
 
-        var act = () => service.UpdatePlannedWorkoutAsync(planId, Guid.NewGuid(), ValidWorkout());
+        var request = new ScheduleRequest { ScheduledDate = new DateOnly(2026, 5, 31) };
 
-        await act.Should().ThrowAsync<KeyNotFoundException>();
+        var act = () => service.RescheduleAsync(plan.Id, pwId, request);
+
+        await act.Should().ThrowAsync<Bryk.Application.Exceptions.ValidationException>()
+            .Where(ex => ex.Errors.Any(e => e.StartsWith("ScheduledDate:")));
         repo.UpdatedPlannedWorkout.Should().BeNull();
         uow.SaveCount.Should().Be(0);
     }
 
     [Fact]
-    public async Task RemovePlannedWorkoutAsync_ForeignPlan_ThrowsKeyNotFound()
+    public async Task RescheduleAsync_AboveWindow_ThrowsValidationException()
     {
-        var planId = Guid.NewGuid();
-        var plan = new TrainingPlan { Id = planId, AthleteId = Guid.NewGuid() }; // belongs to someone else
+        var start = new DateOnly(2026, 6, 1);
+        var end = new DateOnly(2026, 6, 30);
+        var pwId = Guid.NewGuid();
+        var plan = PlanWithWindow(start, end, pwId: pwId);
         var repo = new StubTrainingPlanRepository { ToReturn = plan };
         var uow = new StubUnitOfWork();
         var service = NewService(repo, uow);
 
-        var act = () => service.RemovePlannedWorkoutAsync(planId, Guid.NewGuid());
+        var request = new ScheduleRequest { ScheduledDate = new DateOnly(2026, 7, 1) };
 
-        await act.Should().ThrowAsync<KeyNotFoundException>();
-        repo.RemovedPlannedWorkout.Should().BeNull();
+        var act = () => service.RescheduleAsync(plan.Id, pwId, request);
+
+        await act.Should().ThrowAsync<Bryk.Application.Exceptions.ValidationException>()
+            .Where(ex => ex.Errors.Any(e => e.StartsWith("ScheduledDate:")));
+        repo.UpdatedPlannedWorkout.Should().BeNull();
         uow.SaveCount.Should().Be(0);
     }
 
     [Fact]
-    public async Task RemovePlannedWorkoutAsync_OwnedPlannedWorkout_Removes()
+    public async Task RescheduleAsync_MissingPlan_ThrowsKeyNotFound()
     {
-        var planId = Guid.NewGuid();
-        var pwId = Guid.NewGuid();
-        var plan = new TrainingPlan
-        {
-            Id = planId,
-            AthleteId = AthleteId,
-            PlannedWorkouts = new List<PlannedWorkout>
-            {
-                new() { Id = pwId, AthleteId = AthleteId, TrainingPlanId = planId, Title = "Drop me" }
-            }
-        };
+        var repo = new StubTrainingPlanRepository { ToReturn = null };
+        var uow = new StubUnitOfWork();
+        var service = NewService(repo, uow);
+
+        var act = () => service.RescheduleAsync(Guid.NewGuid(), Guid.NewGuid(),
+            new ScheduleRequest { ScheduledDate = new DateOnly(2026, 6, 15) });
+
+        await act.Should().ThrowAsync<KeyNotFoundException>();
+        uow.SaveCount.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task RescheduleAsync_ForeignPlan_ThrowsKeyNotFound()
+    {
+        var plan = PlanWithWindow(new DateOnly(2026, 6, 1), new DateOnly(2026, 6, 30),
+            athleteId: Guid.NewGuid());
         var repo = new StubTrainingPlanRepository { ToReturn = plan };
         var uow = new StubUnitOfWork();
         var service = NewService(repo, uow);
 
-        await service.RemovePlannedWorkoutAsync(planId, pwId);
+        var act = () => service.RescheduleAsync(plan.Id, Guid.NewGuid(),
+            new ScheduleRequest { ScheduledDate = new DateOnly(2026, 6, 15) });
 
-        repo.RemovedPlannedWorkout.Should().NotBeNull();
-        repo.RemovedPlannedWorkout!.Id.Should().Be(pwId);
-        uow.SaveCount.Should().Be(1);
+        await act.Should().ThrowAsync<KeyNotFoundException>();
+        uow.SaveCount.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task RescheduleAsync_MissingPlannedWorkout_ThrowsKeyNotFound()
+    {
+        var start = new DateOnly(2026, 6, 1);
+        var end = new DateOnly(2026, 6, 30);
+        var plan = PlanWithWindow(start, end);
+        var repo = new StubTrainingPlanRepository { ToReturn = plan };
+        var uow = new StubUnitOfWork();
+        var service = NewService(repo, uow);
+
+        var act = () => service.RescheduleAsync(plan.Id, Guid.NewGuid(),
+            new ScheduleRequest { ScheduledDate = new DateOnly(2026, 6, 15) });
+
+        await act.Should().ThrowAsync<KeyNotFoundException>();
+        uow.SaveCount.Should().Be(0);
     }
 
     private sealed class StubCurrentUserService(Guid athleteId) : ICurrentUserService

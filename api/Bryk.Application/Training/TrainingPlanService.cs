@@ -1,3 +1,4 @@
+using Bryk.Application.Calendar;
 using Bryk.Application.Common;
 using Bryk.Application.Common.Validation;
 using Bryk.Domain.Entities;
@@ -10,6 +11,7 @@ public class TrainingPlanService(
     ICurrentUserService currentUser,
     IValidator<TrainingPlanRequest> planValidator,
     IValidator<PlannedWorkoutDto> plannedWorkoutValidator,
+    IValidator<ScheduleRequest> scheduleValidator,
     ITrainingPlanRepository planRepo,
     IUnitOfWork unitOfWork) : ITrainingPlanService
 {
@@ -110,6 +112,41 @@ public class TrainingPlanService(
 
         // Remove by a key-only stub to avoid attaching the loaded no-tracking aggregate graph.
         planRepo.RemovePlannedWorkout(new PlannedWorkout { Id = existing.Id });
+        await unitOfWork.SaveChangesAsync(ct);
+    }
+
+    public async Task RescheduleAsync(Guid planId, Guid plannedWorkoutId, ScheduleRequest request, CancellationToken ct = default)
+    {
+        await scheduleValidator.ValidateOrThrowAsync(request, ct);
+
+        var plan = await LoadOwnedPlanAsync(planId, ct);
+        var existing = plan.PlannedWorkouts.FirstOrDefault(pw => pw.Id == plannedWorkoutId)
+            ?? throw new KeyNotFoundException();
+
+        if (request.ScheduledDate < plan.StartDate || request.ScheduledDate > plan.EndDate)
+        {
+            throw new Exceptions.ValidationException(new[]
+            {
+                $"ScheduledDate: Scheduled date must be within the plan window ({plan.StartDate:yyyy-MM-dd} to {plan.EndDate:yyyy-MM-dd})."
+            });
+        }
+
+        // Stage a fresh nav-free entity (mirror UpdatePlannedWorkoutAsync's discipline).
+        var updated = new PlannedWorkout
+        {
+            Id = existing.Id,
+            AthleteId = existing.AthleteId,
+            TrainingPlanId = existing.TrainingPlanId,
+            Sport = existing.Sport,
+            ScheduledDate = request.ScheduledDate,
+            Title = existing.Title,
+            Description = existing.Description,
+            PlannedDurationMinutes = existing.PlannedDurationMinutes,
+            PlannedLoad = existing.PlannedLoad,
+            CreatedAt = existing.CreatedAt
+        };
+
+        planRepo.UpdatePlannedWorkout(updated);
         await unitOfWork.SaveChangesAsync(ct);
     }
 

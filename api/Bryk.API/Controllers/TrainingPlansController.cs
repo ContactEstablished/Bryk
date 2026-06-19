@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using Bryk.Application.Calendar;
 using Bryk.Application.Training;
 using Microsoft.AspNetCore.Mvc;
 
@@ -49,6 +50,18 @@ public class TrainingPlansController(
     {
         PlannedWorkoutResponse result = await trainingPlanService.UpdatePlannedWorkoutAsync(id, plannedWorkoutId, request, cancellationToken);
         return Ok(result);
+    }
+
+    /// <summary>
+    /// Moves a planned workout to a new scheduled date within the owning plan's window
+    /// [StartDate, EndDate]. 400 if the date is outside the window; 404 if the plan or planned workout
+    /// is missing or foreign. Returns 204 NoContent (ADR-0008 §2).
+    /// </summary>
+    [HttpPatch("{id:guid}/plannedworkouts/{plannedWorkoutId:guid}/schedule")]
+    public async Task<IActionResult> RescheduleAsync(Guid id, Guid plannedWorkoutId, [FromBody] ScheduleRequest request, CancellationToken cancellationToken)
+    {
+        await trainingPlanService.RescheduleAsync(id, plannedWorkoutId, request, cancellationToken);
+        return NoContent();
     }
 
     /// <summary>Removes a planned workout from a plan owned by the current athlete. 404 if the plan or planned workout is missing or foreign.</summary>

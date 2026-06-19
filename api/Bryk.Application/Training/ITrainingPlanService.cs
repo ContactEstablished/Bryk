@@ -1,3 +1,5 @@
+using Bryk.Application.Calendar;
+
 namespace Bryk.Application.Training;
 
 /// <summary>
@@ -26,4 +28,11 @@ public interface ITrainingPlanService
 
     /// <summary>Removes a planned workout from an owned plan; 404 if the plan or planned workout is missing or foreign.</summary>
     Task RemovePlannedWorkoutAsync(Guid planId, Guid plannedWorkoutId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Moves a planned workout to a new scheduled date within the owning plan's window
+    /// [StartDate, EndDate]. 400 (validation) if the date is outside the window; 404 if the plan or
+    /// planned workout is missing or foreign (ADR-0008 §2). Returns Task (204 NoContent).
+    /// </summary>
+    Task RescheduleAsync(Guid planId, Guid plannedWorkoutId, ScheduleRequest request, CancellationToken ct = default);
 }
