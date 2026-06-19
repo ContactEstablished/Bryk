@@ -23,6 +23,16 @@ public class EventRepository(ApplicationDbContext db) : IEventRepository
             .ToListAsync(ct);
     }
 
+    public async Task<IReadOnlyList<Event>> GetByAthleteInRangeAsync(Guid athleteId, DateOnly start, DateOnly end, CancellationToken ct = default)
+    {
+        return await db.Events
+            .AsNoTracking()
+            .Where(e => e.AthleteId == athleteId && e.EventDate >= start && e.EventDate <= end)
+            .OrderBy(e => e.EventDate)
+            .ThenBy(e => e.Priority)
+            .ToListAsync(ct);
+    }
+
     public async Task<IReadOnlyList<Event>> GetAllAsync(CancellationToken ct = default)
     {
         return await db.Events

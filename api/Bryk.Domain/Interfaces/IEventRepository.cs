@@ -21,6 +21,12 @@ public interface IEventRepository
     Task<IReadOnlyList<Event>> GetByAthleteIdAsync(Guid athleteId, CancellationToken ct = default);
 
     /// <summary>
+    /// The athlete's <see cref="Event"/>s whose <see cref="Event.EventDate"/> is within [start, end]
+    /// inclusive, ordered by <see cref="Event.EventDate"/> then <see cref="Event.Priority"/>. No-tracking.
+    /// </summary>
+    Task<IReadOnlyList<Event>> GetByAthleteInRangeAsync(Guid athleteId, DateOnly start, DateOnly end, CancellationToken ct = default);
+
+    /// <summary>
     /// Returns all <see cref="Event"/> entities — entity only, no includes.
     /// Uses no-tracking.
     /// </summary>
