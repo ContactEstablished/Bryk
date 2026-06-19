@@ -9,7 +9,9 @@ import CalendarGrid from '@/components/calendar/CalendarGrid.vue'
 import MonthWeekToggle from '@/components/calendar/MonthWeekToggle.vue'
 import { isoDate } from '@/lib/calendar'
 import { useCalendarStore } from '@/stores/calendar'
+import { getPlans } from '@/services/training'
 import type { CalendarDayDto } from '@/types/calendar'
+import type { PlanWindow } from '@/composables/useDragReschedule'
 
 const route = useRoute()
 const router = useRouter()
@@ -32,6 +34,23 @@ const periodLabel = computed(() =>
 )
 
 const days = computed<CalendarDayDto[]>(() => feed.value?.days ?? [])
+
+const planWindows = ref<Record<string, PlanWindow>>({})
+
+async function loadPlanWindows() {
+  try {
+    const plans = await getPlans()
+    const map: Record<string, PlanWindow> = {}
+    for (const plan of plans) {
+      map[plan.id] = { start: plan.startDate, end: plan.endDate }
+    }
+    planWindows.value = map
+  } catch {
+    // Silently ignore — plan windows are used for the client-side window check,
+    // but the server is the authority (400 on out-of-window).
+    planWindows.value = {}
+  }
+}
 
 // Compute the feed window for the visible anchor month.
 function feedWindow(d: Date): { from: string; to: string } {
@@ -68,6 +87,7 @@ onMounted(() => {
   } else {
     loadForAnchor()
   }
+  void loadPlanWindows()
 })
 
 // Recompute feed when the anchor month changes.
@@ -121,7 +141,7 @@ watch(anchorDate, () => loadForAnchor())
       </div>
 
       <!-- Month grid -->
-      <CalendarGrid v-else :days="days" :anchor-month="anchorMonth" />
+      <CalendarGrid v-else :days="days" :anchor-month="anchorMonth" :plan-windows="planWindows" />
     </template>
 
     <!-- Week placeholder (16-5 replaces with WeekStrip) -->

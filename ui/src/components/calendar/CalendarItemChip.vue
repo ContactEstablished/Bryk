@@ -1,11 +1,16 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, inject } from 'vue'
 import { complianceColor, sportColor } from '@/lib/calendar'
+import { DRAG_RESCHEDULE_KEY } from '@/composables/injectionKeys'
 import type { CalendarItemDto } from '@/types/calendar'
 
 const props = defineProps<{
   item: CalendarItemDto
+  /** The date of the day cell containing this chip (YYYY-MM-DD). */
+  currentDate: string
 }>()
+
+const drag = inject(DRAG_RESCHEDULE_KEY, null)
 
 const sportCls = computed(() => sportColor(props.item.sport))
 
@@ -21,11 +26,29 @@ const loadDisplay = computed(() => {
   if (l == null) return null
   return Number.isInteger(l) ? l : Math.round(l * 10) / 10
 })
+
+const isDraggable = computed(() => props.item.kind === 'Planned')
+
+const isDragging = computed(
+  () => isDraggable.value && drag?.isDragging.value && drag.draggingItem.value?.id === props.item.id,
+)
+
+const cursorClass = computed(() => (isDraggable.value ? 'cursor-grab' : 'cursor-default'))
+
+function onPointerDown(event: PointerEvent) {
+  if (!isDraggable.value || !drag) return
+  // Stamp the origin date onto a shallow clone so the composable can
+  // compare the drop target against the chip's current day cell.
+  const itemWithDate = { ...props.item, __currentDate: props.currentDate }
+  drag.onPointerDown(itemWithDate, event)
+}
 </script>
 
 <template>
   <div
-    class="group flex items-center gap-1.5 rounded-md border border-border bg-muted/50 px-1.5 py-0.5 text-[11px] leading-tight transition-shadow hover:shadow-sm hover:cursor-grab"
+    class="group flex items-center gap-1.5 rounded-md border border-border bg-muted/50 px-1.5 py-0.5 text-[11px] leading-tight transition-shadow hover:shadow-sm"
+    :class="[cursorClass, { 'is-dragging': isDragging, 'touch-none': isDraggable }]"
+    @pointerdown="onPointerDown"
   >
     <!-- Sport color square -->
     <span class="size-2 shrink-0 rounded-sm" :class="sportCls" />

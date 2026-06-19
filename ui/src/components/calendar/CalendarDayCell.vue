@@ -1,17 +1,31 @@
 <script setup lang="ts">
+import { inject } from 'vue'
 import CalendarItemChip from '@/components/calendar/CalendarItemChip.vue'
+import { DRAG_RESCHEDULE_KEY } from '@/composables/injectionKeys'
 import type { CalendarDayCell } from '@/lib/calendar'
 
 defineProps<{
   cell: CalendarDayCell
   today: string
 }>()
+
+const drag = inject(DRAG_RESCHEDULE_KEY, null)
 </script>
 
 <template>
   <div
+    :data-date="cell.date"
     class="flex min-h-[88px] flex-col gap-1 border-t border-border p-1"
-    :class="cell.isInMonth ? 'bg-background' : 'bg-muted/30'"
+    :class="[
+      cell.isInMonth ? 'bg-background' : 'bg-muted/30',
+      {
+        'drop-target': drag?.isDragging.value && drag.draggingOverDate.value === cell.date,
+        'drop-rejected':
+          drag?.isDragging.value &&
+          drag.draggingOverDate.value === cell.date &&
+          !drag.canDropHere.value,
+      },
+    ]"
   >
     <!-- Date number -->
     <div class="flex items-center gap-1 px-0.5 pt-0.5">
@@ -35,6 +49,7 @@ defineProps<{
         v-for="item in cell.items.slice(0, 3)"
         :key="item.id"
         :item="item"
+        :current-date="cell.date"
       />
       <span
         v-if="cell.items.length > 3"
@@ -45,3 +60,13 @@ defineProps<{
     </template>
   </div>
 </template>
+
+<style scoped>
+.drop-target {
+  outline: 2px dashed var(--primary-hi, #818cf8);
+}
+
+.drop-rejected {
+  outline: 2px dashed var(--rose-500, #f43f5e);
+}
+</style>
