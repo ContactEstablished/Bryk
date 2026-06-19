@@ -8,6 +8,7 @@ import {
   Target,
   User,
   Gauge,
+  CalendarDays,
   CalendarRange,
   type LucideIcon,
 } from 'lucide-vue-next'
@@ -32,6 +33,7 @@ const trainItems: NavItem[] = [
   { icon: Home, label: 'Dashboard', to: '/', routeName: 'home' },
   { icon: Gauge, label: 'Zones', to: '/zones', routeName: 'zones' },
   { icon: CalendarRange, label: 'Training', to: '/plans', routeName: 'plans' },
+  { icon: CalendarDays, label: 'Calendar', to: '/calendar', routeName: 'calendar' },
   { icon: Activity, label: 'Workouts', to: '/workouts', routeName: 'workouts' },
   { icon: TrendingUp, label: 'Progress', to: '/progress', routeName: 'progress' },
   { icon: Target, label: 'Goals' },

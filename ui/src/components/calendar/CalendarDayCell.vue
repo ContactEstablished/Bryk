@@ -4,12 +4,21 @@ import CalendarItemChip from '@/components/calendar/CalendarItemChip.vue'
 import { DRAG_RESCHEDULE_KEY } from '@/composables/injectionKeys'
 import type { CalendarDayCell } from '@/lib/calendar'
 
-defineProps<{
+const props = defineProps<{
   cell: CalendarDayCell
   today: string
 }>()
 
+const emit = defineEmits<{
+  openPopover: [cell: CalendarDayCell, rect: DOMRect]
+}>()
+
 const drag = inject(DRAG_RESCHEDULE_KEY, null)
+
+function onHeaderClick(event: MouseEvent) {
+  const el = event.currentTarget as HTMLElement
+  emit('openPopover', props.cell, el.getBoundingClientRect())
+}
 </script>
 
 <template>
@@ -30,7 +39,7 @@ const drag = inject(DRAG_RESCHEDULE_KEY, null)
     <!-- Date number -->
     <div class="flex items-center gap-1 px-0.5 pt-0.5">
       <span
-        class="inline-flex items-center justify-center text-[12px] font-medium leading-none"
+        class="inline-flex cursor-pointer select-none items-center justify-center text-[12px] font-medium leading-none hover:underline"
         :class="
           cell.isToday
             ? 'size-6 rounded-full bg-primary-hi text-primary-foreground'
@@ -38,6 +47,7 @@ const drag = inject(DRAG_RESCHEDULE_KEY, null)
               ? 'text-foreground'
               : 'text-faint'
         "
+        @click="onHeaderClick"
       >
         {{ parseInt(cell.date.slice(8), 10) }}
       </span>
@@ -54,6 +64,7 @@ const drag = inject(DRAG_RESCHEDULE_KEY, null)
       <span
         v-if="cell.items.length > 3"
         class="cursor-pointer px-1 font-mono text-[10px] text-muted-foreground hover:text-foreground"
+        @click="onHeaderClick"
       >
         +{{ cell.items.length - 3 }} more
       </span>
