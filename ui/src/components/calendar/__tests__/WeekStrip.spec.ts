@@ -126,7 +126,7 @@ describe('WeekStrip', () => {
     await targetCell.vm.$emit('openPopover', targetCell.props('cell'), fakeRect)
 
     expect(wrapper.emitted('openPopover')).toHaveLength(1)
-    expect(wrapper.emitted('openPopover')![0][0].date).toBe('2026-06-16')
+    expect((wrapper.emitted('openPopover')![0][0] as CalendarDayDto).date).toBe('2026-06-16')
 
     wrapper.unmount()
   })
