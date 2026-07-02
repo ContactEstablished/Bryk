@@ -46,6 +46,14 @@ public interface ITrainingPlanRepository
     Task<IReadOnlyList<PlannedWorkout>> GetPlannedWorkoutsByIdsWithStructureAsync(IEnumerable<Guid> ids, CancellationToken ct = default);
 
     /// <summary>
+    /// The <see cref="TrainingPlan"/>s whose <see cref="TrainingPlan.EventId"/> is in <paramref name="eventIds"/>
+    /// (and non-null) — entity only, no <see cref="TrainingPlan.PlannedWorkouts"/> include (callers only need
+    /// <c>Id</c> + <c>Name</c> for the linked-plan chip). No-tracking. An empty <paramref name="eventIds"/>
+    /// returns an empty list with no query (mirrors <see cref="GetPlannedWorkoutsByIdsWithStructureAsync"/>).
+    /// </summary>
+    Task<IReadOnlyList<TrainingPlan>> GetByEventIdsAsync(IEnumerable<Guid> eventIds, CancellationToken ct = default);
+
+    /// <summary>
     /// Stages a new <see cref="TrainingPlan"/> (with any seeded <see cref="PlannedWorkout"/> children)
     /// for insertion. Does NOT call SaveChanges.
     /// </summary>

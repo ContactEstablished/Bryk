@@ -64,6 +64,20 @@ public class TrainingPlanRepository(ApplicationDbContext db) : ITrainingPlanRepo
             .ToListAsync(ct);
     }
 
+    public async Task<IReadOnlyList<TrainingPlan>> GetByEventIdsAsync(IEnumerable<Guid> eventIds, CancellationToken ct = default)
+    {
+        var idList = eventIds.Distinct().ToList();
+        if (idList.Count == 0)
+        {
+            return new List<TrainingPlan>();
+        }
+
+        return await db.TrainingPlans
+            .AsNoTracking()
+            .Where(p => p.EventId != null && idList.Contains(p.EventId!.Value))
+            .ToListAsync(ct);
+    }
+
     public async Task AddAsync(TrainingPlan entity, CancellationToken ct = default)
     {
         await db.TrainingPlans.AddAsync(entity, ct);

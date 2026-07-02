@@ -10,6 +10,18 @@ namespace Bryk.API.Controllers;
 [Route("api/v{version:apiVersion}/[controller]")]
 public class GoalsController(IGoalService goalService) : ControllerBase
 {
+    /// <summary>
+    /// Returns the current athlete's goals ordered by
+    /// <see cref="Bryk.Domain.Entities.Goal.TargetDate"/> ascending (nulls last), each carrying computed
+    /// <c>daysRemaining</c> and <c>status</c> (see <see cref="Bryk.Application.Goals.GoalProgress"/>).
+    /// </summary>
+    [HttpGet]
+    public async Task<IActionResult> GetAllAsync(CancellationToken cancellationToken)
+    {
+        IReadOnlyList<GoalListItemResponse> result = await goalService.GetAllAsync(cancellationToken);
+        return Ok(result);
+    }
+
     /// <summary>Creates a new goal for the current athlete.</summary>
     [HttpPost]
     public async Task<IActionResult> CreateAsync([FromBody] GoalDto request, CancellationToken cancellationToken)

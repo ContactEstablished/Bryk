@@ -23,7 +23,7 @@ public class EventServiceTests
     };
 
     private static EventService NewService(StubEventRepository repo, StubUnitOfWork uow) =>
-        new(new StubCurrentUserService(AthleteId), new EventDtoValidator(), repo, uow);
+        new(new StubCurrentUserService(AthleteId), new EventDtoValidator(), repo, new StubPlanRepository(), uow);
 
     [Fact]
     public async Task CreateAsync_ValidRequest_PersistsForCurrentAthleteAndReturnsResponseWithId()
@@ -173,5 +173,29 @@ public class EventServiceTests
         public Task<IReadOnlyList<Event>> GetByAthleteIdAsync(Guid athleteId, CancellationToken ct = default) => throw new NotImplementedException();
         public Task<IReadOnlyList<Event>> GetAllAsync(CancellationToken ct = default) => throw new NotImplementedException();
         public Task<IReadOnlyList<Event>> GetByAthleteInRangeAsync(Guid athleteId, DateOnly start, DateOnly end, CancellationToken ct = default) => throw new NotImplementedException();
+    }
+
+    // Create/Update/Delete don't touch the plan repo; the read paths are covered by integration tests.
+    private sealed class StubPlanRepository : ITrainingPlanRepository
+    {
+        public Task<TrainingPlan?> GetByIdAsync(Guid id, CancellationToken ct = default) => throw new NotImplementedException();
+        public Task<IReadOnlyList<TrainingPlan>> GetByAthleteIdAsync(Guid athleteId, CancellationToken ct = default) => throw new NotImplementedException();
+        public Task<IReadOnlyList<PlannedWorkout>> GetPlannedWorkoutsInRangeAsync(Guid athleteId, DateOnly start, DateOnly end, CancellationToken ct = default) => throw new NotImplementedException();
+        public Task<IReadOnlyList<PlannedWorkout>> GetPlannedWorkoutsInRangeWithStructureAsync(Guid athleteId, DateOnly start, DateOnly end, CancellationToken ct = default) => throw new NotImplementedException();
+        public Task<IReadOnlyList<PlannedWorkout>> GetPlannedWorkoutsByIdsWithStructureAsync(IEnumerable<Guid> ids, CancellationToken ct = default) => throw new NotImplementedException();
+        public Task<IReadOnlyList<TrainingPlan>> GetByEventIdsAsync(IEnumerable<Guid> eventIds, CancellationToken ct = default) => throw new NotImplementedException();
+        public Task AddAsync(TrainingPlan entity, CancellationToken ct = default) => throw new NotImplementedException();
+        public void Update(TrainingPlan entity) => throw new NotImplementedException();
+        public void Delete(TrainingPlan entity) => throw new NotImplementedException();
+        public Task AddPlannedWorkoutAsync(PlannedWorkout plannedWorkout, CancellationToken ct = default) => throw new NotImplementedException();
+        public void UpdatePlannedWorkout(PlannedWorkout plannedWorkout) => throw new NotImplementedException();
+        public void RemovePlannedWorkout(PlannedWorkout plannedWorkout) => throw new NotImplementedException();
+        public Task<PlannedWorkout?> GetPlannedWorkoutWithStructureAsync(Guid plannedWorkoutId, CancellationToken ct = default) => throw new NotImplementedException();
+        public Task AddWorkoutBlockAsync(WorkoutBlock block, CancellationToken ct = default) => throw new NotImplementedException();
+        public void UpdateWorkoutBlock(WorkoutBlock block) => throw new NotImplementedException();
+        public void RemoveWorkoutBlock(WorkoutBlock block) => throw new NotImplementedException();
+        public Task AddWorkoutStepAsync(WorkoutStep step, CancellationToken ct = default) => throw new NotImplementedException();
+        public void UpdateWorkoutStep(WorkoutStep step) => throw new NotImplementedException();
+        public void RemoveWorkoutStep(WorkoutStep step) => throw new NotImplementedException();
     }
 }

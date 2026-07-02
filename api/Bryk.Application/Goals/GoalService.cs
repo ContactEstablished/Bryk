@@ -13,6 +13,27 @@ public class GoalService(
     IGoalRepository goalRepo,
     IUnitOfWork unitOfWork) : IGoalService
 {
+    public async Task<IReadOnlyList<GoalListItemResponse>> GetAllAsync(CancellationToken ct = default)
+    {
+        var athleteId = currentUser.GetCurrentAthleteId();
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var goals = await goalRepo.GetByAthleteIdAsync(athleteId, ct);
+
+        return goals.Select(g =>
+        {
+            var (daysRemaining, status) = GoalProgress.Compute(g.TargetDate, today);
+            return new GoalListItemResponse
+            {
+                Id = g.Id,
+                Type = g.Type,
+                Description = g.Description,
+                TargetDate = g.TargetDate,
+                DaysRemaining = daysRemaining,
+                Status = status
+            };
+        }).ToList();
+    }
+
     public async Task<GoalResponse> CreateAsync(GoalDto request, CancellationToken ct = default)
     {
         await validator.ValidateOrThrowAsync(request, ct);
