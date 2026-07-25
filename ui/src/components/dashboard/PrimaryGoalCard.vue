@@ -2,6 +2,7 @@
 import { computed, onMounted } from 'vue'
 import { useProfileStore } from '@/stores/profile'
 import { useCountUp } from '@/composables/useCountUp'
+import ProgressRing from '@/components/common/ProgressRing.vue'
 
 const store = useProfileStore()
 
@@ -39,6 +40,16 @@ const days = computed(() => {
 
 const weeks = computed(() => (days.value != null ? Math.ceil(days.value / 7) : null))
 const animatedWeeks = useCountUp(weeks)
+
+// Rolling-horizon fill: an EventResponse carries no creation or plan-start date, so the dashboard
+// card cannot compute a true [start, target] elapsed fraction. Approximate against a fixed look-back
+// horizon — the honest date-based signal until GoalsView (17-3), which has the linked plan's
+// startDate, passes the real window. Driven by days rather than weeks so it advances daily.
+const HORIZON_DAYS = 168 // 24 weeks
+
+const fraction = computed(() =>
+  days.value != null ? Math.min(1, Math.max(0, 1 - days.value / HORIZON_DAYS)) : 0,
+)
 </script>
 
 <template>
@@ -52,25 +63,26 @@ const animatedWeeks = useCountUp(weeks)
         <span v-if="store.primaryEvent.sport">{{ store.primaryEvent.sport }} · </span>{{ formattedDate }}
       </p>
 
-      <!-- Race day / eve: headline instead of the week counter -->
-      <p
-        v-if="days != null && days <= 1"
-        class="mt-5 bg-[linear-gradient(180deg,var(--bryk-fg-0),#888c98)] bg-clip-text text-5xl font-bold leading-[0.9] tracking-[-0.05em] text-transparent"
-      >
-        {{ days <= 0 ? 'Today' : 'Tomorrow' }}
-      </p>
-
-      <div v-else class="mt-5 flex items-baseline gap-3">
-        <span
-          class="bg-[linear-gradient(180deg,var(--bryk-fg-0),#888c98)] bg-clip-text text-[88px] font-bold leading-[0.9] tracking-[-0.05em] tabular-nums text-transparent"
-        >
-          {{ animatedWeeks }}
-        </span>
-        <span class="flex flex-col gap-1">
-          <span class="eyebrow">weeks to go</span>
-          <span class="font-mono text-xs text-subtle">{{ days }} days</span>
-        </span>
-      </div>
+      <!-- Countdown through the shared ring; race day / eve swaps the centre for a headline -->
+      <ProgressRing class="mt-5" :fraction="fraction">
+        <template #center>
+          <span
+            v-if="days != null && days <= 1"
+            class="bg-[linear-gradient(180deg,var(--bryk-fg-0),#888c98)] bg-clip-text text-3xl font-bold leading-[0.9] tracking-[-0.05em] text-transparent"
+          >
+            {{ days <= 0 ? 'Today' : 'Tomorrow' }}
+          </span>
+          <template v-else>
+            <span
+              class="bg-[linear-gradient(180deg,var(--bryk-fg-0),#888c98)] bg-clip-text text-4xl font-bold leading-[0.9] tracking-[-0.05em] tabular-nums text-transparent"
+            >
+              {{ animatedWeeks }}
+            </span>
+            <span class="eyebrow">weeks to go</span>
+            <span class="font-mono text-xs text-subtle">{{ days }} days</span>
+          </template>
+        </template>
+      </ProgressRing>
     </div>
 
     <!-- Loading (goals not yet fetched) -->

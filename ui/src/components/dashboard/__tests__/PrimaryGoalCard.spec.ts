@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { mount, RouterLinkStub } from '@vue/test-utils'
 import { createTestingPinia } from '@pinia/testing'
 import PrimaryGoalCard from '@/components/dashboard/PrimaryGoalCard.vue'
+import ProgressRing from '@/components/common/ProgressRing.vue'
 import type { EventResponse, ProfileGoalsResponse } from '@/types/profile'
 
 function makeEvent(overrides: Partial<EventResponse> & { id: string }): EventResponse {
@@ -56,6 +57,34 @@ describe('PrimaryGoalCard', () => {
     // The past A-event is excluded; the future C-event surfaces.
     expect(wrapper.text()).toContain('Next Race')
     expect(wrapper.text()).not.toContain('Old Race')
+
+    wrapper.unmount()
+  })
+
+  it('renders a ProgressRing with the animated week count for a future event', () => {
+    const wrapper = mountCard([
+      makeEvent({ id: 'a', name: 'Boston Marathon', priority: 'A', eventDate: '2099-09-01' }),
+    ])
+
+    expect(wrapper.findComponent(ProgressRing).exists()).toBe(true)
+    expect(wrapper.text()).toContain('weeks to go')
+    expect(wrapper.text()).toContain('days')
+
+    wrapper.unmount()
+  })
+
+  it('renders "Today" through the ring centre for a same-day event', () => {
+    const now = new Date()
+    const iso = [
+      now.getUTCFullYear(),
+      String(now.getUTCMonth() + 1).padStart(2, '0'),
+      String(now.getUTCDate()).padStart(2, '0'),
+    ].join('-')
+    const wrapper = mountCard([makeEvent({ id: 'race', name: 'Race Day', priority: 'A', eventDate: iso })])
+
+    expect(wrapper.findComponent(ProgressRing).exists()).toBe(true)
+    expect(wrapper.text()).toContain('Today')
+    expect(wrapper.text()).not.toContain('weeks to go')
 
     wrapper.unmount()
   })
