@@ -5,13 +5,16 @@ import { Button } from '@/components/ui/button'
 import { Activity } from 'lucide-vue-next'
 import { useOnboardingStore } from '@/stores/onboarding'
 import AppShell from '@/components/layout/AppShell.vue'
-import PlaceholderCard from '@/components/dashboard/PlaceholderCard.vue'
 import PrimaryGoalCard from '@/components/dashboard/PrimaryGoalCard.vue'
 import RestingHrCard from '@/components/dashboard/RestingHrCard.vue'
+import SleepCard from '@/components/dashboard/SleepCard.vue'
 import ThisWeekCard from '@/components/dashboard/ThisWeekCard.vue'
 import WeeklyLoadCard from '@/components/dashboard/WeeklyLoadCard.vue'
+import WeightCard from '@/components/dashboard/WeightCard.vue'
+import HrvCard from '@/components/dashboard/HrvCard.vue'
 import FormCard from '@/components/dashboard/FormCard.vue'
 import RecentActivityCard from '@/components/dashboard/RecentActivityCard.vue'
+import WellnessQuickEntryCard from '@/components/wellness/WellnessQuickEntryCard.vue'
 
 const router = useRouter()
 const store = useOnboardingStore()
@@ -88,11 +91,17 @@ const formattedDate = computed(() => {
     <div class="stagger-in grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <WeeklyLoadCard />
       <RestingHrCard />
-      <PlaceholderCard
-        title="Sleep Avg"
-        subtitle="Post-v1 — needs a device or health-app integration."
-      />
+      <SleepCard />
       <FormCard />
+    </div>
+
+    <!-- Wellness: today's entry plus the two metrics with no tile of their own -->
+    <div class="stagger-in grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div class="lg:col-span-2">
+        <WellnessQuickEntryCard />
+      </div>
+      <WeightCard />
+      <HrvCard />
     </div>
 
     <!-- Middle row: training plan + primary goal -->
