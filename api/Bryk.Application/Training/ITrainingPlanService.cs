@@ -20,6 +20,14 @@ public interface ITrainingPlanService
     /// <summary>Returns one plan with its planned workouts; 404 if missing or foreign.</summary>
     Task<TrainingPlanResponse> GetByIdAsync(Guid id, CancellationToken ct = default);
 
+    /// <summary>
+    /// Replaces an owned plan's metadata (name, methodology, window, event link, periodization fields).
+    /// Planned workouts are untouched. 400 when the body is invalid, when the requested window would
+    /// strand existing planned workouts (ADR-0009 §5), or when EventId names an event the athlete does
+    /// not own; 404 when the plan is missing or foreign.
+    /// </summary>
+    Task<TrainingPlanResponse> UpdateAsync(Guid id, TrainingPlanUpdateRequest request, CancellationToken ct = default);
+
     /// <summary>Adds a planned workout to an owned plan; 404 if the plan is missing or foreign.</summary>
     Task<PlannedWorkoutResponse> AddPlannedWorkoutAsync(Guid planId, PlannedWorkoutDto request, CancellationToken ct = default);
 

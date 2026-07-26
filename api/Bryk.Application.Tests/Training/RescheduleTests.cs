@@ -19,7 +19,10 @@ public class RescheduleTests
             new TrainingPlanRequestValidator(),
             new PlannedWorkoutDtoValidator(),
             new ScheduleRequestValidator(),
-            repo, uow);
+            new TrainingPlanUpdateRequestValidator(),
+            repo,
+            new StubEventRepository(),
+            uow);
 
     private static TrainingPlan PlanWithWindow(DateOnly start, DateOnly end, Guid? planId = null, Guid? athleteId = null,
         Guid? pwId = null) =>
@@ -254,5 +257,17 @@ public class RescheduleTests
         public Task AddWorkoutStepAsync(WorkoutStep step, CancellationToken ct = default) => throw new NotImplementedException();
         public void UpdateWorkoutStep(WorkoutStep step) => throw new NotImplementedException();
         public void RemoveWorkoutStep(WorkoutStep step) => throw new NotImplementedException();
+    }
+
+    // Ctor filler only — RescheduleAsync never reads the event repository.
+    private sealed class StubEventRepository : IEventRepository
+    {
+        public Task<Event?> GetByIdAsync(Guid id, CancellationToken ct = default) => throw new NotImplementedException();
+        public Task<IReadOnlyList<Event>> GetByAthleteIdAsync(Guid athleteId, CancellationToken ct = default) => throw new NotImplementedException();
+        public Task<IReadOnlyList<Event>> GetByAthleteInRangeAsync(Guid athleteId, DateOnly start, DateOnly end, CancellationToken ct = default) => throw new NotImplementedException();
+        public Task<IReadOnlyList<Event>> GetAllAsync(CancellationToken ct = default) => throw new NotImplementedException();
+        public Task AddAsync(Event entity, CancellationToken ct = default) => throw new NotImplementedException();
+        public void Update(Event entity) => throw new NotImplementedException();
+        public void Delete(Event entity) => throw new NotImplementedException();
     }
 }

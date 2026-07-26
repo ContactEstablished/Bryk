@@ -12,7 +12,9 @@ public class TrainingPlanService(
     IValidator<TrainingPlanRequest> planValidator,
     IValidator<PlannedWorkoutDto> plannedWorkoutValidator,
     IValidator<ScheduleRequest> scheduleValidator,
+    IValidator<TrainingPlanUpdateRequest> updateValidator,
     ITrainingPlanRepository planRepo,
+    IEventRepository eventRepo,
     IUnitOfWork unitOfWork) : ITrainingPlanService
 {
     public async Task<TrainingPlanResponse> CreateAsync(TrainingPlanRequest request, CancellationToken ct = default)
@@ -58,6 +60,70 @@ public class TrainingPlanService(
     {
         var plan = await LoadOwnedPlanAsync(id, ct);
         return Map(plan);
+    }
+
+    public async Task<TrainingPlanResponse> UpdateAsync(Guid id, TrainingPlanUpdateRequest request, CancellationToken ct = default)
+    {
+        await updateValidator.ValidateOrThrowAsync(request, ct);
+
+        var plan = await LoadOwnedPlanAsync(id, ct);
+
+        // Orphan guard (ADR-0009 §5): a window that would leave existing planned workouts stranded is
+        // rejected — the client reschedules or removes them first. Window containment is inclusive on
+        // both ends (a workout scheduled exactly on StartDate or EndDate is NOT stranded).
+        var stranded = plan.PlannedWorkouts
+            .Where(pw => pw.ScheduledDate < request.StartDate || pw.ScheduledDate > request.EndDate)
+            .ToList();
+        if (stranded.Count > 0)
+        {
+            throw new Exceptions.ValidationException(new[]
+            {
+                $"PlanWindow: {stranded.Count} planned workout(s) fall outside the requested window " +
+                $"({request.StartDate:yyyy-MM-dd} to {request.EndDate:yyyy-MM-dd}); reschedule or remove them first " +
+                $"(earliest {stranded.Min(pw => pw.ScheduledDate):yyyy-MM-dd}, latest {stranded.Max(pw => pw.ScheduledDate):yyyy-MM-dd})."
+            });
+        }
+
+        // Event-ownership guard. A null EventId clears the link with no read.
+        if (request.EventId is { } eventId)
+        {
+            var ev = await eventRepo.GetByIdAsync(eventId, ct);
+            if (ev is null || ev.AthleteId != plan.AthleteId)
+            {
+                throw new Exceptions.ValidationException(new[]
+                {
+                    "EventId: The selected event does not exist or belongs to another athlete."
+                });
+            }
+        }
+
+        // Stage a fresh, nav-free entity: the loaded `plan` came from a no-tracking Include, so
+        // re-attaching it would drag PlannedWorkouts into the change tracker. CreatedAt is carried
+        // over; the interceptor sets UpdatedAt. Never set UpdatedAt here.
+        var updated = new TrainingPlan
+        {
+            Id = plan.Id,
+            AthleteId = plan.AthleteId,
+            Name = request.Name,
+            Methodology = request.Methodology,
+            StartDate = request.StartDate,
+            EndDate = request.EndDate,
+            EventId = request.EventId,
+            BuildWeeks = request.BuildWeeks,
+            RecoveryWeeks = request.RecoveryWeeks,
+            RecoveryWeekPercentage = request.RecoveryWeekPercentage,
+            CreatedAt = plan.CreatedAt
+        };
+
+        planRepo.Update(updated);
+        await unitOfWork.SaveChangesAsync(ct);
+
+        // TRAP: Map(updated) alone returns an EMPTY PlannedWorkouts — `updated` is nav-free by design
+        // (see the staging comment above). Re-attach the untouched children from the originally loaded
+        // `plan` for the projection only; do not mutate `updated.PlannedWorkouts` after SaveChangesAsync.
+        var response = Map(updated);
+        response.PlannedWorkouts = plan.PlannedWorkouts.OrderBy(pw => pw.ScheduledDate).Select(Map).ToList();
+        return response;
     }
 
     public async Task<PlannedWorkoutResponse> AddPlannedWorkoutAsync(Guid planId, PlannedWorkoutDto request, CancellationToken ct = default)
