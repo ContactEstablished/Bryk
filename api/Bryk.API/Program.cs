@@ -125,6 +125,7 @@ builder.Services.AddScoped<Bryk.Application.ActivityFiles.IActivityFileParser, B
 builder.Services.AddScoped<Bryk.Application.ActivityFiles.IActivityFileParser, Bryk.Infrastructure.ActivityFiles.TcxActivityParser>();
 builder.Services.AddScoped<Bryk.Application.ActivityFiles.IActivityFileParser, Bryk.Infrastructure.ActivityFiles.GpxActivityParser>();
 builder.Services.AddScoped<Bryk.Application.ActivityFiles.IActivityFileService, Bryk.Application.ActivityFiles.ActivityFileService>();
+builder.Services.AddScoped<Bryk.Application.Wellness.IWellnessService, Bryk.Application.Wellness.WellnessService>();
 
 var app = builder.Build();
 
