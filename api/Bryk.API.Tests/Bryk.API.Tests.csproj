@@ -21,4 +21,10 @@
     <ProjectReference Include="..\Bryk.API\Bryk.API.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Fixtures\ActivityFiles\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
