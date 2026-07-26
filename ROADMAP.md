@@ -46,7 +46,7 @@ Non-negotiable per phase. They constrain how prompts get written and how diffs g
 | 16 | Calendar & scheduling (reschedule, compliance coloring)                          | ✅ Complete       |
 | 17 | Goals & events surface (Goals page, ProgressRing, plan↔event links)              | ✅ Complete       |
 | 18 | ATP / periodization engine (weekly targets, ramp, taper)                         | ✅ Complete       |
-| 19 | Activity file import (.fit / .tcx / .gpx)                                        | ⏳ Planned        |
+| 19 | Activity file import (.fit / .tcx / .gpx)                                        | ✅ Complete       |
 | 20 | Wellness metrics (sleep, RHR, weight, soreness, HRV)                             | ⏳ Planned        |
 | 21 | Production hardening & deployment                                                | ⏳ Planned        |
 
@@ -524,7 +524,7 @@ Post-v1 expansion (v2 coach features, device sync, marketplace, virtual training
 
 ---
 
-## Phase 19 — Activity file import (.fit / .tcx / .gpx) ⏳
+## Phase 19 — Activity file import (.fit / .tcx / .gpx) ✅
 
 **Goal.** Upload a device file → parsed `Workout` with real actuals + zone data, matched to a planned workout — upgrading time-in-zone from "estimated" to sample-based for imports.
 
@@ -549,6 +549,8 @@ Post-v1 expansion (v2 coach features, device sync, marketplace, virtual training
 **Success criteria.** Committed test fixtures (.fit ride, .tcx run, .gpx activity) upload→preview→commit→appear in history with the correct IF branch driving load — pinned by a test asserting a powered bike import yields a TSS **different from** the HR-only fallback (the regression guard on ADR-0010 §3); import against a seeded same-day planned workout offers + links the match and the calendar shows real compliance; Progress shows `samples` method for imports; corrupt/oversized files fail clean with nothing persisted.
 
 **Estimated size.** **L** — 6 task docs (19-1 ADR-0010 + `ActivityFile` + migration; 19-2 parser abstraction + TCX/GPX + zone bucketing; 19-3 FIT parser; 19-4 endpoints + validation + commit; 19-5 review UI + match flow; 19-6 `samples` time-in-zone). Kicked off 2026-07-26 — see `md/Tasks-19-1.md` … `Tasks-19-6.md` and `md/Impl-19-1.md` … `Impl-19-6.md`.
+
+**Delivered 2026-07-26.** All six tasks landed, one commit each; see `md/handoffs/2026-07-26-phase-19-complete.md`. Exactly **one migration** (`AddActivityFile`) and exactly **one new package** (`Garmin.FIT.Sdk` 21.205.0, `Bryk.Infrastructure` only). `LoadCalculator.cs`, `Workout.cs` and `ExceptionHandlingMiddleware.cs` were not touched. Two carry-forwards: the `.fit` fixture and its six pinned parser tests are **deferred** (no real device-written file was available, and the task forbids synthesising one — the FIT parser ships with its failure-contract tests only), and the live `samples` badge state needs a dense-sample file: the committed 4-point TCX fixture measures 180 s of a 3600 s session, so the reachable live state is `mixed`.
 
 ---
 
