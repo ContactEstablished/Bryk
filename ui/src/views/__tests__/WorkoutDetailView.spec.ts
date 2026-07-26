@@ -81,7 +81,7 @@ const structure = {
   ],
 }
 
-async function mountView() {
+async function mountView(activityFiles: Record<string, unknown> = { source: null }) {
   const router = createRouter({ history: createMemoryHistory(), routes })
   await router.push('/workouts/w1')
   await router.isReady()
@@ -91,7 +91,10 @@ async function mountView() {
         router,
         createTestingPinia({
           createSpy: vi.fn,
-          initialState: { training: { currentWorkout: workout, structure } },
+          initialState: {
+            training: { currentWorkout: workout, structure },
+            activityFiles,
+          },
         }),
       ],
       stubs: { AppSidebar: true },
@@ -139,6 +142,24 @@ describe('WorkoutDetailView', () => {
     await confirmBtn!.trigger('click')
 
     expect(store.deleteWorkout).toHaveBeenCalledWith('w1')
+
+    wrapper.unmount()
+  })
+
+  it('renders the "from file" badge when the workout has a source file', async () => {
+    const { wrapper } = await mountView({
+      source: { id: 'f1', fileName: 'ride.tcx', format: 'Tcx', uploadedAt: '2026-07-26T10:00:00Z' },
+    })
+
+    expect(wrapper.text()).toContain('from file')
+
+    wrapper.unmount()
+  })
+
+  it('renders no badge for a manually logged workout', async () => {
+    const { wrapper } = await mountView({ source: null })
+
+    expect(wrapper.text()).not.toContain('from file')
 
     wrapper.unmount()
   })

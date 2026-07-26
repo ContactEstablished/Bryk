@@ -21,10 +21,13 @@ export async function apiFetch<T>(
 ): Promise<T | null> {
   const url = `${BASE_URL}${path}`
 
-  const headers: HeadersInit = {
-    'Content-Type': 'application/json',
-    ...init?.headers,
-  }
+  // A multipart body must NOT carry an explicit Content-Type: the browser has to set
+  // 'multipart/form-data; boundary=…' itself, and overriding it makes the server unable to
+  // locate the parts. Only default the JSON header for non-FormData bodies.
+  const headers: HeadersInit =
+    init?.body instanceof FormData
+      ? { ...init?.headers }
+      : { 'Content-Type': 'application/json', ...init?.headers }
 
   const response = await fetch(url, { ...init, headers })
 

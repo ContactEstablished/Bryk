@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import {
   Activity,
   Bike,
@@ -15,10 +16,15 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import TypePill from '@/components/common/TypePill.vue'
 import { sportToPillKind } from '@/components/common/pills'
+import ImportReviewCard from '@/components/import/ImportReviewCard.vue'
 import { useTrainingStore } from '@/stores/training'
+import { useActivityFilesStore } from '@/stores/activityFiles'
+import { ACCEPTED_EXTENSIONS, MAX_UPLOAD_BYTES } from '@/services/activityFiles'
 import type { PlannedSport } from '@/types/training'
 
 const store = useTrainingStore()
+const importStore = useActivityFilesStore()
+const router = useRouter()
 
 // Local filter state; applying a change reloads page 1 through the store.
 const sport = ref<PlannedSport | null>(null)
@@ -91,11 +97,96 @@ function formatDuration(totalSeconds: number): string {
 function formatDistance(meters: number): string {
   return `${(meters / 1000).toFixed(1)} km`
 }
+
+// --- activity-file import (Task 19-5) ---
+
+const fileInput = ref<HTMLInputElement | null>(null)
+const dragging = ref(false)
+
+// Client-side pre-checks only avoid a wasted upload; the server's validator is the authority.
+function handleFile(file: File | null | undefined) {
+  if (!file) return
+
+  const dot = file.name.lastIndexOf('.')
+  const extension = dot >= 0 ? file.name.slice(dot).toLowerCase() : ''
+  if (!ACCEPTED_EXTENSIONS.split(',').includes(extension)) {
+    importStore.uploadError = 'Only .fit, .tcx and .gpx files are supported.'
+    return
+  }
+  if (file.size > MAX_UPLOAD_BYTES) {
+    importStore.uploadError = 'That file is larger than the 25 MB limit.'
+    return
+  }
+
+  void importStore.upload(file)
+}
+
+function onFilePicked(event: Event) {
+  const input = event.target as HTMLInputElement
+  handleFile(input.files?.[0])
+  input.value = '' // let the same file be re-picked after a discard
+}
+
+function onDrop(event: DragEvent) {
+  dragging.value = false
+  handleFile(event.dataTransfer?.files?.[0])
+}
+
+function onCommitted(workoutId: string) {
+  void router.push(`/workouts/${workoutId}`)
+}
+
+function onCancelled() {
+  importStore.reset()
+  apply()
+}
 </script>
 
 <template>
   <AppShell title="Workouts" subtitle="Your completed training history.">
     <div class="mx-auto w-full max-w-3xl space-y-5">
+      <!-- Import: drop zone, replaced by the review card once a file has been parsed -->
+      <ImportReviewCard
+        v-if="importStore.preview"
+        @committed="onCommitted"
+        @cancelled="onCancelled"
+      />
+
+      <div
+        v-else
+        class="card-surface flex flex-col items-center gap-2 border-dashed p-5 transition-colors duration-[120ms]"
+        :class="dragging ? 'border-primary bg-primary-glow' : ''"
+        @dragover.prevent="dragging = true"
+        @dragleave.prevent="dragging = false"
+        @drop.prevent="onDrop"
+      >
+        <p class="text-sm text-muted-foreground">
+          Drop a <span class="font-mono text-[11px]">.fit</span>,
+          <span class="font-mono text-[11px]">.tcx</span> or
+          <span class="font-mono text-[11px]">.gpx</span> file here
+        </p>
+
+        <p v-if="importStore.uploading" class="text-sm text-muted-foreground">Parsing…</p>
+        <Button v-else type="button" variant="outline" size="sm" @click="fileInput?.click()">
+          Import file
+        </Button>
+
+        <input
+          ref="fileInput"
+          type="file"
+          class="sr-only"
+          :accept="ACCEPTED_EXTENSIONS"
+          @change="onFilePicked"
+        />
+
+        <p
+          v-if="importStore.uploadError"
+          class="rounded-md bg-destructive/10 px-4 py-3 text-sm text-destructive"
+        >
+          {{ importStore.uploadError }}
+        </p>
+      </div>
+
       <!-- Filter bar -->
       <div class="card-surface flex flex-wrap items-end gap-4 p-4">
         <div class="space-y-2">

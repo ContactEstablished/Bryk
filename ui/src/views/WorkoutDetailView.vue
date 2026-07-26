@@ -9,12 +9,14 @@ import TypePill from '@/components/common/TypePill.vue'
 import { sportToPillKind } from '@/components/common/pills'
 import LogWorkoutForm from '@/components/training/LogWorkoutForm.vue'
 import { useTrainingStore } from '@/stores/training'
+import { useActivityFilesStore } from '@/stores/activityFiles'
 import { ApiError } from '@/services/api'
 import type { WorkoutStepResponse } from '@/types/training'
 
 const route = useRoute()
 const router = useRouter()
 const store = useTrainingStore()
+const activityFilesStore = useActivityFilesStore()
 
 const id = computed(() => String(route.params.id))
 const editing = ref(false)
@@ -23,6 +25,8 @@ const deleteError = ref<string | null>(null)
 
 async function load() {
   await store.loadWorkout(id.value)
+  // The "from file" badge is a reverse lookup (ADR-0010 §4) — there is no field on the workout read.
+  await activityFilesStore.loadSource(id.value)
   const w = store.currentWorkout
   if (w?.plannedWorkoutId && w.trainingPlanId) {
     await store.loadStructure(w.trainingPlanId, w.plannedWorkoutId)
@@ -156,6 +160,13 @@ async function confirmDelete() {
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div class="flex items-center gap-3">
             <TypePill :kind="sportToPillKind(workout.sport)">{{ workout.sport }}</TypePill>
+            <span
+              v-if="activityFilesStore.source"
+              class="rounded border border-border px-1.5 py-px font-mono text-[9px] uppercase tracking-[0.08em] text-muted-foreground"
+              :title="activityFilesStore.source.fileName"
+            >
+              from file
+            </span>
             <span class="font-mono text-sm text-muted-foreground">{{ formatDay(workout.completedDate) }}</span>
           </div>
           <div class="flex items-center gap-2">
