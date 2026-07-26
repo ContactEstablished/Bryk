@@ -47,7 +47,7 @@ Non-negotiable per phase. They constrain how prompts get written and how diffs g
 | 17 | Goals & events surface (Goals page, ProgressRing, plan↔event links)              | ✅ Complete       |
 | 18 | ATP / periodization engine (weekly targets, ramp, taper)                         | ✅ Complete       |
 | 19 | Activity file import (.fit / .tcx / .gpx)                                        | ✅ Complete       |
-| 20 | Wellness metrics (sleep, RHR, weight, soreness, HRV)                             | 🚧 Specs ready    |
+| 20 | Wellness metrics (sleep, RHR, weight, soreness, HRV)                             | ✅ Complete       |
 | 21 | Production hardening & deployment                                                | ⏳ Planned        |
 
 Post-v1 expansion (v2 coach features, device sync, marketplace, virtual training, etc.) is tracked in `md/product/feature-parity-trainingpeaks.md` and folded back into this roadmap only when a candidate gets scoped.
@@ -554,7 +554,7 @@ Post-v1 expansion (v2 coach features, device sync, marketplace, virtual training
 
 ---
 
-## Phase 20 — Wellness metrics (sleep, RHR, weight, soreness, HRV) ⏳
+## Phase 20 — Wellness metrics (sleep, RHR, weight, soreness, HRV) ✅
 
 **Goal.** Manual daily wellness entry — sleep, resting HR, weight, soreness, HRV — turning on the Sleep placeholder tile and giving Resting HR a real history trend.
 
@@ -577,6 +577,8 @@ Post-v1 expansion (v2 coach features, device sync, marketplace, virtual training
 **Estimated size.** **M** — 4 task docs (20-1 ADR-0011 + entity + repo + migration; 20-2 endpoints + validators + summary math; 20-3 types/store/`ScaleSelector` + entry form; 20-4 tiles + dashboard wiring). Kicked off 2026-07-26 — see `md/Tasks-20-1.md` … `Tasks-20-4.md` and `md/Impl-20-1.md` … `Impl-20-4.md`.
 
 **Two verified hazards the specs encode** (both confirmed against the code at kickoff, neither obvious from this entry): `Program.cs:32–33` sets `SuppressModelStateInvalidFilter = true`, so a `{date}` route segment that fails to bind does **not** 400 — it arrives as `default(DateOnly)` and the action still runs; the PUT therefore carries **both** a `{date:datetime}` route constraint (malformed → 404) and a validator `default` guard (→ 400), and neither alone is sufficient. And `BrykWebApplicationFactory` runs on EF InMemory, whose own doc comment records that it enforces **no unique index** — so the `{AthleteId, Date}` constraint is verified by reading the generated migration, while the *behaviour* is proven by a service-side "PUT twice, count rows" test.
+
+**Delivered 2026-07-26.** All four tasks landed, one commit each; see `md/handoffs/2026-07-26-phase-20-complete.md`. Exactly **one migration** (`AddDailyWellness`) and **zero** new packages. `Athlete.cs`, `DeltaChip.vue`, `LogWorkoutForm.vue` and every PMC/load calculator were not touched. **All success criteria met and observed at runtime**, against real SQL Server with the unique index live: a duplicate `{AthleteId, Date}` insert is rejected with error 2601, ten repeated PUTs to one date leave exactly **one** row, the `Athletes` row is byte-identical before and after (`48|74.50`), `PUT /wellness/not-a-date` → **404** and `/0001-01-01` → **400**, and the dashboard's Sleep tile shows a real 7-day average with a sparkline while Resting HR reads **46 bpm** from logged entries rather than the onboarding constant 48. Both hazards above held exactly as specified. One spec expectation was wrong rather than the code: a date-with-time segment (`…/2026-07-25T10:00:00`) returns **200**, not 400/404, because ASP.NET Core's `DateOnly` binder accepts an ISO datetime and truncates it — the request canonicalises to a valid non-future date, so no bad date reaches the database (recorded as a carry-forward, not a defect).
 
 ---
 
