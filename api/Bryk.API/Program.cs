@@ -120,6 +120,10 @@ builder.Services.AddScoped<Bryk.Application.Training.Workouts.IWorkoutService, B
 builder.Services.AddScoped<Bryk.Application.Analytics.IAnalyticsService, Bryk.Application.Analytics.AnalyticsService>();
 builder.Services.AddScoped<Bryk.Application.Calendar.ICalendarService, Bryk.Application.Calendar.CalendarService>();
 builder.Services.AddScoped<Bryk.Application.Training.Periodization.IPeriodizationService, Bryk.Application.Training.Periodization.PeriodizationService>();
+builder.Services.AddScoped<Bryk.Application.ActivityFiles.IActivityFileParser, Bryk.Infrastructure.ActivityFiles.FitActivityParser>();
+builder.Services.AddScoped<Bryk.Application.ActivityFiles.IActivityFileParser, Bryk.Infrastructure.ActivityFiles.TcxActivityParser>();
+builder.Services.AddScoped<Bryk.Application.ActivityFiles.IActivityFileParser, Bryk.Infrastructure.ActivityFiles.GpxActivityParser>();
+builder.Services.AddScoped<Bryk.Application.ActivityFiles.IActivityFileService, Bryk.Application.ActivityFiles.ActivityFileService>();
 
 var app = builder.Build();
 
