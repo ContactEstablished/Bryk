@@ -3,10 +3,13 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bryk.API.Tests.Fixtures;
+using Bryk.Application.ActivityFiles;
 using Bryk.Application.Analytics;
 using Bryk.Application.Training.Workouts;
 using Bryk.Domain.Entities;
+using Bryk.Infrastructure.Data;
 using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace Bryk.API.Tests.Analytics;
@@ -257,5 +260,82 @@ public class AnalyticsControllerTests
             + result.MethodBreakdown.UnclassifiedSeconds).Should().Be(result.TotalSeconds);
         result.Zones.Should().HaveCount(5);
         result.Zones.Sum(z => z.Seconds).Should().Be(0);
+    }
+
+    [Fact]
+    public async Task TimeInZone_WithNoImportedFiles_ReportsZeroSampleSeconds()
+    {
+        await using var factory = new BrykWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var day = Today.AddDays(-3);
+        await client.PostAsJsonAsync("/api/v1/workouts", LogWithOverride(day, 50m));
+
+        var result = await client.GetFromJsonAsync<TimeInZoneResponse>(
+            $"/api/v1/analytics/time-in-zone?from={Iso(day.AddDays(-1))}&to={Iso(Today)}", JsonOptions);
+
+        result!.MethodBreakdown.SampleSeconds.Should().Be(0);
+        result.MethodBreakdown.UnclassifiedSeconds.Should().Be(3600);
+        result.TotalSeconds.Should().Be(3600);
+    }
+
+    [Fact]
+    public async Task TimeInZone_AfterCommittingAnImportedFile_ReportsSampleSeconds()
+    {
+        await using var factory = new BrykWebApplicationFactory();
+
+        // Seed a bike FTP so the imported ride's power samples resolve into real zone bands — without a
+        // threshold the athlete has no zone model and every sample would fall out of the histogram.
+        using (var scope = factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            db.Athletes.Add(new Athlete
+            {
+                Id = BrykWebApplicationFactory.TestAthleteId,
+                Name = "Test Athlete",
+                Gender = Gender.Male,
+                DateOfBirth = new DateOnly(1990, 1, 1),
+                HeightCm = 180,
+                WeightKg = 75,
+                TypicalWeeklyHours = 10,
+                Methodology = MethodologyChoice.Polarized
+            });
+            db.AthleteSportProfiles.Add(new AthleteSportProfile
+            {
+                Id = Guid.NewGuid(),
+                AthleteId = BrykWebApplicationFactory.TestAthleteId,
+                Sport = Sport.Bike,
+                IsActive = true,
+                ThresholdValue = 200m
+            });
+            await db.SaveChangesAsync();
+        }
+
+        var client = factory.CreateClient();
+
+        var form = new MultipartFormDataContent();
+        var bytes = await File.ReadAllBytesAsync(
+            Path.Combine(AppContext.BaseDirectory, "Fixtures", "ActivityFiles", "sample-ride.tcx"));
+        form.Add(new ByteArrayContent(bytes), "file", "sample-ride.tcx");
+
+        var uploaded = await client.PostAsync("/api/v1/activityfiles", form);
+        uploaded.StatusCode.Should().Be(HttpStatusCode.Created);
+        var preview = await uploaded.Content.ReadFromJsonAsync<ActivityFileUploadResponse>(JsonOptions);
+
+        var committed = await client.PostAsJsonAsync(
+            $"/api/v1/activityfiles/{preview!.Id}/commit", new CommitActivityFileRequest());
+        committed.StatusCode.Should().Be(HttpStatusCode.Created);
+
+        // The ride fixture is dated 2026-06-02.
+        var rideDate = new DateOnly(2026, 6, 2);
+        var result = await client.GetFromJsonAsync<TimeInZoneResponse>(
+            $"/api/v1/analytics/time-in-zone?from={Iso(rideDate.AddDays(-1))}&to={Iso(rideDate.AddDays(1))}",
+            JsonOptions);
+
+        result.Should().NotBeNull();
+        result!.MethodBreakdown.SampleSeconds.Should().BePositive();
+        (result.MethodBreakdown.SampleSeconds + result.MethodBreakdown.StructureSeconds
+            + result.MethodBreakdown.SessionAvgSeconds + result.MethodBreakdown.UnclassifiedSeconds)
+            .Should().Be(result.TotalSeconds);
     }
 }

@@ -49,13 +49,15 @@ export interface WeeklyLoadResponse {
   optimalBand: OptimalBand | null
 }
 
-// Coarse, estimated time-in-zone (ADR-0007 §4). zoneNumber 1..5.
+// Time-in-zone (ADR-0007 §4, ADR-0010 §5). zoneNumber 1..5. Sample-derived seconds are measured from an
+// imported file's histogram; the other three provenances are estimates.
 export interface ZoneTime {
   zoneNumber: number
   seconds: number
 }
 
 export interface ZoneTimeMethodBreakdown {
+  sampleSeconds: number
   structureSeconds: number
   sessionAvgSeconds: number
   unclassifiedSeconds: number

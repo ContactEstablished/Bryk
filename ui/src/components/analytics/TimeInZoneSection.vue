@@ -57,6 +57,25 @@ const segments = computed(() => {
 })
 
 const pct = (seconds: number) => `${(seconds / total.value) * 100}%`
+
+const sampleSeconds = computed(() => timeInZone.value?.methodBreakdown.sampleSeconds ?? 0)
+
+// samples = every second in the window came from an imported file; mixed = some did; estimated = none.
+const provenance = computed<'samples' | 'mixed' | 'estimated'>(() => {
+  if (sampleSeconds.value === 0) return 'estimated'
+  return sampleSeconds.value === total.value ? 'samples' : 'mixed'
+})
+
+const provenanceParts = computed(() => {
+  const b = timeInZone.value?.methodBreakdown
+  if (!b) return []
+  const parts: string[] = []
+  if (b.sampleSeconds > 0) parts.push(`device samples (${formatHm(b.sampleSeconds)})`)
+  if (b.structureSeconds > 0) parts.push(`planned structure (${formatHm(b.structureSeconds)})`)
+  if (b.sessionAvgSeconds > 0) parts.push(`session HR (${formatHm(b.sessionAvgSeconds)})`)
+  if (b.unclassifiedSeconds > 0) parts.push(`unclassified (${formatHm(b.unclassifiedSeconds)})`)
+  return parts
+})
 </script>
 
 <template>
@@ -66,9 +85,10 @@ const pct = (seconds: number) => `${(seconds / total.value) * 100}%`
         <div class="flex items-center gap-2">
           <h2 class="text-[15px] font-semibold tracking-[-0.02em] text-foreground">Time in Zone</h2>
           <span
-            class="rounded border border-border px-1.5 py-px font-mono text-[9px] uppercase tracking-[0.08em] text-warn"
+            class="rounded border border-border px-1.5 py-px font-mono text-[9px] uppercase tracking-[0.08em]"
+            :class="provenance === 'samples' ? 'text-primary-hi' : 'text-warn'"
           >
-            estimated
+            {{ provenance }}
           </span>
         </div>
         <span class="eyebrow text-faint">Last 90 days · intensity distribution</span>
@@ -107,16 +127,13 @@ const pct = (seconds: number) => `${(seconds / total.value) * 100}%`
         </span>
       </div>
 
-      <!-- honest provenance behind the "estimated" badge -->
+      <!-- honest provenance behind the badge -->
       <p class="font-mono text-[11px] text-faint">
-        Estimated from
-        <span v-if="timeInZone!.methodBreakdown.structureSeconds > 0">
-          planned structure ({{ formatHm(timeInZone!.methodBreakdown.structureSeconds) }})</span
-        ><span v-if="timeInZone!.methodBreakdown.sessionAvgSeconds > 0">
-          · session HR ({{ formatHm(timeInZone!.methodBreakdown.sessionAvgSeconds) }})</span
-        ><span v-if="timeInZone!.methodBreakdown.unclassifiedSeconds > 0">
-          · unclassified ({{ formatHm(timeInZone!.methodBreakdown.unclassifiedSeconds) }})</span
-        >. Real sample data lands with file import.
+        {{ sampleSeconds > 0 ? 'Measured from' : 'Estimated from' }} {{ provenanceParts.join(' · ') }}.<span
+          v-if="sampleSeconds === 0"
+        >
+          Import a device file for real sample data.</span
+        >
       </p>
     </template>
 

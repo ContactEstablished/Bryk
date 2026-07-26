@@ -8,11 +8,14 @@ public class ZoneTimeDto
     public int Seconds { get; set; }
 }
 
-// How the histogram's seconds were derived (ADR-0007 §4): planned structure for linked workouts, coarse
-// session AvgHr otherwise, else unclassified. The three sum to TotalSeconds — the honest provenance behind
-// the always-"estimated" badge (no sample-derived zone time until Phase 19 file import).
+// How the histogram's seconds were derived, in precedence order (ADR-0007 §4, ADR-0010 §5): an imported
+// file's measured per-zone histogram first, then planned structure for linked workouts, then coarse
+// session AvgHr, else unclassified. The four sum to TotalSeconds. SampleSeconds is the only one that is
+// measured rather than estimated — it comes from a device file's samples bucketed against the athlete's
+// own zones at commit — and it is what lets the UI's badge stop saying "estimated".
 public class ZoneTimeMethodBreakdownDto
 {
+    public int SampleSeconds { get; set; }
     public int StructureSeconds { get; set; }
     public int SessionAvgSeconds { get; set; }
     public int UnclassifiedSeconds { get; set; }

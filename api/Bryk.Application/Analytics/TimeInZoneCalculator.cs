@@ -1,13 +1,16 @@
+using Bryk.Application.ActivityFiles;
 using Bryk.Application.Zones;
 using Bryk.Domain.Entities;
 
 namespace Bryk.Application.Analytics;
 
 /// <summary>
-/// Pure, coarse, honestly-"estimated" time-in-zone (ADR-0007 §4, ROADMAP math conventions). No I/O — the
-/// caller passes the completed workouts, the linked planned structures, the athlete's zones, and MaxHr.
-/// Builds a 5-bucket intensity histogram (seconds) with a structure / sessionAvg / unclassified breakdown
-/// that sums to the total. Stays coarse until Phase 19 supplies real samples.
+/// Pure time-in-zone (ADR-0007 §4, ADR-0010 §5, ROADMAP math conventions). No I/O — the caller passes the
+/// completed workouts, the linked planned structures, the athlete's zones, MaxHr, and the per-zone
+/// histograms of any workout that came from an imported file. Builds a 5-bucket intensity histogram
+/// (seconds) with a samples / structure / sessionAvg / unclassified breakdown that sums to the total.
+/// Sample-derived seconds are measured; the other three are estimates, and samples win outright for a
+/// covered workout.
 /// </summary>
 public static class TimeInZoneCalculator
 {
@@ -17,15 +20,45 @@ public static class TimeInZoneCalculator
         IReadOnlyList<Workout> workouts,
         IReadOnlyDictionary<Guid, PlannedWorkout> structures,
         ZonesResponse zones,
-        int? maxHr)
+        int? maxHr,
+        IReadOnlyDictionary<Guid, IReadOnlyList<ZoneHistogramEntry>> sampleHistograms)
     {
         var zoneSeconds = new int[ZoneCount + 1]; // index 1..5
+        var sampleSeconds = 0;
         var structureSeconds = 0;
         var sessionAvgSeconds = 0;
         var unclassifiedSeconds = 0;
 
         foreach (var workout in workouts)
         {
+            // 0. samples — an imported file's measured per-zone histogram (ADR-0010 §5). It wins outright
+            // over structure and sessionAvg: those are estimates of the same time. A histogram that sums
+            // to zero is treated as absent (the file carried no usable signal) and the workout falls
+            // through to the estimate chain below.
+            if (sampleHistograms.TryGetValue(workout.Id, out var histogram) && histogram.Count > 0)
+            {
+                var measured = 0;
+                foreach (var bucket in histogram)
+                {
+                    // Out-of-range zone numbers are ignored, not clamped: ZoneHistogramCalculator already
+                    // collapsed to 1..5, so anything else is corrupt data and must not fold into bucket 5.
+                    if (bucket.ZoneNumber >= 1 && bucket.ZoneNumber <= ZoneCount && bucket.Seconds > 0)
+                    {
+                        zoneSeconds[bucket.ZoneNumber] += bucket.Seconds;
+                        measured += bucket.Seconds;
+                    }
+                }
+
+                if (measured > 0)
+                {
+                    sampleSeconds += measured;
+                    // Samples with no usable signal are not measured time; attribute the remainder of the
+                    // session honestly rather than shrinking the athlete's total training time.
+                    unclassifiedSeconds += Math.Max(0, (workout.ActualDurationSeconds ?? 0) - measured);
+                    continue;
+                }
+            }
+
             var planned = workout.PlannedWorkoutId is { } pid
                           && structures.TryGetValue(pid, out var p)
                           && p.Blocks.Count > 0
@@ -85,11 +118,12 @@ public static class TimeInZoneCalculator
             Zones = zoneList,
             MethodBreakdown = new ZoneTimeMethodBreakdownDto
             {
+                SampleSeconds = sampleSeconds,
                 StructureSeconds = structureSeconds,
                 SessionAvgSeconds = sessionAvgSeconds,
                 UnclassifiedSeconds = unclassifiedSeconds
             },
-            TotalSeconds = structureSeconds + sessionAvgSeconds + unclassifiedSeconds
+            TotalSeconds = sampleSeconds + structureSeconds + sessionAvgSeconds + unclassifiedSeconds
         };
     }
 

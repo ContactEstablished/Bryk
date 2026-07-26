@@ -1,3 +1,5 @@
+using System.Text.Json;
+using Bryk.Application.ActivityFiles;
 using Bryk.Application.Common;
 using Bryk.Application.Common.Validation;
 using Bryk.Application.Training.Load;
@@ -15,12 +17,16 @@ public class AnalyticsService(
     IWorkoutRepository workoutRepo,
     ITrainingPlanRepository planRepo,
     IAthleteRepository athleteRepo,
+    IActivityFileRepository fileRepo,
     IZoneService zoneService) : IAnalyticsService
 {
     // Bounded warm-up before `from` so the EWMA is primed; 180 days ≫ the 42-day CTL constant (ADR-0006 §2).
     private const int LookbackDays = 180;
 
     private const int DefaultWeeks = 8;
+
+    // The same defaults Task 19-4 serializes the histogram with, so camelCase names round-trip.
+    private static readonly JsonSerializerOptions HistogramJsonOptions = new(JsonSerializerDefaults.Web);
 
     public async Task<IReadOnlyList<DailyLoadDto>> GetDailyLoadAsync(DateOnly? from, DateOnly? to, CancellationToken ct = default)
     {
@@ -139,7 +145,35 @@ public class AnalyticsService(
         var zones = await zoneService.GetZonesAsync(ct);
         var athlete = await athleteRepo.GetWithSportProfilesAsync(athleteId, ct);
 
-        return TimeInZoneCalculator.Compute(workouts, structures, zones, athlete?.MaxHr);
+        // Sample-derived histograms for any workout in this range that came from an imported file
+        // (ADR-0010 §5). The reverse lookup never loads the file bytes. The ids are the already
+        // sport-filtered list, so a ?sport= query narrows the file lookup too.
+        var files = await fileRepo.GetByParsedWorkoutIdsAsync(athleteId, workouts.Select(w => w.Id), ct);
+        var sampleHistograms = new Dictionary<Guid, IReadOnlyList<ZoneHistogramEntry>>();
+        foreach (var file in files)
+        {
+            if (file.ParsedWorkoutId is not { } workoutId || string.IsNullOrWhiteSpace(file.ZoneHistogramJson))
+            {
+                continue;
+            }
+
+            List<ZoneHistogramEntry>? entries;
+            try
+            {
+                entries = JsonSerializer.Deserialize<List<ZoneHistogramEntry>>(file.ZoneHistogramJson, HistogramJsonOptions);
+            }
+            catch (JsonException)
+            {
+                continue; // a malformed stored histogram degrades to the estimate chain, never to a 500
+            }
+
+            if (entries is { Count: > 0 })
+            {
+                sampleHistograms[workoutId] = entries;
+            }
+        }
+
+        return TimeInZoneCalculator.Compute(workouts, structures, zones, athlete?.MaxHr, sampleHistograms);
     }
 
     // Reduce a completed Workout to its peak-relevant figures. Pace is the honest session avg (distance ÷
