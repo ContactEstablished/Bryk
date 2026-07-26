@@ -119,6 +119,41 @@ export interface TrainingPlanRequest {
   plannedWorkouts: PlannedWorkoutDto[]
 }
 
+// Mirrors Bryk.Application.Training.TrainingPlanUpdateRequest (Task 18-2). Metadata only —
+// planned workouts are edited through their own endpoints. recoveryWeekPercentage is percent-scale
+// (60 = 60% of a build week, ADR-0009 §6); eventId null clears the link.
+export interface TrainingPlanUpdateRequest {
+  name: string
+  methodology: MethodologyChoice
+  startDate: string
+  endDate: string
+  eventId: string | null
+  buildWeeks: number | null
+  recoveryWeeks: number | null
+  recoveryWeekPercentage: number | null
+}
+
+// Mirrors Bryk.Application.Training.Periodization.* (Task 18-3).
+export type TargetBaselineSource = 'None' | 'TrailingActual' | 'FirstWeekPlanned'
+
+export interface WeeklyTargetWeek {
+  weekStart: string
+  targetLoad: number
+  isRecoveryWeek: boolean
+  isTaperWeek: boolean
+  plannedLoad: number
+  actualLoad: number
+}
+
+export interface WeeklyTargetsResponse {
+  planId: string
+  startDate: string
+  endDate: string
+  baseline: number | null
+  baselineSource: TargetBaselineSource
+  weeks: WeeklyTargetWeek[]
+}
+
 // ── Structured-workout payload (Task 10-4 / ADR-0004 §2), mirroring the backend DTOs ──
 
 export type StepIntent = 'Warmup' | 'Work' | 'Recovery' | 'Cooldown' | 'Rest'

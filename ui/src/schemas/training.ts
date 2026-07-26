@@ -43,6 +43,37 @@ export const trainingPlanSchema = z
 
 export type TrainingPlanFormValues = z.infer<typeof trainingPlanSchema>
 
+// ── Plan metadata edit (Task 18-4) ─────────────
+// Bounds mirror TrainingPlanUpdateRequestValidator exactly (1–8, ≥1, 30–90 percent — ADR-0009 §6).
+// Client bounds are a UX convenience; the server stays authoritative. No cross-field "all three or
+// none" rule: a partial cadence is legal and reads as "no cadence" (ADR-0009 §2).
+export const planMetadataSchema = z
+  .object({
+    name: z
+      .string()
+      .min(1, 'Plan name is required')
+      .max(200, 'Name must be 200 characters or fewer'),
+    methodology: z.enum(['Pyramidal', 'Periodization', 'Polarized', 'Norwegian'], {
+      message: 'Please select a methodology',
+    }),
+    startDate: z.string().min(1, 'Start date is required'),
+    endDate: z.string().min(1, 'End date is required'),
+    eventId: z.string(),
+    buildWeeks: optionalNumber(
+      z.coerce.number().int('Whole number').gte(1, 'Must be at least 1').lte(8, 'Must be 8 or fewer'),
+    ),
+    recoveryWeeks: optionalNumber(z.coerce.number().int('Whole number').gte(1, 'Must be at least 1')),
+    recoveryWeekPercentage: optionalNumber(
+      z.coerce.number().gte(30, 'Must be at least 30').lte(90, 'Must be 90 or less'),
+    ),
+  })
+  .refine((d) => !d.startDate || !d.endDate || d.endDate >= d.startDate, {
+    message: 'End date must be on or after start date',
+    path: ['endDate'],
+  })
+
+export type PlanMetadataFormValues = z.infer<typeof planMetadataSchema>
+
 // ── Structured-workout builder (Task 10-5) ─────────────
 
 // Form shape — orderIndex is positional (assigned at submit), so it is not a form field.

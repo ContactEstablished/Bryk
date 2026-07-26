@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import TypePill from '@/components/common/TypePill.vue'
 import { sportToPillKind } from '@/components/common/pills'
 import WorkoutStructureBuilder from '@/components/training/WorkoutStructureBuilder.vue'
+import PeriodizationPanel from '@/components/training/PeriodizationPanel.vue'
 import { useTrainingStore } from '@/stores/training'
 import type { PlannedSport, PlannedWorkoutResponse } from '@/types/training'
 
@@ -63,15 +64,7 @@ function formatDay(iso: string): string {
       <p v-else-if="!plan" class="card-surface p-6 text-sm text-muted-foreground">Plan not found.</p>
 
       <template v-else>
-        <!-- Plan header (read-only; metadata editing is Phase 18) -->
-        <div class="card-surface p-6">
-          <h2 class="text-lg font-semibold">{{ plan.name }}</h2>
-          <p class="mt-1 flex flex-wrap gap-x-3 font-mono text-[12px] text-muted-foreground">
-            <span>{{ plan.methodology }}</span>
-            <span>{{ formatDay(plan.startDate) }} – {{ formatDay(plan.endDate) }}</span>
-            <span v-if="plan.eventId">Linked to an event</span>
-          </p>
-        </div>
+        <PeriodizationPanel :plan="plan" />
 
         <!-- Planned workouts -->
         <div class="card-surface">

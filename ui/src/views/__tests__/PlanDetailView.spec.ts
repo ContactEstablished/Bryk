@@ -3,6 +3,7 @@ import { mount } from '@vue/test-utils'
 import { createTestingPinia } from '@pinia/testing'
 import { createMemoryHistory, createRouter } from 'vue-router'
 import PlanDetailView from '@/views/PlanDetailView.vue'
+import PeriodizationPanel from '@/components/training/PeriodizationPanel.vue'
 import type { TrainingPlanResponse } from '@/types/training'
 
 const stubView = { template: '<div />' }
@@ -45,7 +46,10 @@ async function mountView() {
     global: {
       plugins: [
         router,
-        createTestingPinia({ createSpy: vi.fn, initialState: { training: { currentPlan: plan } } }),
+        createTestingPinia({
+          createSpy: vi.fn,
+          initialState: { training: { currentPlan: plan, weeklyTargets: null }, goals: { events: [] } },
+        }),
       ],
       stubs: { AppSidebar: true },
     },
@@ -61,6 +65,15 @@ describe('PlanDetailView', () => {
     expect(wrapper.text()).toContain('Spring Base')
     expect(wrapper.text()).toContain('Threshold 4x8')
     expect(wrapper.text()).toContain('Bike')
+
+    wrapper.unmount()
+  })
+
+  it('renders the periodization panel instead of the read-only header', async () => {
+    const { wrapper } = await mountView()
+
+    expect(wrapper.findComponent(PeriodizationPanel).exists()).toBe(true)
+    expect(wrapper.text()).toContain('Spring Base')
 
     wrapper.unmount()
   })

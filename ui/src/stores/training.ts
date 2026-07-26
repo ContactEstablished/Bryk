@@ -6,6 +6,8 @@ import {
   createPlan as createPlanApi,
   getPlans as getPlansApi,
   getPlan as getPlanApi,
+  updatePlan as updatePlanApi,
+  getWeeklyTargets as getWeeklyTargetsApi,
   getStructure as getStructureApi,
   saveStructure as saveStructureApi,
   logWorkout as logWorkoutApi,
@@ -20,6 +22,8 @@ import type {
   ThisWeekResponse,
   TrainingPlanRequest,
   TrainingPlanResponse,
+  TrainingPlanUpdateRequest,
+  WeeklyTargetsResponse,
   PlannedWorkoutResponse,
   WorkoutStructureRequest,
   WorkoutResponse,
@@ -84,6 +88,34 @@ export const useTrainingStore = defineStore('training', () => {
     } finally {
       loadingPlan.value = false
     }
+  }
+
+  // ── Periodization (Task 18-4): compute-on-read targets + the plan-metadata write ──
+  const weeklyTargets = ref<WeeklyTargetsResponse | null>(null)
+  const loadingTargets = ref(false)
+  const targetsError = ref<ApiError | Error | null>(null)
+
+  async function loadWeeklyTargets(id: string) {
+    loadingTargets.value = true
+    targetsError.value = null
+    weeklyTargets.value = null
+    try {
+      weeklyTargets.value = await getWeeklyTargetsApi(id)
+    } catch (e) {
+      targetsError.value = e as ApiError | Error
+    } finally {
+      loadingTargets.value = false
+    }
+  }
+
+  // The PUT returns server truth including the plan's untouched planned workouts, so it can replace
+  // currentPlan outright — no second loadPlan. A window/cadence/event change reshapes the whole ramp,
+  // so targets are re-read after. Re-throws so the form can map the 400 (mirrors updateWorkout).
+  async function updatePlan(id: string, req: TrainingPlanUpdateRequest): Promise<TrainingPlanResponse> {
+    const updated = await updatePlanApi(id, req)
+    currentPlan.value = updated
+    await loadWeeklyTargets(id)
+    return updated
   }
 
   // ── Structured-workout payload (Task 10-5) ──
@@ -253,6 +285,11 @@ export const useTrainingStore = defineStore('training', () => {
     loadingPlan,
     planError,
     loadPlan,
+    weeklyTargets,
+    loadingTargets,
+    targetsError,
+    loadWeeklyTargets,
+    updatePlan,
     structure,
     loadingStructure,
     structureError,

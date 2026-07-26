@@ -3,6 +3,8 @@ import type {
   ThisWeekResponse,
   TrainingPlanRequest,
   TrainingPlanResponse,
+  TrainingPlanUpdateRequest,
+  WeeklyTargetsResponse,
   PlannedWorkoutResponse,
   WorkoutStructureRequest,
   WorkoutResponse,
@@ -41,6 +43,31 @@ export async function getPlan(id: string): Promise<TrainingPlanResponse> {
   const result = await apiFetch<TrainingPlanResponse>(`/trainingplans/${id}`)
   if (result === null) {
     throw new Error('Unexpected empty response from GET /trainingplans/{id}')
+  }
+  return result
+}
+
+// Plan-metadata update (Task 18-2). Metadata only — the response carries the plan's untouched
+// planned workouts, so the caller can assign it straight onto currentPlan.
+export async function updatePlan(
+  id: string,
+  req: TrainingPlanUpdateRequest,
+): Promise<TrainingPlanResponse> {
+  const result = await apiFetch<TrainingPlanResponse>(`/trainingplans/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(req),
+  })
+  if (result === null) {
+    throw new Error('Unexpected empty response from PUT /trainingplans/{id}')
+  }
+  return result
+}
+
+// Compute-on-read weekly targets (Task 18-3). No query params — the plan window is the range.
+export async function getWeeklyTargets(id: string): Promise<WeeklyTargetsResponse> {
+  const result = await apiFetch<WeeklyTargetsResponse>(`/trainingplans/${id}/weekly-targets`)
+  if (result === null) {
+    throw new Error('Unexpected empty response from GET /trainingplans/{id}/weekly-targets')
   }
   return result
 }
