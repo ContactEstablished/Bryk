@@ -22,6 +22,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<WorkoutBlock> WorkoutBlocks => Set<WorkoutBlock>();
     public DbSet<WorkoutStep> WorkoutSteps => Set<WorkoutStep>();
     public DbSet<WorkoutStepResult> WorkoutStepResults => Set<WorkoutStepResult>();
+    public DbSet<ActivityFile> ActivityFiles => Set<ActivityFile>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -225,6 +226,21 @@ public class ApplicationDbContext : DbContext
                 .OnDelete(DeleteBehavior.NoAction);
 
             entity.HasIndex(e => new { e.WorkoutId, e.OrderIndex });
+            // Denormalized AthleteId, no FK to Athlete (ADR-0003/0004).
+            entity.HasIndex(e => e.AthleteId);
+        });
+
+        // ActivityFile configuration (ADR-0010 §2/§4/§5)
+        modelBuilder.Entity<ActivityFile>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.FileName).IsRequired().HasMaxLength(260);
+            entity.Property(e => e.Content).IsRequired();
+
+            // ParsedWorkoutId is a plain indexed Guid? with NO FK to Workout (ADR-0010 §4): the link is
+            // one-directional (reverse lookup only) and deleting a workout must not cascade away the
+            // uploaded file. Indexed because analytics reads it once per range query.
+            entity.HasIndex(e => e.ParsedWorkoutId);
             // Denormalized AthleteId, no FK to Athlete (ADR-0003/0004).
             entity.HasIndex(e => e.AthleteId);
         });
