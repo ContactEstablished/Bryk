@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using Bryk.Application.Calendar;
 using Bryk.Application.Training;
+using Bryk.Application.Training.Periodization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Bryk.API.Controllers;
@@ -10,7 +11,8 @@ namespace Bryk.API.Controllers;
 [Route("api/v{version:apiVersion}/[controller]")]
 public class TrainingPlansController(
     ITrainingPlanService trainingPlanService,
-    IStructuredWorkoutService structuredWorkoutService) : ControllerBase
+    IStructuredWorkoutService structuredWorkoutService,
+    IPeriodizationService periodizationService) : ControllerBase
 {
     /// <summary>Creates a new training plan (with any planned workouts supplied) for the current athlete.</summary>
     [HttpPost]
@@ -46,6 +48,20 @@ public class TrainingPlansController(
     public async Task<IActionResult> UpdateAsync(Guid id, [FromBody] TrainingPlanUpdateRequest request, CancellationToken cancellationToken)
     {
         TrainingPlanResponse result = await trainingPlanService.UpdateAsync(id, request, cancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Returns the plan's computed weekly load targets (ADR-0009: trailing-4-week baseline, +7 %/build-week
+    /// ramp, build:recovery cadence, two-week taper into a linked in-window event) merged with the plan's
+    /// planned load and the athlete's actual load per ISO week. Targets are computed on read — nothing is
+    /// stored. An athlete with no usable baseline gets an empty week list. 404 if the plan is missing or
+    /// foreign.
+    /// </summary>
+    [HttpGet("{id:guid}/weekly-targets")]
+    public async Task<IActionResult> GetWeeklyTargetsAsync(Guid id, CancellationToken cancellationToken)
+    {
+        WeeklyTargetsResponse result = await periodizationService.GetWeeklyTargetsAsync(id, cancellationToken);
         return Ok(result);
     }
 
