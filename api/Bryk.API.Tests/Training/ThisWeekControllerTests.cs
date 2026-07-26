@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bryk.API.Tests.Fixtures;
 using Bryk.Application.Training;
+using Bryk.Application.Training.Workouts;
 using Bryk.Domain.Entities;
 using FluentAssertions;
 using Xunit;
@@ -63,5 +64,66 @@ public class ThisWeekControllerTests
         var thisWeek = await response.Content.ReadFromJsonAsync<ThisWeekResponse>(JsonOptions);
         thisWeek.Should().NotBeNull();
         thisWeek!.PlannedWorkouts.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task GetThisWeek_FreshAthlete_ReturnsNullTargetAndZeroActual()
+    {
+        await using var factory = new BrykWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var response = await client.GetAsync("/api/v1/training/this-week");
+        var thisWeek = await response.Content.ReadFromJsonAsync<ThisWeekResponse>(JsonOptions);
+
+        thisWeek.Should().NotBeNull();
+        thisWeek!.TargetLoad.Should().BeNull();
+        thisWeek.ActualLoad.Should().Be(0m);
+    }
+
+    [Fact]
+    public async Task GetThisWeek_WithAnActivePlanAndHistory_ReturnsATarget()
+    {
+        await using var factory = new BrykWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var thisMonday = today.AddDays(-(((int)today.DayOfWeek + 6) % 7));
+
+        // Four trailing weeks of actual load before the plan's first week → a TrailingActual baseline.
+        foreach (var offsetDays in new[] { -28, -21, -14, -1 })
+        {
+            await client.PostAsJsonAsync("/api/v1/workouts", new LogWorkoutRequest
+            {
+                Sport = Sport.Run,
+                CompletedDate = thisMonday.AddDays(offsetDays),
+                LoadOverride = 200m
+            });
+        }
+
+        // One completion inside the current week — this is what ActualLoad must reflect.
+        await client.PostAsJsonAsync("/api/v1/workouts", new LogWorkoutRequest
+        {
+            Sport = Sport.Run,
+            CompletedDate = thisMonday,
+            LoadOverride = 90m
+        });
+
+        var plan = new TrainingPlanRequest
+        {
+            Name = "Active Block",
+            Methodology = MethodologyChoice.Polarized,
+            StartDate = today,
+            EndDate = thisMonday.AddDays(27),
+            PlannedWorkouts = new List<PlannedWorkoutDto>()
+        };
+        (await client.PostAsJsonAsync("/api/v1/trainingplans", plan))
+            .StatusCode.Should().Be(HttpStatusCode.Created);
+
+        var response = await client.GetAsync("/api/v1/training/this-week");
+        var thisWeek = await response.Content.ReadFromJsonAsync<ThisWeekResponse>(JsonOptions);
+
+        thisWeek.Should().NotBeNull();
+        thisWeek!.TargetLoad.Should().NotBeNull();
+        thisWeek.ActualLoad.Should().Be(90m);
     }
 }

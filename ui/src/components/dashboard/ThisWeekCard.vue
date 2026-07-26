@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
 import TypePill from '@/components/common/TypePill.vue'
+import DeltaChip from '@/components/common/DeltaChip.vue'
 import { sportToPillKind } from '@/components/common/pills'
 import { useTrainingStore } from '@/stores/training'
+import { buildTargetProgress } from '@/lib/weeklyTarget'
 
 const store = useTrainingStore()
 
@@ -52,6 +54,20 @@ const weekRange = computed(() => {
 })
 
 const sessions = computed(() => store.thisWeek?.plannedWorkouts ?? [])
+
+// Null when the athlete has no active plan or the plan has no usable baseline (ADR-0009 §1) — the
+// card then renders exactly as it did before Phase 18: no bar, no placeholder, no dash row.
+const targetProgress = computed(() => {
+  const tw = store.thisWeek
+  if (tw?.targetLoad == null) return null
+  return buildTargetProgress(tw.actualLoad ?? 0, tw.targetLoad)
+})
+
+const barClass: Record<'good' | 'warn' | 'bad', string> = {
+  good: 'bg-good',
+  warn: 'bg-warn',
+  bad: 'bg-bad',
+}
 </script>
 
 <template>
@@ -67,6 +83,30 @@ const sessions = computed(() => store.thisWeek?.plannedWorkouts ?? [])
     </div>
 
     <div class="p-6">
+      <!-- Target vs actual (Phase 18). Absent entirely when there is no target. -->
+      <div v-if="targetProgress" class="mb-4 flex flex-col gap-1.5">
+        <div class="flex items-center justify-between gap-3">
+          <span class="font-mono text-[11px] text-muted-foreground">
+            {{ store.thisWeek!.actualLoad ?? 0 }} / {{ store.thisWeek!.targetLoad }} TSS
+          </span>
+          <DeltaChip :dir="targetProgress.dir">{{ targetProgress.deltaLabel }}</DeltaChip>
+        </div>
+        <div
+          class="h-1.5 overflow-hidden rounded-full bg-muted"
+          role="progressbar"
+          :aria-valuenow="targetProgress.widthPct"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          :aria-label="`Weekly load: ${store.thisWeek!.actualLoad ?? 0} of ${store.thisWeek!.targetLoad} TSS`"
+        >
+          <div
+            class="h-full rounded-full transition-[width] duration-[200ms]"
+            :class="barClass[targetProgress.state]"
+            :style="{ width: targetProgress.widthPct + '%' }"
+          />
+        </div>
+      </div>
+
       <!-- Loading (this week not yet fetched) -->
       <p v-if="!store.thisWeek" class="text-sm text-muted-foreground">Loading…</p>
 

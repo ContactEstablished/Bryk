@@ -31,6 +31,10 @@ export interface ThisWeekResponse {
   weekStart: string
   weekEnd: string
   weeklyLoad?: number
+  // Phase 18: the week's ramp target (null when no active plan / no usable baseline) and the sum of
+  // the week's completed effective load. Optional, matching weeklyLoad, so older fixtures still fit.
+  targetLoad?: number | null
+  actualLoad?: number
   plannedWorkouts: PlannedWorkoutResponse[]
 }
 
