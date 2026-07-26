@@ -1,7 +1,13 @@
 # HANDOFF — Phase 19 complete (Activity file import)
 
 **Date:** 2026-07-26
-**Phase:** 19 — Activity file import (.fit / .tcx / .gpx) (✅ COMPLETE, with two documented carry-forwards)
+**Phase:** 19 — Activity file import (.fit / .tcx / .gpx) (✅ COMPLETE)
+
+> **Update, later the same day.** A real device-written cycling file was supplied and committed as
+> `sample-ride.fit`, which **closed carry-forwards 1 and 2** below. The six fixture-pinned FIT parser
+> tests now run (xUnit **343**, +6), and the `samples` badge state has been observed live. Both
+> carry-forward entries are retained below with their resolutions appended, because the reasoning that
+> produced them is still the record of why the phase shipped when it did.
 **Decision:** **ADR-0010** — `md/decisions/0010-activity-file-import.md` (Accepted 2026-07-26), written as
 Task 19-1's first step, before any code, as the ROADMAP required.
 **Specs:** `md/Tasks-19-1.md` … `md/Tasks-19-6.md` plus `md/Impl-19-1.md` … `md/Impl-19-6.md`.
@@ -28,7 +34,9 @@ only). No npm package.
 ## Verification state
 
 - **Backend:** `dotnet build api/Bryk.sln` green, **0 errors**. `dotnet test api/Bryk.sln` green —
-  **337 tests** (196 `Bryk.Application.Tests` + 141 `Bryk.API.Tests`; was **262** at phase start, **+75**).
+  **343 tests** (196 `Bryk.Application.Tests` + 147 `Bryk.API.Tests`; was **262** at phase start, **+81**).
+  (The phase first shipped at 337; the six fixture-pinned FIT parser facts brought it to 343 once the
+  real `.fit` landed — see carry-forward 1.)
 - **Frontend:** `pnpm run build` (`vue-tsc -b`) green. `pnpm exec vitest run --no-file-parallelism`
   green — **61 test files, 288 tests** (was 56/252 at phase start, **+36**).
 - **Warnings:** **16** on a *clean* compile (`--no-incremental`) — exactly the documented baseline,
@@ -120,22 +128,36 @@ ADR-0008 §1's `[0.8, 1.2]` band. Real compliance from a real import.
 **`.gpx` end to end:** upload `201` → parsed `Run / 2026-06-03 / 600 s / 2000 m` (haversine) `/ avgHr 140
 / pace 300 / 3 samples`; commit `201`, `computedLoad 12.04`.
 
+**`.fit` end to end (the real 433 KB fixture, added later the same day):** upload `201` → parsed
+`Bike / 2026-02-17 / 6175 s / 26 481 m / avgHr 82 / avgPower 40 / 6198 samples`, `byteSize 443 770`
+(the whole file round-tripped through `varbinary(max)`), zone histogram against the athlete's real bike
+bands `Z1 6571 · Z2 153 · Z3 27 · Z4 16 · Z5 42`; commit `201`, `computedLoad 4.39` =
+`6175 × (40/250)² / 3600 × 100` — the power IF branch a third time, at a third FTP/power combination.
+
+**Badge states, all three observed live on the analytics endpoint the badge is computed from:**
+
+| Range | `sampleSeconds` | `totalSeconds` | Badge |
+|---|---|---|---|
+| Only the `.fit` import (`2026-02-17`) | `6809` | `6809` | **`samples`** |
+| `.fit` + the seed's hand-logged history (`2026-02-01 → 2026-07-26`) | `6809` | `41309` | `mixed` |
+| Hand-logged only (`2026-06-10 → 14`) | `0` | `22800` | `estimated` (pre-Phase-19 numbers intact) |
+
 ## Success criteria (ROADMAP Phase 19) — checked
 
-- **Committed fixtures upload→preview→commit→appear in history with correct load** — ✅ for `.tcx`
-  (run + ride) and `.gpx`, observed live above and pinned at exactly `110.25` TSS in test.
-  ⚠️ **`.fit` is partial** — the parser ships and is exercised against a real 966 KB Garmin file during
-  development (11 160 records, HR + power, decoded correctly), but no committed `.fit` fixture exists.
-  See carry-forward 1.
+- **Committed fixtures upload→preview→commit→appear in history with correct load** — ✅ for **all three
+  formats**. `.tcx` (run + ride) and `.gpx` observed live, pinned at exactly `110.25` TSS in test; `.fit`
+  observed live once the real fixture landed — a 433 KB, 6198-record file uploads (`201`), stores its
+  bytes in `varbinary(max)`, and commits at `4.39` TSS = `6175 × (40/250)² / 3600 × 100`, the power IF
+  branch again at the dev athlete's real FTP.
 - **Import against a seeded same-day planned workout offers + links the match** — ✅ observed live
   (`dayOffset 0`, single candidate, linked on commit) plus 5 integration facts covering the ±1 window
   boundary, sport mismatch and already-linked exclusion.
 - **Calendar shows real compliance for imports** — ✅ observed: `Green` at ratio `0.941`.
-- **Progress shows `samples` method for imports** — ✅ **partial in the literal badge sense.**
-  `sampleSeconds` is reported, the provenance line leads with device samples, and the badge moves off
-  `estimated` → `mixed`. The literal `samples` badge requires `sampleSeconds == totalSeconds`, which
-  needs a dense per-second file; the committed 4-point TCX fixture can only measure 180 s of a 3600 s
-  session. The `samples` state is covered by a unit fact and a Vitest spec. See carry-forward 2.
+- **Progress shows `samples` method for imports** — ✅ All three badge states observed live against real
+  data: **`samples`** for a range containing only the dense `.fit` import (`sampleSeconds 6809 ==
+  totalSeconds 6809`), **`mixed`** for a range mixing it with hand-logged history, and **`estimated`**
+  for hand-logged only — the last byte-identical to pre-Phase-19. See carry-forward 2 for the resolution
+  detail.
 - **Corrupt/oversized files fail clean with nothing persisted** — ✅ observed: `400` in every case, with
   `ActivityFiles` count `0` after the corrupt upload.
 
@@ -156,21 +178,40 @@ ADR-0008 §1's `[0.8, 1.2]` band. Real compliance from a real import.
 
 ## Known gaps / carry-forward
 
-1. **The `.fit` fixture and its six pinned parser tests are deferred.** `Tasks-19-3.md` requires a *real
-   device-written* file and explicitly forbids hand-crafting one or generating one with the SDK encoder.
-   No such file (≤ 200 KB, ride with HR + power) was available: the machine held one 966 KB Garmin **run**
-   and two small Zwift files carrying no records. The user elected to supply a file later.
-   `FitActivityParserTests.cs` ships with the three facts that need no fixture — `Format_IsFit`, garbage
-   bytes → `ThrowExactly<ValidationException>`, and TCX bytes → `ValidationException` — which cover the
-   contract that matters most (a corrupt upload must be a clean 400, never a 500). **To finish:** drop the
-   file at `api/Bryk.API.Tests/Fixtures/ActivityFiles/sample-ride.fit` (the csproj glob already covers it),
-   add the six fixture-pinned facts from `Tasks-19-3.md`, promote the observed `AvgPower` to a
-   `private const`, and delete the `PENDING FIXTURE` header comment.
-2. **The live `samples` badge needs a dense-sample file.** `samples` requires every second in the window
-   to be measured. The 4-point TCX fixture yields 180 measured seconds out of 3600, so the highest live
-   state reachable today is `mixed`. This is correct behaviour (ADR-0010 §5's honesty rule — unmeasured
-   seconds go to `unclassified`, never silently into a zone), not a defect. A real 1-second `.fit` will
-   produce `samples`. Resolving carry-forward 1 also resolves this.
+1. ~~**The `.fit` fixture and its six pinned parser tests are deferred.**~~ **RESOLVED same day.**
+   `Tasks-19-3.md` requires a *real device-written* file and forbids hand-crafting one or generating one
+   with the SDK encoder. None was available at the time (the machine held one 966 KB Garmin **run** and
+   two small Zwift files carrying no records), so `FitActivityParserTests.cs` shipped with only the three
+   facts that need no fixture. **Resolution:** a real cycling file was supplied and committed as
+   `api/Bryk.API.Tests/Fixtures/ActivityFiles/sample-ride.fit` — Bike, `2026-02-17T22:05:18Z`, 6175 s
+   timer time, 26 481 m, **6198 records** (HR on all, power on all but the first 24), avg power 40 W,
+   HR 58–125. The six fixture-pinned facts now run with the file's real figures promoted to
+   `private const`s, and the `PENDING FIXTURE` header is gone. **Two deviations worth knowing:**
+   - **Size.** The file is **433 KB**, above `Tasks-19-3.md`'s "≤ 200 KB" guideline. Accepted — it was
+     supplied explicitly for this purpose and a one-off binary of this size is not a meaningful repo
+     burden — but it is a documented departure from the stated criterion, not an oversight.
+   - **The spec's histogram assertion does not hold for a real file.** `Tasks-19-3.md` asks the
+     integration fact to assert the buckets "sum to a positive number **≤ `DurationSeconds`**". On this
+     file the buckets sum to **6785 s** against a `DurationSeconds` of **6175 s**, and that is correct:
+     FIT's `TotalTimerTime` excludes paused time, while the record timestamps span 7456 s of wall clock,
+     and the histogram accumulates per-sample gaps across that wall clock. The test therefore bounds the
+     sum by the sample series' **elapsed span** (`Samples[^1].ElapsedSeconds`), which is the true ceiling
+     — every sample contributes at most its own gap. The spec's version would fail on any genuine file
+     containing a pause.
+2. ~~**The live `samples` badge needs a dense-sample file.**~~ **RESOLVED by (1).** With the real
+   `.fit` imported, a range containing only that workout reports
+   `sampleSeconds 6809 / structure 0 / sessionAvg 0 / unclassified 0`, `totalSeconds 6809` — i.e.
+   `sampleSeconds == totalSeconds`, so the badge renders **`samples`** (`text-primary-hi`). A wide range
+   mixing it with the seed's hand-logged history reports `mixed`, and a hand-logged-only range still
+   reports `estimated` with the pre-Phase-19 numbers intact. All three states now observed live.
+   *Note:* because the histogram (6809 s of wall clock) exceeds the workout's `ActualDurationSeconds`
+   (6175 s of timer time), the `Math.Max(0, duration − measured)` guard in `TimeInZoneCalculator`
+   correctly contributes **0** unclassified seconds rather than a negative. The consequence is that
+   time-in-zone can report slightly more time for a paused import than the workout's own recorded
+   duration. That is the honest reading of the samples, but it is worth knowing before anyone tries to
+   reconcile the two totals. *(Also: this fixture is dated 2026-02-17, outside the Progress page's fixed
+   trailing-90-day window, so the `samples` badge was verified through the analytics endpoint the badge
+   is computed from plus its Vitest rendering spec, rather than by eye at `/progress`.)*
 3. **The zone histogram is JSON on `ActivityFile`, not a normalized table** (ADR-0010 §5). Read whole,
    never queried per-zone. **Normalizing it is an explicit Phase-21 candidate.**
 4. **Above 32 MB the framework wins and the status is whatever it produces.** `RequestSizeLimit` /
@@ -223,7 +264,7 @@ ADR-0008 §1's `[0.8, 1.2]` band. Real compliance from a real import.
 | `api/Bryk.Infrastructure/ActivityFiles/ActivitySampleBounds.cs`, `TcxActivityParser.cs`, `GpxActivityParser.cs`, `FitActivityParser.cs` | Sample sanity + the three format parsers. |
 | `api/Bryk.Application/ActivityFiles/ActivityFileLimits.cs`, `ActivityFileUploadRequest.cs`, `CommitActivityFileRequest.cs`, `ActivityFileResponses.cs`, `Validators/*`, `IActivityFileService.cs`, `ActivityFileService.cs` | The service slice. |
 | `api/Bryk.API/Controllers/ActivityFilesController.cs` | Four actions + the per-route cap. |
-| `api/Bryk.API.Tests/Fixtures/ActivityFiles/sample-run.tcx`, `sample-ride.tcx`, `sample-activity.gpx` | The committed fixtures every pinned number derives from. |
+| `api/Bryk.API.Tests/Fixtures/ActivityFiles/sample-run.tcx`, `sample-ride.tcx`, `sample-activity.gpx`, `sample-ride.fit` | The committed fixtures every pinned number derives from. The `.fit` is a real device-written ride (433 KB, 6198 records). |
 | `ui/src/types/activityFiles.ts`, `services/activityFiles.ts`, `stores/activityFiles.ts` | The frontend slice. |
 | `ui/src/components/import/ImportReviewCard.vue`, `ZoneHistogramBars.vue`, `MatchCandidateList.vue` | The review flow. |
 | `ui/src/services/__tests__/api.spec.ts` | The multipart regression guard on `apiFetch`. |
@@ -237,7 +278,7 @@ ADR-0008 §1's `[0.8, 1.2]` band. Real compliance from a real import.
 - [x] Upload/commit/discard/by-workout endpoints + the synthetic `WorkoutStepResult` (19-4).
 - [x] Upload + review UI + "from file" badge + the `api.ts` FormData fix (19-5).
 - [x] `samples` time-in-zone, precedence and honest badge (19-6).
-- [x] xUnit: 337 tests. Vitest: 61 files, 288 tests. Both builds green, warnings flat at 16.
+- [x] xUnit: 343 tests. Vitest: 61 files, 288 tests. Both builds green, warnings flat at 16.
 - [x] Runtime gates observed live; dev seed left exactly as found.
 - [x] Handoff doc written (`md/handoffs/2026-07-26-phase-19-complete.md`).
 - [x] ROADMAP.md updated (Phase 19 → ✅; ledger + heading; delivered note).
@@ -253,15 +294,14 @@ therefore one reviewed migration set under the Sr. Dev gate. No new package expe
 hand-rolled, a table-layout decision, migration approval, OAuth wiring, cookie-or-JWT.
 **All auth code requires approval before it is written.**
 
-Small and worth clearing first: carry-forward **1** (drop in the `.fit` fixture and finish 19-3's test
-list — a 20-minute task once a file exists) and carry-forward **10** (the POST/PUT bounds divergence,
-now deferred twice).
+Small and worth clearing first: carry-forward **10** (the POST/PUT bounds divergence, now deferred
+twice). Carry-forwards **1** and **2** are closed.
 
 ## Session-start checklist
 
 1. Read this handoff + the ROADMAP Phase 20 entry (or Phase 12 if auth is next) + ADR-0010.
 2. `git status` clean; `git log --oneline -10`.
-3. Backend: `dotnet build api/Bryk.sln` + `dotnet test api/Bryk.sln` (expect **337**).
+3. Backend: `dotnet build api/Bryk.sln` + `dotnet test api/Bryk.sln` (expect **343**).
    Use `--no-incremental` when checking the warning count (**16**); an incremental build reports 14.
 4. Frontend: `pnpm run build` + `pnpm exec vitest run --no-file-parallelism` (expect **288 / 61**);
    the transient worker-fork crash with all tests passing → re-run once before debugging.

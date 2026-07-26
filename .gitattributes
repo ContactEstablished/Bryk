@@ -1,0 +1,5 @@
+# Activity-file test fixtures are binary. core.autocrlf is true on this repo, and while git's content
+# heuristic already spots the NUL bytes in a FIT file, saying so explicitly means a fresh clone can
+# never end up with a line-ending-mangled fixture and an inexplicable parser failure.
+*.fit binary
+*.FIT binary
