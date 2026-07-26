@@ -1,10 +1,12 @@
-import { describe, expect, it } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { describe, expect, it, vi } from 'vitest'
+import { flushPromises, mount, type VueWrapper } from '@vue/test-utils'
 import { createTestingPinia } from '@pinia/testing'
 import { createMemoryHistory, createRouter } from 'vue-router'
 import GoalsView from '@/views/GoalsView.vue'
 import GoalsEventCard from '@/components/goals/GoalsEventCard.vue'
+import GoalsEventForm from '@/components/goals/GoalsEventForm.vue'
 import GoalsGoalCard from '@/components/goals/GoalsGoalCard.vue'
+import GoalsGoalForm from '@/components/goals/GoalsGoalForm.vue'
 import type { EventListItem, GoalListItem } from '@/types/goals'
 
 const stub = { template: '<div />' }
@@ -50,12 +52,19 @@ async function mountView(state: Record<string, unknown>) {
       plugins: [
         router,
         createTestingPinia({
-          createSpy: () => () => {},
+          createSpy: vi.fn,
           initialState: { goals: state },
         }),
       ],
     },
   })
+}
+
+async function clickButton(wrapper: VueWrapper, label: string) {
+  const btn = wrapper.findAll('button').find((b) => b.text() === label)
+  if (!btn) throw new Error(`Button "${label}" not found`)
+  await btn.trigger('click')
+  await flushPromises()
 }
 
 describe('GoalsView', () => {
@@ -108,12 +117,67 @@ describe('GoalsView', () => {
     wrapper.unmount()
   })
 
-  it('stubs the add affordances until the forms land', async () => {
+  it('"Add Event" reveals a draft event form', async () => {
     const wrapper = await mountView({ events: [], goals: [], loading: false, error: null })
+    expect(wrapper.findAllComponents(GoalsEventForm)).toHaveLength(0)
 
-    const buttons = wrapper.findAll('button')
-    expect(buttons.length).toBeGreaterThan(0)
-    expect(buttons.every((b) => b.attributes('disabled') !== undefined)).toBe(true)
+    await clickButton(wrapper, 'Add Event')
+
+    expect(wrapper.findAllComponents(GoalsEventForm)).toHaveLength(1)
+
+    wrapper.unmount()
+  })
+
+  it('"Add Goal" reveals a draft goal form', async () => {
+    const wrapper = await mountView({ events: [], goals: [], loading: false, error: null })
+    expect(wrapper.findAllComponents(GoalsGoalForm)).toHaveLength(0)
+
+    await clickButton(wrapper, 'Add Goal')
+
+    expect(wrapper.findAllComponents(GoalsGoalForm)).toHaveLength(1)
+
+    wrapper.unmount()
+  })
+
+  it('drops the draft form once the create succeeds', async () => {
+    const wrapper = await mountView({ events: [], goals: [], loading: false, error: null })
+    await clickButton(wrapper, 'Add Event')
+
+    const form = wrapper.findComponent(GoalsEventForm)
+    await form.find('input[name="name"]').setValue('Spring Half')
+    await form.find('input[name="eventDate"]').setValue('2099-04-12')
+    await form.find('form').trigger('submit')
+
+    await vi.waitFor(() => expect(wrapper.findAllComponents(GoalsEventForm)).toHaveLength(0))
+
+    wrapper.unmount()
+  })
+
+  it('drops the draft form when the draft is discarded', async () => {
+    const wrapper = await mountView({ events: [], goals: [], loading: false, error: null })
+    await clickButton(wrapper, 'Add Goal')
+
+    await clickButton(wrapper, 'Remove')
+
+    expect(wrapper.findAllComponents(GoalsGoalForm)).toHaveLength(0)
+
+    wrapper.unmount()
+  })
+
+  it('"Edit" reveals the form for an existing row and hides it again', async () => {
+    const wrapper = await mountView({
+      events: [makeEvent({ id: 'e1', name: 'Boston Marathon' })],
+      goals: [],
+      loading: false,
+      error: null,
+    })
+    expect(wrapper.findAllComponents(GoalsEventForm)).toHaveLength(0)
+
+    await clickButton(wrapper, 'Edit')
+    expect(wrapper.findAllComponents(GoalsEventForm)).toHaveLength(1)
+
+    await clickButton(wrapper, 'Close')
+    expect(wrapper.findAllComponents(GoalsEventForm)).toHaveLength(0)
 
     wrapper.unmount()
   })

@@ -2,11 +2,26 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { useGoalsStore } from '@/stores/goals'
 import { getEvents, getGoalsList } from '@/services/goals-events'
+import { createEvent, updateEvent, deleteEvent } from '@/services/events'
+import { createGoal, updateGoal, deleteGoal } from '@/services/goals'
+import type { EventDto, GoalDto } from '@/types/onboarding'
 import type { EventListItem, GoalListItem } from '@/types/goals'
 
 vi.mock('@/services/goals-events', () => ({
   getEvents: vi.fn(),
   getGoalsList: vi.fn(),
+}))
+
+vi.mock('@/services/events', () => ({
+  createEvent: vi.fn(),
+  updateEvent: vi.fn(),
+  deleteEvent: vi.fn(),
+}))
+
+vi.mock('@/services/goals', () => ({
+  createGoal: vi.fn(),
+  updateGoal: vi.fn(),
+  deleteGoal: vi.fn(),
 }))
 
 const getEventsMock = vi.mocked(getEvents)
@@ -104,5 +119,85 @@ describe('useGoalsStore', () => {
     expect(store.error?.message).toBe('boom')
     expect(store.events).toBeNull()
     expect(store.loading).toBe(false)
+  })
+})
+
+describe('useGoalsStore CRUD actions', () => {
+  const eventDto: EventDto = {
+    name: 'Boston Marathon',
+    eventDate: '2099-09-01',
+    sport: 'Run',
+    triathlonDistance: null,
+    customDistanceName: null,
+    priority: 'A',
+    notes: null,
+  }
+
+  const goalDto: GoalDto = { type: 'General', description: 'Sub 3', targetDate: null }
+
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+    getEventsMock.mockResolvedValue([])
+    getGoalsListMock.mockResolvedValue([])
+  })
+
+  it('createEvent posts the dto then re-fetches both lists', async () => {
+    const store = useGoalsStore()
+    await store.createEvent(eventDto)
+
+    expect(createEvent).toHaveBeenCalledWith(eventDto)
+    expect(getEventsMock).toHaveBeenCalledTimes(1)
+    expect(getGoalsListMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('updateEvent puts by id then re-fetches', async () => {
+    const store = useGoalsStore()
+    await store.updateEvent('e1', eventDto)
+
+    expect(updateEvent).toHaveBeenCalledWith('e1', eventDto)
+    expect(getEventsMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('deleteEvent deletes by id then re-fetches', async () => {
+    const store = useGoalsStore()
+    await store.deleteEvent('e1')
+
+    expect(deleteEvent).toHaveBeenCalledWith('e1')
+    expect(getEventsMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('createGoal posts the dto then re-fetches both lists', async () => {
+    const store = useGoalsStore()
+    await store.createGoal(goalDto)
+
+    expect(createGoal).toHaveBeenCalledWith(goalDto)
+    expect(getEventsMock).toHaveBeenCalledTimes(1)
+    expect(getGoalsListMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('updateGoal puts by id then re-fetches', async () => {
+    const store = useGoalsStore()
+    await store.updateGoal('g1', goalDto)
+
+    expect(updateGoal).toHaveBeenCalledWith('g1', goalDto)
+    expect(getGoalsListMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('deleteGoal deletes by id then re-fetches', async () => {
+    const store = useGoalsStore()
+    await store.deleteGoal('g1')
+
+    expect(deleteGoal).toHaveBeenCalledWith('g1')
+    expect(getGoalsListMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('re-throws a write failure instead of swallowing it into error state', async () => {
+    vi.mocked(createEvent).mockRejectedValue(new Error('409'))
+    const store = useGoalsStore()
+
+    await expect(store.createEvent(eventDto)).rejects.toThrow('409')
+    // The failed write must not trigger a re-fetch.
+    expect(getEventsMock).not.toHaveBeenCalled()
   })
 })

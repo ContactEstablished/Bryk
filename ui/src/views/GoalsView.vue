@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { Plus } from 'lucide-vue-next'
 import AppShell from '@/components/layout/AppShell.vue'
 import { Button } from '@/components/ui/button'
 import GoalsEventCard from '@/components/goals/GoalsEventCard.vue'
+import GoalsEventForm from '@/components/goals/GoalsEventForm.vue'
 import GoalsGoalCard from '@/components/goals/GoalsGoalCard.vue'
+import GoalsGoalForm from '@/components/goals/GoalsGoalForm.vue'
 import { useGoalsStore } from '@/stores/goals'
 
 const store = useGoalsStore()
@@ -14,6 +16,42 @@ const { events, goals, loading, error, upcomingEvents } = storeToRefs(store)
 onMounted(() => {
   void store.loadAll()
 })
+
+// Local draft cards (no server id yet), keyed by a monotonic counter so each keeps a stable :key
+// independent of its array position. A draft is dropped once it saves (its real row arrives from
+// the store) or the user discards it. Mirrors ProfileGoalsSection.
+let draftCounter = 0
+const eventDrafts = ref<number[]>([])
+const goalDrafts = ref<number[]>([])
+
+function addEventDraft() {
+  eventDrafts.value.push((draftCounter += 1))
+}
+
+function removeEventDraft(key: number) {
+  eventDrafts.value = eventDrafts.value.filter((k) => k !== key)
+}
+
+function addGoalDraft() {
+  goalDrafts.value.push((draftCounter += 1))
+}
+
+function removeGoalDraft(key: number) {
+  goalDrafts.value = goalDrafts.value.filter((k) => k !== key)
+}
+
+// Existing rows show their read card by default; Edit reveals the form beneath it. The card stays
+// visible so a save's re-fetch is immediately reflected above the open form.
+const editingEvents = ref(new Set<string>())
+const editingGoals = ref(new Set<string>())
+
+function toggleEventEdit(id: string) {
+  if (!editingEvents.value.delete(id)) editingEvents.value.add(id)
+}
+
+function toggleGoalEdit(id: string) {
+  if (!editingGoals.value.delete(id)) editingGoals.value.add(id)
+}
 
 // Whatever `upcomingEvents` didn't claim is past — derived from the store's filter rather than
 // re-deriving "today", so both lists always agree. Date-desc, so the most recent sits nearest
@@ -25,12 +63,16 @@ const pastEvents = computed(() => {
     .sort((a, b) => b.eventDate.localeCompare(a.eventDate))
 })
 
+// A pending draft counts as content — otherwise adding the first event would render the
+// empty state and swallow the form.
 const isEmpty = computed(
   () =>
     !loading.value &&
     !error.value &&
     (events.value?.length ?? 0) === 0 &&
-    (goals.value?.length ?? 0) === 0,
+    (goals.value?.length ?? 0) === 0 &&
+    eventDrafts.value.length === 0 &&
+    goalDrafts.value.length === 0,
 )
 </script>
 
@@ -60,14 +102,13 @@ const isEmpty = computed(
         Add your first event or goal to start a countdown.
       </p>
       <div class="mt-4 flex items-center justify-center gap-2">
-        <!-- 17-4 wires these to the event/goal forms -->
-        <Button variant="outline" size="sm" disabled title="Coming soon">
+        <Button variant="outline" size="sm" @click="addEventDraft">
           <Plus />
-          Add event
+          Add Event
         </Button>
-        <Button variant="outline" size="sm" disabled title="Coming soon">
+        <Button variant="outline" size="sm" @click="addGoalDraft">
           <Plus />
-          Add goal
+          Add Goal
         </Button>
       </div>
     </div>
@@ -79,24 +120,46 @@ const isEmpty = computed(
         <header class="flex items-center gap-3">
           <h2 class="eyebrow">Events</h2>
           <div class="flex-1" />
-          <Button variant="outline" size="sm" disabled title="Coming soon">
+          <Button variant="outline" size="sm" @click="addEventDraft">
             <Plus />
-            Add event
+            Add Event
           </Button>
         </header>
 
-        <!-- 17-4 mounts the event form here -->
+        <GoalsEventForm
+          v-for="key in eventDrafts"
+          :key="`event-draft-${key}`"
+          @remove="removeEventDraft(key)"
+          @created="removeEventDraft(key)"
+        />
 
-        <p v-if="(events?.length ?? 0) === 0" class="text-sm text-muted-foreground">
+        <p
+          v-if="(events?.length ?? 0) === 0 && eventDrafts.length === 0"
+          class="text-sm text-muted-foreground"
+        >
           No events yet.
         </p>
 
-        <GoalsEventCard v-for="event in upcomingEvents" :key="event.id" :event="event" />
+        <div v-for="event in upcomingEvents" :key="event.id" class="flex flex-col gap-2">
+          <GoalsEventCard :event="event" />
+          <div class="flex justify-end">
+            <Button variant="ghost" size="sm" @click="toggleEventEdit(event.id)">
+              {{ editingEvents.has(event.id) ? 'Close' : 'Edit' }}
+            </Button>
+          </div>
+          <GoalsEventForm v-if="editingEvents.has(event.id)" :event="event" />
+        </div>
 
         <template v-if="pastEvents.length > 0">
           <h3 class="eyebrow pt-2 text-faint">Past events</h3>
-          <div class="flex flex-col gap-3 opacity-60">
-            <GoalsEventCard v-for="event in pastEvents" :key="event.id" :event="event" />
+          <div v-for="event in pastEvents" :key="event.id" class="flex flex-col gap-2 opacity-60">
+            <GoalsEventCard :event="event" />
+            <div class="flex justify-end">
+              <Button variant="ghost" size="sm" @click="toggleEventEdit(event.id)">
+                {{ editingEvents.has(event.id) ? 'Close' : 'Edit' }}
+              </Button>
+            </div>
+            <GoalsEventForm v-if="editingEvents.has(event.id)" :event="event" />
           </div>
         </template>
       </section>
@@ -106,20 +169,36 @@ const isEmpty = computed(
         <header class="flex items-center gap-3">
           <h2 class="eyebrow">Goals</h2>
           <div class="flex-1" />
-          <Button variant="outline" size="sm" disabled title="Coming soon">
+          <Button variant="outline" size="sm" @click="addGoalDraft">
             <Plus />
-            Add goal
+            Add Goal
           </Button>
         </header>
 
-        <!-- 17-4 mounts the goal form here -->
+        <GoalsGoalForm
+          v-for="key in goalDrafts"
+          :key="`goal-draft-${key}`"
+          @remove="removeGoalDraft(key)"
+          @created="removeGoalDraft(key)"
+        />
 
-        <p v-if="(goals?.length ?? 0) === 0" class="text-sm text-muted-foreground">
+        <p
+          v-if="(goals?.length ?? 0) === 0 && goalDrafts.length === 0"
+          class="text-sm text-muted-foreground"
+        >
           No goals yet.
         </p>
 
         <!-- Server returns goals target-date ascending, undated last — no client sort needed. -->
-        <GoalsGoalCard v-for="goal in goals ?? []" :key="goal.id" :goal="goal" />
+        <div v-for="goal in goals ?? []" :key="goal.id" class="flex flex-col gap-2">
+          <GoalsGoalCard :goal="goal" />
+          <div class="flex justify-end">
+            <Button variant="ghost" size="sm" @click="toggleGoalEdit(goal.id)">
+              {{ editingGoals.has(goal.id) ? 'Close' : 'Edit' }}
+            </Button>
+          </div>
+          <GoalsGoalForm v-if="editingGoals.has(goal.id)" :goal="goal" />
+        </div>
       </section>
     </template>
   </AppShell>

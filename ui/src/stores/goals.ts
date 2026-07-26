@@ -2,6 +2,17 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { ApiError } from '@/services/api'
 import { getEvents, getGoalsList } from '@/services/goals-events'
+import {
+  createEvent as createEventApi,
+  updateEvent as updateEventApi,
+  deleteEvent as deleteEventApi,
+} from '@/services/events'
+import {
+  createGoal as createGoalApi,
+  updateGoal as updateGoalApi,
+  deleteGoal as deleteGoalApi,
+} from '@/services/goals'
+import type { EventDto, GoalDto } from '@/types/onboarding'
 import type { EventListItem, GoalListItem } from '@/types/goals'
 
 // Today as YYYY-MM-DD in UTC, so date-string comparisons match the server's DateOnly
@@ -52,5 +63,51 @@ export const useGoalsStore = defineStore('goals', () => {
       )
   })
 
-  return { events, goals, loading, error, loadAll, upcomingEvents }
+  // Per-item CRUD against the existing events / goals write endpoints, then a full re-fetch so the
+  // lists reflect server truth (new rows pick up their id, and every row its computed
+  // daysRemaining / status / linkedPlans). Errors propagate for the form to map.
+  async function createEvent(dto: EventDto) {
+    await createEventApi(dto)
+    await loadAll()
+  }
+
+  async function updateEvent(id: string, dto: EventDto) {
+    await updateEventApi(id, dto)
+    await loadAll()
+  }
+
+  async function deleteEvent(id: string) {
+    await deleteEventApi(id)
+    await loadAll()
+  }
+
+  async function createGoal(dto: GoalDto) {
+    await createGoalApi(dto)
+    await loadAll()
+  }
+
+  async function updateGoal(id: string, dto: GoalDto) {
+    await updateGoalApi(id, dto)
+    await loadAll()
+  }
+
+  async function deleteGoal(id: string) {
+    await deleteGoalApi(id)
+    await loadAll()
+  }
+
+  return {
+    events,
+    goals,
+    loading,
+    error,
+    loadAll,
+    upcomingEvents,
+    createEvent,
+    updateEvent,
+    deleteEvent,
+    createGoal,
+    updateGoal,
+    deleteGoal,
+  }
 })
