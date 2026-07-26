@@ -47,7 +47,7 @@ Non-negotiable per phase. They constrain how prompts get written and how diffs g
 | 17 | Goals & events surface (Goals page, ProgressRing, plan↔event links)              | ✅ Complete       |
 | 18 | ATP / periodization engine (weekly targets, ramp, taper)                         | ✅ Complete       |
 | 19 | Activity file import (.fit / .tcx / .gpx)                                        | ✅ Complete       |
-| 20 | Wellness metrics (sleep, RHR, weight, soreness, HRV)                             | ⏳ Planned        |
+| 20 | Wellness metrics (sleep, RHR, weight, soreness, HRV)                             | 🚧 Specs ready    |
 | 21 | Production hardening & deployment                                                | ⏳ Planned        |
 
 Post-v1 expansion (v2 coach features, device sync, marketplace, virtual training, etc.) is tracked in `md/product/feature-parity-trainingpeaks.md` and folded back into this roadmap only when a candidate gets scoped.
@@ -568,13 +568,15 @@ Post-v1 expansion (v2 coach features, device sync, marketplace, virtual training
 **Frontend scope.**
 - Dashboard "Today" wellness quick-entry card (collapsed → form). Sleep tile live: 7-day avg + `Sparkline` of nightly hours + `DeltaChip` vs prior week. `RestingHrCard` upgraded from the static onboarding value to entered history + sparkline. Weight/HRV as `MetricTile`+`Sparkline` pairs. Soreness input parameterizes `RpeSelector` into a shared scale selector (default to prop-parameterize over duplicate).
 
-**Decisions needed.** `DailyWellness` migration approval. HRV-adjusted readiness blending into TSB — **recommend no** for v1 (PMC stays pure per 14's ADR); parity-doc candidate. RpeSelector generalization call.
+**Decisions needed.** ✅ All resolved by the Sr. Dev 2026-07-26; **ADR-0011** (`md/decisions/0011-wellness-metrics.md`) is Task 20-1's first deliverable and records them with rationale. §1 `DailyWellness` is **independent of `Athlete`** — a wellness save never writes back to `Athlete.WeightKg`/`RestingHr` (verified: neither feeds load, zone or PMC math), with a **read-only fallback** so the Resting HR tile never regresses to `—`; §2 one wide mostly-nullable row per athlete per day, uniqueness enforced by a composite index **and** a service-side read-then-update upsert (the index is unenforceable by the InMemory test provider, so no test may assert a duplicate insert throws); §3 HRV does **not** blend into TSB/PMC or any readiness score — ADR-0006's calculator stays pure, and this makes the ROADMAP's prior "recommend no" binding; §4 the soreness/sleep-quality input **generalizes** `RpeSelector` into a shared `ScaleSelector` (soreness 1–10, sleep quality 1–5) rather than duplicating it, leaving `LogWorkoutForm.vue` and its three specs untouched; §5 `DeltaChip` is **not** recoloured — the standing `ui/src/lib/weeklyTarget.ts:21–23` convention holds, and inverted metrics (RHR, weight, soreness) report their change in `MetricTile`'s footer slot so good news never renders red; §6 **one migration, `DailyWellness` alone** — no `Athlete` change, no FK, no second table, no new package. The `AddDailyWellness` migration remains the phase's single **Sr. Dev approval gate**: generate, read `Up`/`Down`, approve, then apply.
 
 **Out of scope.** Device/health sync (Whoop/Oura/Apple Health), readiness scores/recommendations, hydration/menstruation/nutrition (additive later — schema is one row per day), logging reminders.
 
 **Success criteria.** Today's entry persists, survives reload, re-submit updates not duplicates (upsert proven); Sleep tile shows real 7-day avg + sparkline; RestingHr sparkline reflects entries, not the onboarding constant; out-of-range and future dates rejected with field messages.
 
-**Estimated size.** **M** — 4 task docs (20-1 entity + migration + repo; 20-2 endpoints + validators; 20-3 entry form + tiles; 20-4 trends + selector reuse).
+**Estimated size.** **M** — 4 task docs (20-1 ADR-0011 + entity + repo + migration; 20-2 endpoints + validators + summary math; 20-3 types/store/`ScaleSelector` + entry form; 20-4 tiles + dashboard wiring). Kicked off 2026-07-26 — see `md/Tasks-20-1.md` … `Tasks-20-4.md` and `md/Impl-20-1.md` … `Impl-20-4.md`.
+
+**Two verified hazards the specs encode** (both confirmed against the code at kickoff, neither obvious from this entry): `Program.cs:32–33` sets `SuppressModelStateInvalidFilter = true`, so a `{date}` route segment that fails to bind does **not** 400 — it arrives as `default(DateOnly)` and the action still runs; the PUT therefore carries **both** a `{date:datetime}` route constraint (malformed → 404) and a validator `default` guard (→ 400), and neither alone is sufficient. And `BrykWebApplicationFactory` runs on EF InMemory, whose own doc comment records that it enforces **no unique index** — so the `{AthleteId, Date}` constraint is verified by reading the generated migration, while the *behaviour* is proven by a service-side "PUT twice, count rows" test.
 
 ---
 
