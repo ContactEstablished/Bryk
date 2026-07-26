@@ -267,7 +267,7 @@ This project has the **dotnet-claude-kit** plugin active. Use it rather than rei
 
 ## Project state pointers
 
-- Current phase: **Phase 15 complete** (Progress page — compute-on-read `WeeklyLoadCalculator`/`PeaksCalculator`/`TimeInZoneCalculator` + `AnalyticsService` methods, `GET /api/v1/analytics/weekly-load` & `/peaks` & `/time-in-zone`, `/progress` `ProgressView` with hand-rolled-SVG `PMCChart`/`LoadChart` ports (no chart lib), time-in-zone stacked bar ("estimated") + session-level peaks grid, Progress nav live; no migration; see `md/handoffs/2026-06-14-phase-15-complete.md` and ADR-0007). Next feature phase: **Phase 16** — Calendar & scheduling. **Phase 12** — Authentication & Authorization — remains deferred and **approval-gated** (see Open decisions). Phases 8–11 and 13–14 are complete.
+- Current phase: **Phase 17 complete** (Goals & events surface — `GET /api/v1/events` (`upcoming` filter, `Notes`, linked plans via reverse `EventId` lookup) & `/events/{id}` & `/goals` (pure `GoalProgress.Compute` → `daysRemaining`/`status`), ported hand-rolled-SVG `ProgressRing` + `buildRingGeometry` shared with the dashboard `PrimaryGoalCard`, `/goals` `GoalsView` with read-display event/goal cards (Notes inline, A/B/C priority, countdown ring, linked-plan chip → `/plans/:id`) and on-page vee-validate + zod CRUD forms over the existing Phase-8 writes, Goals nav live; no migration, no new package; see `md/handoffs/2026-07-25-phase-17-complete.md`). Next feature phase: **Phase 18** — ATP / periodization engine. **Phase 12** — Authentication & Authorization — remains deferred and **approval-gated** (see Open decisions). Phases 8–11 and 13–16 are complete.
 - ADRs (`/md/decisions/`) — read before touching the training/zone domain:
   - **0001** — Mesocycle superseded by TrainingPlan / PlannedWorkout / Workout (Accepted; retirement migration `DropMesocycleSurface` committed).
   - **0002** — Coaches are v2; v1 is athlete-only, one human = one `Athlete` (Accepted).
@@ -276,9 +276,11 @@ This project has the **dotnet-claude-kit** plugin active. Use it rather than rei
   - **0005** — Training-load engine + executed-workout capture (Accepted; HR §1=a, strength §2=c).
   - **0006** — PMC computation strategy: compute-on-read (no snapshot), 180-day seeded lookback, `current` = range last day (null for a fresh athlete), TSB bands > +10 / ±10 / < −10 (Accepted).
   - **0007** — Progress analytics: optimal band = `[0.8, 1.3] × trailing-4-week mean actual` (single horizontal band; Phase-18 ramp ceiling), peaks compute-on-read session-level (pace per-sport), time-in-zone coarse 5-level "estimated" (structure/sessionAvg/unclassified), range-picker `?pmc=&weeks=&sport=` (Accepted).
+  - **0008** — Calendar compliance bands + reschedule policy: 5-bucket classifier with a single null-load fallback, out-of-window reschedule rejected with 400, `Calendar` sidebar item (Accepted; Phase 18 reuses the bands verbatim).
+- **Phase 17 added no ADR.** Its two decisions live in the ROADMAP entry: quantitative goal progress (`TargetValue`/`Unit`/`CurrentValue`) is **deferred** (date-based only, no migration), and the plan↔event link is **display-only** until Phase 18's plan PUT ships the write path.
 - `/md/product/feature-parity-trainingpeaks.md` — feature wishlist and status.
 - `/md/Tasks-<phase>-<n>.md` — per-task specs (Phase 10: `Tasks-10-1.md` … `Tasks-10-5.md`).
-- `/md/handoffs/` — session-end handoff documents. Most recent: `2026-06-14-phase-15-complete.md`.
+- `/md/handoffs/` — session-end handoff documents. Most recent: `2026-07-25-phase-17-complete.md`.
 - `git log --oneline -20` for recent commit history.
 
 On session start: read the latest handoff (or ask for one) and skim the relevant Tasks doc / ADR before starting work. Confirm clean working tree and green build (`dotnet build` + `pnpm run build`) before proposing the first task.
