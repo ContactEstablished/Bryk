@@ -105,6 +105,7 @@ builder.Services.AddScoped<ITrainingPlanRepository, TrainingPlanRepository>();
 builder.Services.AddScoped<IAthleteSportZoneRepository, AthleteSportZoneRepository>();
 builder.Services.AddScoped<IWorkoutRepository, WorkoutRepository>();
 builder.Services.AddScoped<IActivityFileRepository, ActivityFileRepository>();
+builder.Services.AddScoped<IDailyWellnessRepository, DailyWellnessRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IOnboardingService, OnboardingService>();

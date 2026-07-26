@@ -23,6 +23,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<WorkoutStep> WorkoutSteps => Set<WorkoutStep>();
     public DbSet<WorkoutStepResult> WorkoutStepResults => Set<WorkoutStepResult>();
     public DbSet<ActivityFile> ActivityFiles => Set<ActivityFile>();
+    public DbSet<DailyWellness> DailyWellness => Set<DailyWellness>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -243,6 +244,19 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => e.ParsedWorkoutId);
             // Denormalized AthleteId, no FK to Athlete (ADR-0003/0004).
             entity.HasIndex(e => e.AthleteId);
+        });
+
+        // DailyWellness configuration (ADR-0011 §2/§6)
+        modelBuilder.Entity<DailyWellness>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.SleepHours).HasPrecision(4, 2);
+            entity.Property(e => e.WeightKg).HasPrecision(5, 2);
+            entity.Property(e => e.Notes).HasMaxLength(1000);
+
+            // One row per athlete per day. Denormalized AthleteId, no FK to Athlete (ADR-0003/0004);
+            // this composite index both enforces the day constraint and serves the range read.
+            entity.HasIndex(e => new { e.AthleteId, e.Date }).IsUnique();
         });
     }
 
