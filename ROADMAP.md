@@ -505,7 +505,7 @@ Post-v1 expansion (v2 coach features, device sync, marketplace, virtual training
 
 **Backend scope.**
 - **No migration** — columns exist; targets compute on read (persisted `WeeklyTarget` overrides = future migration; recommend against for v1).
-- `PUT /api/v1/trainingplans/{id}` — **new endpoint** (verified gap: no plan-metadata update exists). Name, dates, methodology, `EventId`, the three periodization fields. Validation: `BuildWeeks` 1–8, `RecoveryWeeks` ≥ 1, `RecoveryWeekPercentage` 0.3–0.9, dates coherent with event.
+- `PUT /api/v1/trainingplans/{id}` — **new endpoint** (verified gap: no plan-metadata update exists). Name, dates, methodology, `EventId`, the three periodization fields. Validation: `BuildWeeks` 1–8, `RecoveryWeeks` ≥ 1, `RecoveryWeekPercentage` 30–90, dates coherent with event. (**Corrected 2026-07-26:** this entry previously said `0.3–0.9`. The field is **percent-scale** — `decimal(5,2)`, ADR-0003 records "e.g. `60.0`", and the shipped POST validator accepts 0–100. The code wins; see ADR-0009 §6.)
 - New `Bryk.Application/Training/Periodization/`: `WeeklyTargetCalculator` (pure: plan window + baseline + ramp + build/recovery cadence → `[{weekStart, targetLoad, isRecoveryWeek}]`, taper into a linked event), `IPeriodizationService` (baseline from trailing 4-week actuals via 14's series).
 - `GET /api/v1/trainingplans/{id}/weekly-targets` — targets merged with actuals.
 - xUnit: cadence (3 build + 1 recovery), ramp bounds, taper, no-event plans, degenerate short plans — exact values pinned.
