@@ -1,6 +1,6 @@
 # ROADMAP — Bryk
 
-**Status as of 2026-07-25.** Source of truth for phased Bryk development. Read alongside `CLAUDE.md` (workflow, conventions, pending decisions, tech debt), `md/decisions/` (architectural decision records), and `md/product/feature-parity-trainingpeaks.md` (parity wishlist with status tags). Phase plans below win on scope; the parity doc is the candidate inventory.
+**Status as of 2026-07-26.** Source of truth for phased Bryk development. Read alongside `CLAUDE.md` (workflow, conventions, pending decisions, tech debt), `md/decisions/` (architectural decision records), and `md/product/feature-parity-trainingpeaks.md` (parity wishlist with status tags). Phase plans below win on scope; the parity doc is the candidate inventory.
 
 **Phase 7 reshape note.** This roadmap reflects a renumbering decided 2026-05-26 after ADR-0001 (supersede Mesocycle) and ADR-0002 (coaches are v2). Old Phase 7 (TrainingPlan domain) becomes new Phase 9. Two new phases — 7 (closeout) and 8 (profile + dashboard warmups) — are inserted. Downstream numbers shift by +2. Per-phase entries below reflect the new numbering; ADR documents capture the decisions that drove the reshape.
 
@@ -45,7 +45,7 @@ Non-negotiable per phase. They constrain how prompts get written and how diffs g
 | 15 | Progress page (PMC chart, weekly load, time-in-zone, peaks)                      | ✅ Complete       |
 | 16 | Calendar & scheduling (reschedule, compliance coloring)                          | ✅ Complete       |
 | 17 | Goals & events surface (Goals page, ProgressRing, plan↔event links)              | ✅ Complete       |
-| 18 | ATP / periodization engine (weekly targets, ramp, taper)                         | ⏳ Planned        |
+| 18 | ATP / periodization engine (weekly targets, ramp, taper)                         | ✅ Complete       |
 | 19 | Activity file import (.fit / .tcx / .gpx)                                        | ⏳ Planned        |
 | 20 | Wellness metrics (sleep, RHR, weight, soreness, HRV)                             | ⏳ Planned        |
 | 21 | Production hardening & deployment                                                | ⏳ Planned        |
@@ -497,7 +497,7 @@ Post-v1 expansion (v2 coach features, device sync, marketplace, virtual training
 
 ---
 
-## Phase 18 — ATP / periodization engine (weekly targets, ramp, taper) ⏳
+## Phase 18 — ATP / periodization engine (weekly targets, ramp, taper) ✅
 
 **Goal.** Bring `BuildWeeks`/`RecoveryWeeks`/`RecoveryWeekPercentage` (dormant since ADR-0003) alive: auto-generated weekly load targets ramping toward the linked event, recovery-week scaling, taper, and weekly target-vs-actual on the dashboard.
 
@@ -514,7 +514,7 @@ Post-v1 expansion (v2 coach features, device sync, marketplace, virtual training
 - Plan detail (13's browser) gains a Periodization panel: edit fields + event link via the PUT; render the target ramp by **reusing 15's LoadChart** (targets in place of planned hatch).
 - `ThisWeekCard` gains target-vs-actual progress bar + `DeltaChip` (reusing 16's compliance bands). Calendar week headers optionally show the weekly target.
 
-**Decisions needed.** **ADR: ramp model** — baseline source, ramp cap (~5–8%/week, consistent with projected ACWR ≤ 1.3), taper rule. Write before any code task. Compute-on-read confirmation. Reject-vs-warn when shrinking plan dates orphans planned workouts (align with 16).
+**Decisions needed.** ✅ Closed by **ADR-0009** (`md/decisions/0009-periodization-ramp-model.md`): baseline = trailing 4-week mean actual load (ADR-0007's `A`); ramp = **+7 %/build week** (`1.07⁴ = 1.31`, derived from the locked ACWR 1.3 ceiling); `BuildWeeks : RecoveryWeeks` cadence with recovery weeks at `RecoveryWeekPercentage` % of the build target they interrupt (recovery does not advance the ramp); two-week **75 % / 50 %** taper into a linked in-window event, overriding recovery scaling; compute-on-read confirmed (no `WeeklyTarget` table, no migration); a plan-window shrink that would strand planned workouts is **rejected 400** (`PlanWindow:`), extending ADR-0008 §2 to the PUT.
 
 **Out of scope.** Auto-generating planned *workouts* from targets (targets are numbers; authoring stays manual), multi-event season ATP, per-sport target split, coach overrides (v2).
 

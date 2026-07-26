@@ -252,6 +252,7 @@ Verified against the codebase 2026-06-07. Three prior items are resolved and dro
 5. Single `SwaggerDoc` hardcoded as `"v1"` in `Program.cs` (TODO comment in place). Iterate over `IApiVersionDescriptionProvider` when v2 ships.
 6. Test coverage exists but is **partial**, not comprehensive. Newer surfaces (TrainingPlan/zones, profile editing) are better covered than older ones; keep raising coverage as you touch code.
 7. CI hook running both test suites on commit not yet confirmed present.
+8. **Plan POST/PUT validator bounds diverge** (Phase 18, deliberate): `TrainingPlanRequestValidator` accepts `BuildWeeks > 0` / `RecoveryWeeks > 0` / `RecoveryWeekPercentage` 0–100, while `TrainingPlanUpdateRequestValidator` bounds them to 1–8 / ≥ 1 / 30–90. Tightening the shipped POST is an API breaking change — **needs a Sr. Dev decision**, deferred once already.
 
 ---
 
@@ -267,7 +268,7 @@ This project has the **dotnet-claude-kit** plugin active. Use it rather than rei
 
 ## Project state pointers
 
-- Current phase: **Phase 17 complete** (Goals & events surface — `GET /api/v1/events` (`upcoming` filter, `Notes`, linked plans via reverse `EventId` lookup) & `/events/{id}` & `/goals` (pure `GoalProgress.Compute` → `daysRemaining`/`status`), ported hand-rolled-SVG `ProgressRing` + `buildRingGeometry` shared with the dashboard `PrimaryGoalCard`, `/goals` `GoalsView` with read-display event/goal cards (Notes inline, A/B/C priority, countdown ring, linked-plan chip → `/plans/:id`) and on-page vee-validate + zod CRUD forms over the existing Phase-8 writes, Goals nav live; no migration, no new package; see `md/handoffs/2026-07-25-phase-17-complete.md`). Next feature phase: **Phase 18** — ATP / periodization engine. **Phase 12** — Authentication & Authorization — remains deferred and **approval-gated** (see Open decisions). Phases 8–11 and 13–16 are complete.
+- Current phase: **Phase 18 complete** (ATP / periodization engine — ADR-0009's ramp model made executable: pure `WeeklyTargetCalculator` in `Bryk.Application/Training/Periodization/` (two-pass ramp walk, recovery scaling, 75 %/50 % taper), `PeriodizationService` resolving the baseline chain and merging planned/actual per ISO week, `PUT /api/v1/trainingplans/{id}` (the verified plan-metadata gap — with a `PlanWindow:` orphan guard and an `EventId:` ownership guard, and the plan↔event write path Phase 17 deferred), `GET /api/v1/trainingplans/{id}/weekly-targets`, a `PeriodizationPanel` on plan detail reusing Phase-15's `LoadChart` unforked, and a target-vs-actual bar + `DeltaChip` on `ThisWeekCard` reusing ADR-0008 §1's bands verbatim; no migration, no new package; see `md/handoffs/2026-07-26-phase-18-complete.md`). Next feature phase: **Phase 19** — activity file import (**migration required**, Sr. Dev gate). **Phase 12** — Authentication & Authorization — remains deferred and **approval-gated** (see Open decisions). Phases 8–11 and 13–17 are complete.
 - ADRs (`/md/decisions/`) — read before touching the training/zone domain:
   - **0001** — Mesocycle superseded by TrainingPlan / PlannedWorkout / Workout (Accepted; retirement migration `DropMesocycleSurface` committed).
   - **0002** — Coaches are v2; v1 is athlete-only, one human = one `Athlete` (Accepted).
@@ -277,10 +278,11 @@ This project has the **dotnet-claude-kit** plugin active. Use it rather than rei
   - **0006** — PMC computation strategy: compute-on-read (no snapshot), 180-day seeded lookback, `current` = range last day (null for a fresh athlete), TSB bands > +10 / ±10 / < −10 (Accepted).
   - **0007** — Progress analytics: optimal band = `[0.8, 1.3] × trailing-4-week mean actual` (single horizontal band; Phase-18 ramp ceiling), peaks compute-on-read session-level (pace per-sport), time-in-zone coarse 5-level "estimated" (structure/sessionAvg/unclassified), range-picker `?pmc=&weeks=&sport=` (Accepted).
   - **0008** — Calendar compliance bands + reschedule policy: 5-bucket classifier with a single null-load fallback, out-of-window reschedule rejected with 400, `Calendar` sidebar item (Accepted; Phase 18 reuses the bands verbatim).
-- **Phase 17 added no ADR.** Its two decisions live in the ROADMAP entry: quantitative goal progress (`TargetValue`/`Unit`/`CurrentValue`) is **deferred** (date-based only, no migration), and the plan↔event link is **display-only** until Phase 18's plan PUT ships the write path.
+  - **0009** — Periodization ramp model: baseline = trailing-4-week mean actual load anchored on the plan's first week (fallback → first-week planned → no targets); ramp +7 %/build week (`1.07⁴ = 1.31`, derived from 0007's 1.3 ceiling); `BuildWeeks : RecoveryWeeks` cadence where recovery weeks scale to `RecoveryWeekPercentage` % and do **not** advance the ramp; two-week 75 %/50 % taper into a linked in-window event, overriding recovery; compute-on-read (no table, no migration); plan-window shrink that strands planned workouts rejected 400; `RecoveryWeekPercentage` is percent-scale, not a fraction (Accepted).
+- **Phase 17 added no ADR.** Its two decisions live in the ROADMAP entry: quantitative goal progress (`TargetValue`/`Unit`/`CurrentValue`) is **deferred** (date-based only, no migration). Its second — the plan↔event link being display-only — was **closed by Phase 18's plan PUT**.
 - `/md/product/feature-parity-trainingpeaks.md` — feature wishlist and status.
 - `/md/Tasks-<phase>-<n>.md` — per-task specs (Phase 10: `Tasks-10-1.md` … `Tasks-10-5.md`).
-- `/md/handoffs/` — session-end handoff documents. Most recent: `2026-07-25-phase-17-complete.md`.
+- `/md/handoffs/` — session-end handoff documents. Most recent: `2026-07-26-phase-18-complete.md`.
 - `git log --oneline -20` for recent commit history.
 
 On session start: read the latest handoff (or ask for one) and skim the relevant Tasks doc / ADR before starting work. Confirm clean working tree and green build (`dotnet build` + `pnpm run build`) before proposing the first task.
