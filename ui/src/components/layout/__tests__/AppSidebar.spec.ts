@@ -45,15 +45,14 @@ describe('AppSidebar', () => {
     wrapper.unmount()
   })
 
-  it('renders Workouts and Progress as live links and keeps Goals inert/soon', async () => {
+  it('renders Workouts, Progress and Goals as live links with no "soon" badge left', async () => {
     const wrapper = await mountSidebar()
 
     const links = wrapper.findAll('a').map((a) => a.text())
     expect(links.some((t) => t.includes('Workouts'))).toBe(true)
     expect(links.some((t) => t.includes('Progress'))).toBe(true)
-    expect(links.some((t) => t.includes('Goals'))).toBe(false)
-    expect(wrapper.text()).toContain('Goals')
-    expect(wrapper.text()).toContain('soon')
+    expect(links.some((t) => t.includes('Goals'))).toBe(true)
+    expect(wrapper.text()).not.toContain('soon')
 
     wrapper.unmount()
   })

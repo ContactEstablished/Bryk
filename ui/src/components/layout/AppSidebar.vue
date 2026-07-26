@@ -36,7 +36,7 @@ const trainItems: NavItem[] = [
   { icon: CalendarDays, label: 'Calendar', to: '/calendar', routeName: 'calendar' },
   { icon: Activity, label: 'Workouts', to: '/workouts', routeName: 'workouts' },
   { icon: TrendingUp, label: 'Progress', to: '/progress', routeName: 'progress' },
-  { icon: Target, label: 'Goals' },
+  { icon: Target, label: 'Goals', to: '/goals', routeName: 'goals' },
 ]
 
 const accountItems: NavItem[] = [
